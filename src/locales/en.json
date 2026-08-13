@@ -626,5 +626,138 @@
     "overrideCta": "Assign anyway",
     "overrideReasonLabel": "Reason for override",
     "overrideReasonHelp": "Required. Recorded in the audit log with your name."
+  },
+  "weekdays": {
+    "long": {
+      "mon": "Monday",
+      "tue": "Tuesday",
+      "wed": "Wednesday",
+      "thu": "Thursday",
+      "fri": "Friday",
+      "sat": "Saturday",
+      "sun": "Sunday"
+    },
+    "short": {
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun"
+    }
+  },
+  "availability": {
+    "title": "Availability",
+    "sectionsLabel": "Availability sections",
+    "searchEmployees": "Search employees",
+    "previousWeek": "Previous week",
+    "nextWeek": "Next week",
+    "thisWeek": "This week",
+    "openWeek": "Open week",
+    "to": "to",
+    "availableAllDay": "Available all day",
+    "availableFrom": "Available from",
+    "availableUntil": "Available until",
+    "rangeError": "The end time must be later than the start time.",
+    "dayGroupLabel": "{{day}} availability",
+    "dayStatus": {
+      "available": "Available",
+      "partial": "Partial",
+      "unavailable": "Not available"
+    },
+    "type": {
+      "recurring": "Recurring",
+      "temporary": "Temporary"
+    },
+    "my": {
+      "title": "My availability",
+      "subtitle": "Tell us when you can work.",
+      "modeLabel": "Availability type",
+      "mode": {
+        "recurring": "Recurring",
+        "temporary": "This week only"
+      },
+      "modeHint": {
+        "recurring": "Your recurring availability repeats every week until you change it.",
+        "temporary": "A change for one week only. It replaces your recurring availability for that week."
+      },
+      "recurringBannerTitle": "Recurring availability has no deadline",
+      "recurringBannerBody": "Save it whenever you like. It applies from the next week that is still open.",
+      "deadlineTitle": "Submit by {{deadline}}",
+      "deadlineBody": "Applies to {{week}}",
+      "lockedTitle": "{{week}} is closed",
+      "lockedBody": "The deadline was {{deadline}}.",
+      "lockedFooter": "This week is read-only. A manager can still change it for you.",
+      "pendingNote": "Submitted, waiting for approval.",
+      "approvedNote": "Approved.",
+      "approvedByNote": "Approved by {{name}}.",
+      "declinedNote": "Declined: {{reason}}",
+      "noReasonGiven": "no reason given",
+      "pendingInForce": "This week's change is already being used for scheduling, but no manager has approved it yet.",
+      "submit": "Submit availability",
+      "submitting": "Submitting…",
+      "noChanges": "No changes to submit.",
+      "fixRanges": "Fix the highlighted time ranges before submitting.",
+      "errorTitle": "We couldn't load your availability",
+      "errorBody": "Check your connection and try again.",
+      "noEmployeeTitle": "No employee record",
+      "noEmployeeBody": "Your sign-in isn't linked to an employee yet, so there is no availability to edit.",
+      "toast": {
+        "submitted": "Availability submitted.",
+        "locked": "That week closed at the deadline. Ask a manager to change it for you.",
+        "failed": "We couldn't submit your availability. Try again."
+      }
+    },
+    "requests": {
+      "tab": "Requests",
+      "subtitle": "Review and approve availability changes",
+      "columns": {
+        "employee": "Employee",
+        "effectiveDates": "Effective dates",
+        "submitted": "Submitted"
+      },
+      "roleLabel": "{{role}} · L{{level}}",
+      "ongoing": "Ongoing",
+      "fromOngoing": "From {{date}} · ongoing",
+      "deadlineBanner": "Availability for {{week}} is due {{deadline}}",
+      "submittedCount": "{{submitted}} of {{total}} employees have submitted",
+      "viewProfile": "View profile",
+      "count_one": "{{count}} request",
+      "count_other": "{{count}} requests",
+      "emptyTitle": "Nothing to review",
+      "emptyBody": "Nobody has submitted availability for this week yet.",
+      "errorTitle": "We couldn't load the requests",
+      "errorBody": "Check your connection and try again.",
+      "declineTitle": "Decline availability",
+      "declineSubtitle": "{{name}} will see the reason you give.",
+      "declining": "Declining…",
+      "reasonLabel": "Reason for declining",
+      "reasonPlaceholder": "For example: coverage conflict on Friday and Saturday",
+      "reasonHelp": "Required. The employee is shown this text.",
+      "toast": {
+        "approved": "Approved {{name}}'s availability.",
+        "approveFailed": "We couldn't approve that. Try again.",
+        "declined": "Declined {{name}}'s availability.",
+        "declineFailed": "We couldn't decline that. Try again."
+      }
+    },
+    "glance": {
+      "tab": "Glance view",
+      "weekOf": "Week of {{week}}",
+      "print": "Print",
+      "roleLabel": "{{role}} L{{level}}",
+      "tableCaption": "Availability by employee and day for {{week}}",
+      "pendingChip": "Pending",
+      "availableBetween": "Available between",
+      "statFully": "Fully available",
+      "statPartial": "Partial",
+      "statSubmitted": "Submitted",
+      "ofTotal": "{{done}} of {{total}}",
+      "emptyTitle": "Nobody to show",
+      "emptyBody": "There are no active employees matching this view.",
+      "errorTitle": "We couldn't load the grid",
+      "errorBody": "Check your connection and try again."
+    }
   }
 }

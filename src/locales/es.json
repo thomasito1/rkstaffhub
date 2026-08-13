@@ -626,5 +626,138 @@
     "overrideCta": "Asignar de todos modos",
     "overrideReasonLabel": "Motivo de la excepción",
     "overrideReasonHelp": "Obligatorio. Se registra en el historial de auditoría con tu nombre."
+  },
+  "weekdays": {
+    "long": {
+      "mon": "Lunes",
+      "tue": "Martes",
+      "wed": "Miércoles",
+      "thu": "Jueves",
+      "fri": "Viernes",
+      "sat": "Sábado",
+      "sun": "Domingo"
+    },
+    "short": {
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mié",
+      "thu": "Jue",
+      "fri": "Vie",
+      "sat": "Sáb",
+      "sun": "Dom"
+    }
+  },
+  "availability": {
+    "title": "Disponibilidad",
+    "sectionsLabel": "Secciones de disponibilidad",
+    "searchEmployees": "Buscar empleados",
+    "previousWeek": "Semana anterior",
+    "nextWeek": "Semana siguiente",
+    "thisWeek": "Esta semana",
+    "openWeek": "Semana abierta",
+    "to": "a",
+    "availableAllDay": "Disponible todo el día",
+    "availableFrom": "Disponible desde",
+    "availableUntil": "Disponible hasta",
+    "rangeError": "La hora de fin debe ser posterior a la de inicio.",
+    "dayGroupLabel": "Disponibilidad del {{day}}",
+    "dayStatus": {
+      "available": "Disponible",
+      "partial": "Parcial",
+      "unavailable": "No disponible"
+    },
+    "type": {
+      "recurring": "Recurrente",
+      "temporary": "Temporal"
+    },
+    "my": {
+      "title": "Mi disponibilidad",
+      "subtitle": "Dinos cuándo puedes trabajar.",
+      "modeLabel": "Tipo de disponibilidad",
+      "mode": {
+        "recurring": "Recurrente",
+        "temporary": "Solo esta semana"
+      },
+      "modeHint": {
+        "recurring": "Tu disponibilidad recurrente se repite cada semana hasta que la cambies.",
+        "temporary": "Un cambio para una sola semana. Reemplaza tu disponibilidad recurrente esa semana."
+      },
+      "recurringBannerTitle": "La disponibilidad recurrente no tiene fecha límite",
+      "recurringBannerBody": "Guárdala cuando quieras. Se aplica desde la próxima semana que siga abierta.",
+      "deadlineTitle": "Envíala antes del {{deadline}}",
+      "deadlineBody": "Se aplica a {{week}}",
+      "lockedTitle": "{{week}} ya está cerrada",
+      "lockedBody": "La fecha límite fue el {{deadline}}.",
+      "lockedFooter": "Esta semana es de solo lectura. Un gerente todavía puede cambiarla por ti.",
+      "pendingNote": "Enviada, esperando aprobación.",
+      "approvedNote": "Aprobada.",
+      "approvedByNote": "Aprobada por {{name}}.",
+      "declinedNote": "Rechazada: {{reason}}",
+      "noReasonGiven": "sin motivo indicado",
+      "pendingInForce": "El cambio de esta semana ya se usa para armar el horario, pero ningún gerente lo ha aprobado todavía.",
+      "submit": "Enviar disponibilidad",
+      "submitting": "Enviando…",
+      "noChanges": "No hay cambios que enviar.",
+      "fixRanges": "Corrige los horarios marcados antes de enviar.",
+      "errorTitle": "No pudimos cargar tu disponibilidad",
+      "errorBody": "Revisa tu conexión e inténtalo de nuevo.",
+      "noEmployeeTitle": "Sin ficha de empleado",
+      "noEmployeeBody": "Tu cuenta aún no está vinculada a un empleado, así que no hay disponibilidad que editar.",
+      "toast": {
+        "submitted": "Disponibilidad enviada.",
+        "locked": "Esa semana se cerró en la fecha límite. Pide a un gerente que la cambie por ti.",
+        "failed": "No pudimos enviar tu disponibilidad. Inténtalo de nuevo."
+      }
+    },
+    "requests": {
+      "tab": "Solicitudes",
+      "subtitle": "Revisa y aprueba los cambios de disponibilidad",
+      "columns": {
+        "employee": "Empleado",
+        "effectiveDates": "Fechas de vigencia",
+        "submitted": "Enviada"
+      },
+      "roleLabel": "{{role}} · N{{level}}",
+      "ongoing": "En curso",
+      "fromOngoing": "Desde el {{date}} · en curso",
+      "deadlineBanner": "La disponibilidad para {{week}} vence el {{deadline}}",
+      "submittedCount": "{{submitted}} de {{total}} empleados ya la enviaron",
+      "viewProfile": "Ver perfil",
+      "count_one": "{{count}} solicitud",
+      "count_other": "{{count}} solicitudes",
+      "emptyTitle": "Nada que revisar",
+      "emptyBody": "Todavía nadie ha enviado su disponibilidad para esta semana.",
+      "errorTitle": "No pudimos cargar las solicitudes",
+      "errorBody": "Revisa tu conexión e inténtalo de nuevo.",
+      "declineTitle": "Rechazar disponibilidad",
+      "declineSubtitle": "{{name}} verá el motivo que escribas.",
+      "declining": "Rechazando…",
+      "reasonLabel": "Motivo del rechazo",
+      "reasonPlaceholder": "Por ejemplo: falta de cobertura el viernes y el sábado",
+      "reasonHelp": "Obligatorio. Este texto se le muestra al empleado.",
+      "toast": {
+        "approved": "Se aprobó la disponibilidad de {{name}}.",
+        "approveFailed": "No pudimos aprobarla. Inténtalo de nuevo.",
+        "declined": "Se rechazó la disponibilidad de {{name}}.",
+        "declineFailed": "No pudimos rechazarla. Inténtalo de nuevo."
+      }
+    },
+    "glance": {
+      "tab": "Vista general",
+      "weekOf": "Semana del {{week}}",
+      "print": "Imprimir",
+      "roleLabel": "{{role}} N{{level}}",
+      "tableCaption": "Disponibilidad por empleado y día para {{week}}",
+      "pendingChip": "Pendiente",
+      "availableBetween": "Disponible entre",
+      "statFully": "Totalmente disponible",
+      "statPartial": "Parcial",
+      "statSubmitted": "Enviadas",
+      "ofTotal": "{{done}} de {{total}}",
+      "emptyTitle": "No hay a quién mostrar",
+      "emptyBody": "No hay empleados activos que coincidan con esta vista.",
+      "errorTitle": "No pudimos cargar la cuadrícula",
+      "errorBody": "Revisa tu conexión e inténtalo de nuevo."
+    }
   }
 }
