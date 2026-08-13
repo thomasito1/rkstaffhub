@@ -138,9 +138,20 @@ New during Phase 0:
   `firestore.rules` before Phase 1 adds more collections.
 - **No ESLint config yet.** `npm run lint` is declared but will fail until one is
   added.
-- **No Cloud Functions yet.** Custom claims (`role`, `employeeId`) are assumed by
-  both `firestore.rules` and `storage.rules` but nothing sets them — the invite
-  acceptance Function is part of milestone 6.
+- **Two Cloud Functions are required and neither exists yet.** Custom claims
+  (`role`, `employeeId`) are assumed by `firestore.rules`, `storage.rules` and
+  `AuthProvider`, but nothing sets them. Needed:
+  - `acceptInvite(token, …)` — validates the token, binds the auth uid to the
+    employee doc, sets claims.
+  - **`getInvite(token)`** — surfaced while building the invite screen. The
+    person opening an invite link is *signed out*, and `firestore.rules` gates
+    `invites/{id}` behind `employees.edit`, so step 1 of the flow cannot read the
+    invite directly — and the password path needs the invited address to create
+    the account. Until it exists, the invite page shows a retryable "couldn't
+    open this invitation" card, which is also the correct state for a revoked or
+    mistyped token.
+- **Legal links are placeholders.** The login screens point at `#privacy` and
+  `#terms`. Real routes or external URLs needed before anyone signs in for real.
 - **Spanish screens unproven.** All 49 mockups are English. Layouts are built for
   ~30% expansion but that has never been visually verified.
 
