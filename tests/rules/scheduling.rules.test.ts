@@ -5,8 +5,18 @@ import {
   type RulesTestEnvironment,
 } from '@firebase/rules-unit-testing'
 import { readFileSync } from 'node:fs'
-import { deleteDoc, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore'
-import { beforeAll, afterAll, beforeEach, describe, it } from 'vitest'
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  setDoc,
+  updateDoc,
+  where,
+} from 'firebase/firestore'
+import { beforeAll, afterAll, beforeEach, describe, it, expect } from 'vitest'
 
 import { ROLE_DEFAULTS } from '../../src/lib/permissions/defaults'
 
@@ -537,6 +547,45 @@ describe('shifts — published, in your department, in a published week', () => 
         status: 'published',
       }),
     )
+  })
+})
+
+// ── the listShifts() query fix ────────────────────────────────────────────────
+// The single-doc reads above prove the RULE is correct. These prove the actual
+// CLIENT QUERY PATH now works: PUBLISHED_WEEK deliberately mixes an FOH shift,
+// a BOH shift and an unpublished FOH shift, which is exactly the shape that
+// used to deny an unscoped listShifts() call outright. See the RESOLVED note
+// on this match block and the JSDoc on listShifts()/
+// listPublishedShiftsForDepartment() in src/lib/db/schedules.ts.
+
+describe('shifts — the query itself must be scoped, not just the rule', () => {
+  it('DENIES a getDocs() query with no department/status constraint', async () => {
+    const staff = ctx('uid-emp-staff-foh', 'emp-staff-foh', 'staff')
+    // This is the bug in its original form: fetch the whole subcollection and
+    // rely on the rule to sort it out. Firestore denies the WHOLE query the
+    // moment it would return even one document (shift-boh, shift-unpublished)
+    // the rule rejects.
+    await assertFails(getDocs(collection(staff, `schedules/${PUBLISHED_WEEK}/shifts`)))
+  })
+
+  it('SUCCEEDS once the query itself is scoped to department + published — and returns only the allowed shift', async () => {
+    const staff = ctx('uid-emp-staff-foh', 'emp-staff-foh', 'staff')
+    const scoped = query(
+      collection(staff, `schedules/${PUBLISHED_WEEK}/shifts`),
+      where('department', '==', 'FOH'),
+      where('status', '==', 'published'),
+    )
+    const snap = await assertSucceeds(getDocs(scoped))
+    const ids = snap.docs.map((d) => d.id)
+    expect(ids).toEqual(['shift-foh'])
+  })
+
+  it('a manager may still run the unscoped query — canEditSchedules bypasses department scoping', async () => {
+    const mgr = ctx('uid-emp-mgr-foh', 'emp-mgr-foh', 'manager')
+    const snap = await assertSucceeds(
+      getDocs(collection(mgr, `schedules/${PUBLISHED_WEEK}/shifts`)),
+    )
+    expect(snap.docs.map((d) => d.id).sort()).toEqual(['shift-boh', 'shift-foh', 'shift-unpublished'])
   })
 })
 

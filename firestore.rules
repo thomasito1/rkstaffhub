@@ -569,15 +569,18 @@ service cloud.firestore {
       //     republish step real rather than decorative), and
       //   • it is their own shift or their own department (§17).
       //
-      // KNOWN CONSEQUENCE — read this before "fixing" a broken staff query.
+      // RESOLVED — read this before touching the staff query path again.
       // Firestore evaluates a rule against every document a query matches and
       // fails the WHOLE query if any one of them is denied; it does not filter.
-      // listShifts() narrows department client-side, so a staff member calling
-      // it unfiltered for a mixed FOH/BOH week is denied outright (the db layer
-      // maps that to []). The fix is to push `department` into the query, which
-      // is a Phase 2 change to src/lib/db/schedules.ts. Widening this rule to
-      // make the convenience query work would trade the §17 boundary for a
-      // convenience, so it stays.
+      // This rule was correct from the start (department + published-status
+      // scoping, per document); the bug was client-side: listShifts() used to
+      // narrow department with a post-fetch .filter(), so a staff member
+      // calling it unfiltered for a mixed FOH/BOH or mixed draft/published week
+      // was denied outright. Fixed by pushing `department` and `status` into
+      // the actual Firestore query — see listPublishedShiftsForDepartment() and
+      // the JSDoc on listShifts() in src/lib/db/schedules.ts. This rule was
+      // NOT widened; the confirmed policy stands: staff see only their own
+      // department's published schedule, managers+ see both.
 
       match /shifts/{shiftId} {
 

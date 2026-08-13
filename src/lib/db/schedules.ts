@@ -201,6 +201,33 @@ export async function getSchedule(weekId: string): Promise<Schedule | null> {
  * Cancelled shifts are excluded by default — they are kept for history but must
  * never render as coverage in the builder or in "Who's Working".
  */
+/**
+ * RESOLVED (was: "Phase 2 change needed" — see firestore.rules for the full
+ * history). `department` and `status` are pushed into the Firestore QUERY as
+ * `where()` equality constraints, not applied as a post-fetch `.filter()`.
+ *
+ * That distinction is load-bearing. Firestore evaluates the security rule
+ * against every document a query would return and denies the WHOLE query if
+ * any one of them fails — it does not silently filter. The shifts rule allows
+ * a staff member to read a shift only when it is published AND (theirs OR in
+ * their department). If `listShifts()` fetched the whole subcollection and
+ * filtered client-side, a staff member's call on a mixed FOH/BOH or
+ * mixed draft/published week would be denied outright, and this function's
+ * catch would turn that into a silent `[]` — indistinguishable from "nothing
+ * scheduled."
+ *
+ * Pushing `department`/`status` into the query means the query itself can
+ * only ever match documents the rule already allows, so it succeeds. Both are
+ * plain equality filters — Firestore does not require a composite index for
+ * multiple `==` clauses with no `orderBy`, so no `firestore.indexes.json`
+ * change was needed.
+ *
+ * CALLER CONTRACT: any staff-facing call MUST pass both
+ * `{ department: employee.department, status: 'published' }`. Prefer
+ * `listPublishedShiftsForDepartment()` below, which makes that the only option.
+ * `includeCancelled`/`openOnly` stay as post-fetch filters — they narrow a
+ * result set the rule has already approved, so they cannot trigger a denial.
+ */
 export async function listShifts(
   weekId: string,
   opts?: {
@@ -218,13 +245,13 @@ export async function listShifts(
   if (opts?.employeeId) constraints.push(where('employeeId', '==', opts.employeeId))
   if (opts?.date) constraints.push(where('date', '==', opts.date))
   if (opts?.roleId) constraints.push(where('roleId', '==', opts.roleId))
+  if (opts?.department) constraints.push(where('department', '==', opts.department))
+  if (opts?.status) constraints.push(where('status', '==', opts.status))
 
   try {
     const snap = await getDocs(query(shiftsCollection(weekId), ...constraints))
     return snap.docs
       .map((s) => toShift(weekId, s))
-      .filter((s) => (opts?.department ? s.department === opts.department : true))
-      .filter((s) => (opts?.status ? s.status === opts.status : true))
       .filter((s) => (opts?.includeCancelled ? true : s.status !== 'cancelled'))
       .filter((s) =>
         opts?.openOnly === undefined
@@ -238,6 +265,23 @@ export async function listShifts(
     if (isPermissionDenied(err)) return []
     throw err
   }
+}
+
+/**
+ * The ONLY correct way for a staff-facing screen to list a week's shifts.
+ * Confirmed policy: staff see only their own department's published schedule —
+ * FOH staff cannot view BOH's week and vice versa. Managers+ hold
+ * `schedule.create`/`schedule.edit` and bypass department scoping entirely in
+ * the rule, so this helper is for staff call sites, not admin ones.
+ *
+ * Forces both required constraints so a future caller cannot accidentally
+ * regress to the client-side-filter bug this replaced.
+ */
+export async function listPublishedShiftsForDepartment(
+  weekId: string,
+  department: Department,
+): Promise<Shift[]> {
+  return listShifts(weekId, { department, status: 'published' })
 }
 
 /** One shift. `null` on missing or denied. */

@@ -139,7 +139,7 @@ Follows dependency, not screen number:
 | `08-my-availability-mobile-en.html` | mobile 390×844 | Recurring week editor, 3-state day rows |
 | `09-availability-requests-desktop-en.html` | desktop 1440 | Admin approval table |
 | `10-availability-glance-view-desktop-en.html` | desktop 1440 | Signature teal/red/amber grid |
-| `11-schedule-builder-desktop-en.html` | desktop 1440 | **Centerpiece** — role bands, conflicts, labor footer |
+| `11-schedule-builder-desktop-en.html` | desktop 1440 | **Centerpiece** — role bands, conflicts, labor footer. ⚠️ **Superseded by the seed, see below** |
 | `12-shift-modal-desktop-en.html` | desktop 1440 | Required skill level, eligible employees |
 | `13-schedule-ai-draft-desktop-en.html` | desktop 1440 | Review-required state, rationale panel |
 | `14-my-schedule-mobile-en.html` | mobile 390×844 | Week list + mini calendar |
@@ -178,6 +178,25 @@ Follows dependency, not screen number:
 | `37-states-sheet-desktop-en.html` | desktop 1440 | **Skeletons, empty, toasts, offline, push** |
 
 ---
+
+## Superseded — mockup 11's numbers, not its visual grammar
+
+`11-schedule-builder-desktop-en.html`'s drawn shift cards (~84 hrs at
+$11–13.50/hr) and its own labor footer ($2,544.00 / 141.5 hrs, a blended
+$17.98/hr) are mutually inconsistent — the remaining 57 hrs would need
+$27/hr, above every rate on the real roster. The mockup's arithmetic was
+never internally consistent; the app's seed data (`scripts/seed.ts`,
+`assertLaborReconciles()`) is the numeric source of truth going forward.
+
+**Keep from the mockup:** role-band grouping, station chips, the availability-
+conflict tint, the OT corner flag, the labor-footer layout. **Do not** treat its
+per-card hours/rates, or its placement of the conflict/OT flags, as spec — the
+seed moved the OT flag to a person who genuinely exceeds 40 hrs (Oli Fonseca,
+44.0 hrs) and the availability conflict to a shift that genuinely violates that
+person's own submitted availability (Micah, Saturday). See PROGRESS.md
+"Known issues" for the full reasoning. If a future pass "corrects" the builder
+back toward the mockup's card numbers, it will be reintroducing arithmetic that
+never worked.
 
 ## Not designed
 

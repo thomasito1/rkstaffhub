@@ -218,21 +218,65 @@ New during Phase 0. Ordered by when they block work:
   denials still break the build. Reports **0 dirty denials, 12 first-pass
   artifacts**. The quarantine comment in `firestore.rules` is now historical.
 
-### Not enforced in rules — deliberate, needs the Phase 2 callable
+  ⚠️ **Fragility note.** The detector parses the Firestore emulator's decision
+  trace text, which is not a stable, versioned API — `firebase-tools` is pinned
+  to an exact version (`13.29.1`, no `^`) in `package.json` specifically so this
+  doesn't silently drift. **If `firebase-tools` is ever bumped, re-run
+  `npm run test:rules:clean` and manually inspect its output before trusting a
+  green result** — the emulator's trace format may have changed shape, and a
+  parser that silently stops matching would report false confidence, not a
+  failure. If CI ever fails mysteriously on this check right after a dependency
+  bump, this note is where to look first.
+
+- **RESOLVED — mockup `11-schedule-builder-desktop-en.html` is superseded by the
+  seed.** The mockup's drawn shift cards (~84 hrs at $11–13.50/hr) and its own
+  labor footer ($2,544.00 / 141.5 hrs, a blended $17.98/hr) cannot both be true —
+  the remaining 57 hrs would need $27/hr, above every rate on the roster. The
+  seed is the arithmetic source of truth; the mockup is retained only for its
+  **visual grammar** — role-band grouping, station chips, the conflict tint, the
+  OT corner flag, the labor-footer layout. **Do not "correct" the seed or the
+  builder back toward the mockup's card-by-card numbers** — they were never
+  internally consistent to begin with. See the seed's `assertLaborReconciles()`
+  for the numbers that are actually true, and the git log for the specific
+  moves (OT chip → Oli Fonseca 44.0 hrs; availability conflict → Micah's
+  Saturday) and why each was necessary.
+
+### Not enforced in rules — deliberate, moves to the Phase 2 callable
 
 - **The Thursday 23:59 ET availability deadline.** Rules have no tz database, so
   "Thursday 23:59 ET" is 03:59Z or 04:59Z depending on the week. Deriving it from
   the `weekId` string needs `int()` over client-controlled substrings, which
   throws on a malformed id; comparing against a deadline field on the document
-  would mean the submitting client picks its own lock. Rules enforce the
-  expressible half (own availability only, never review your own); the deadline
-  moves to the callable.
-- **Staff shift reads are department-scoped, which breaks `listShifts()` for
-  staff.** Firestore fails a whole query if any matched document is denied, and
-  `listShifts()` filters department client-side — so a staff member's unfiltered
-  call on a mixed FOH/BOH week is denied outright and the db layer maps it to
-  `[]`. Fix is pushing `department` into the query (Phase 2 change to
-  `src/lib/db/schedules.ts`). The rule was NOT widened to paper over it.
+  would mean the submitting client picks its own lock. **Approved as designed**
+  (Aug 13, 2026): rules enforce the expressible half — own availability only,
+  never review your own — and the deadline itself is computed server-side (real
+  tzdata, via `src/lib/deadlines.ts`'s approach) inside the Phase 2 callable that
+  will own `submitAvailability`'s enforcement.
+
+### RESOLVED — staff shift reads (was: "breaks listShifts() for staff")
+
+The rule was already correct — it scopes shift reads to published + (own shift
+OR own department), and managers+ already bypass it via `canEditSchedules`. The
+bug was entirely client-side: `listShifts()` fetched the whole subcollection and
+filtered department/status with `.filter()` *after* the fetch. Firestore denies
+the **whole query** the moment it would return even one document the rule
+rejects — so an unscoped staff call on a mixed FOH/BOH or mixed draft/published
+week was denied outright, and the catch turned that into a silent `[]`.
+
+**Fixed by pushing `department` and `status` into the actual Firestore query**
+as `where()` equality constraints (no composite index needed — Firestore does
+not require one for equality-only compound queries). `listShifts()` now takes
+both; `listPublishedShiftsForDepartment(weekId, department)` is the enforced
+entry point for staff-facing screens, so a future caller cannot regress to the
+old bug by omission. **The rule was NOT widened.**
+
+**Confirmed policy** (Aug 13, 2026): staff see only their own department's
+published schedule — FOH staff cannot view BOH's week and vice versa. Managers+
+see both, unscoped. Proven with a real `getDocs()` query in
+`tests/rules/scheduling.rules.test.ts` (not just single-document reads): an
+unscoped staff query fails outright, the department+status-scoped query
+succeeds and returns exactly the one allowed shift, and the manager's unscoped
+query returns all three.
 
 ### Phase 3 payroll math — RULED, build on this from the start
 
