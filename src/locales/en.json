@@ -288,9 +288,328 @@
     }
   },
   "roles": {
-    "owner": "Owner"
+    "owner": "Owner",
+    "gm": "General manager",
+    "manager": "Manager",
+    "supervisor": "Supervisor",
+    "staff": "Staff"
   },
   "placeholder": {
     "phaseNote": "This screen arrives in Phase {{phase}}."
+  },
+  "departments": {
+    "FOH": "Front of house",
+    "BOH": "Back of house",
+    "Admin": "Administration"
+  },
+  "employmentTypes": {
+    "hourly-tipped": "Hourly · tipped",
+    "hourly": "Hourly",
+    "salaried-weekly": "Salaried · weekly",
+    "salaried-monthly": "Salaried · monthly",
+    "non-clocking": "Doesn't clock in"
+  },
+  "permissionKeys": {
+    "schedule": {
+      "view": "See the schedule",
+      "create": "Build a schedule",
+      "edit": "Edit shifts",
+      "publish": "Publish the schedule"
+    },
+    "availability": {
+      "viewAll": "See everyone's availability",
+      "approve": "Approve availability"
+    },
+    "trades": {
+      "request": "Offer a shift for trade",
+      "approve": "Approve trades",
+      "manualAssign": "Assign a traded shift by hand"
+    },
+    "timeclock": {
+      "punchSelf": "Clock themselves in and out"
+    },
+    "punches": {
+      "viewAll": "See everyone's punches",
+      "edit": "Edit punches"
+    },
+    "tips": {
+      "reportSelf": "Report their own tips",
+      "viewAll": "See everyone's tips",
+      "edit": "Edit reported tips"
+    },
+    "timeoff": {
+      "request": "Request time off",
+      "approve": "Approve time off"
+    },
+    "tasks": {
+      "complete": "Complete tasks",
+      "manage": "Create and assign tasks"
+    },
+    "payroll": {
+      "view": "See payroll",
+      "export": "Export payroll",
+      "lockPeriod": "Lock and unlock a pay period"
+    },
+    "employees": {
+      "view": "See employee records",
+      "edit": "Edit employee records",
+      "editPay": "See and edit pay",
+      "rankSkills": "Set shift roles and skill levels"
+    },
+    "discipline": {
+      "view": "See disciplinary records",
+      "issue": "Issue a disciplinary action"
+    },
+    "policies": {
+      "manage": "Manage policies and handbooks"
+    },
+    "settings": {
+      "manage": "Change app settings"
+    },
+    "permissions": {
+      "manage": "Manage permissions"
+    },
+    "ai": {
+      "configureKeys": "Manage AI provider keys",
+      "generateSchedule": "Generate a draft schedule with AI"
+    }
+  },
+  "people": {
+    "employeeNumber": "Employee #{{number}}",
+    "levelShort": "L{{level}}",
+    "list": {
+      "title": "People",
+      "subtitle": "Everyone on the roster, active and archived",
+      "addEmployee": "+ Add employee",
+      "importCsv": "Import CSV",
+      "searchPlaceholder": "Search by name, punch ID or email",
+      "viewProfile": "View profile",
+      "archive": "Archive employee",
+      "noRoles": "No roles assigned",
+      "count_one": "{{count}} person",
+      "count_other": "{{count}} people",
+      "errorTitle": "Couldn't load the roster",
+      "errorBody": "Something went wrong reading the employee list. Try again.",
+      "emptyRosterTitle": "Nobody on the roster yet",
+      "emptyRosterBody": "Add your first employee, or import your 7shifts export."
+    },
+    "columns": {
+      "employee": "Employee",
+      "roles": "Shift roles",
+      "employmentType": "Employment type"
+    },
+    "fields": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "legalName": "Legal name",
+      "preferredName": "Preferred name",
+      "employeeNumber": "Punch ID",
+      "employmentType": "Employment type",
+      "phone": "Phone",
+      "birthday": "Date of birth",
+      "address": "Address",
+      "street": "Street address",
+      "city": "City",
+      "state": "State",
+      "zip": "ZIP code",
+      "pronouns": "Pronouns",
+      "contactName": "Name",
+      "hourlyRate": "Hourly rate",
+      "salaryAmount": "Salary",
+      "hireDate": "Start date"
+    },
+    "toast": {
+      "saved": "Changes saved",
+      "saveFailed": "Couldn't save those changes",
+      "archived": "{{name}} was archived",
+      "archiveFailed": "Couldn't archive that employee",
+      "created": "Employee added",
+      "createFailed": "Couldn't add that employee"
+    },
+    "add": {
+      "title": "Add employee",
+      "subtitle": "The rest of the profile can be filled in afterwards.",
+      "create": "Create employee",
+      "saving": "Creating…",
+      "note": "New people start as Pending until they accept their invite.",
+      "errors": {
+        "firstName": "Enter a first name.",
+        "lastName": "Enter a last name.",
+        "email": "Enter a valid email address.",
+        "employeeNumber": "A punch ID is required — it is the key shared with payroll."
+      }
+    },
+    "profile": {
+      "breadcrumb": "Breadcrumb",
+      "identity": "Employee #{{number}} · hired {{date}}",
+      "archiveEmployee": "Archive employee",
+      "saving": "Saving…",
+      "sections": "Profile sections",
+      "notFoundTitle": "That employee doesn't exist",
+      "notFoundBody": "The record may have been archived away, or the link is wrong.",
+      "backToRoster": "Back to the roster"
+    },
+    "tabs": {
+      "details": "Details",
+      "schedule": "Schedule",
+      "punches": "Punches",
+      "documents": "Documents",
+      "disciplinary": "Disciplinary"
+    },
+    "personal": {
+      "title": "Personal information"
+    },
+    "emergency": {
+      "title": "Emergency contact"
+    },
+    "employment": {
+      "title": "Employment",
+      "adminOnly": "Admin only",
+      "rateInvalid": "Enter an amount like 11.00.",
+      "salaryHint": "Paid per pay period, not per hour.",
+      "noRateOnFile": "No rate on file yet.",
+      "clockRequired": "Clock required",
+      "clockRequiredHint": "Must punch in and out for every shift.",
+      "tipsRequired": "Tips required",
+      "tipsRequiredHint": "Must report tips at clock-out.",
+      "archiveNote": "Archived people are kept on file and left out of scheduling."
+    },
+    "pay": {
+      "restrictedTitle": "Pay is hidden",
+      "restricted": {
+        "no-permission": "Seeing pay needs the pay permission, which you don't have.",
+        "below-level": "You can only see pay for people whose access role is below yours. The same rank as you doesn't count.",
+        "unavailable": "We can't show pay for this person. It is either not recorded or not visible to you, and we won't guess which."
+      }
+    },
+    "admin": {
+      "restrictedTitle": "Admin details are hidden",
+      "restricted": {
+        "no-permission": "Seeing admin details needs permission to view employee records.",
+        "below-level": "Admin details only open for people whose access role is below yours.",
+        "unavailable": "We can't show the admin details for this person — either nothing is recorded or they aren't visible to you."
+      }
+    },
+    "overrides": {
+      "title": "Permission overrides",
+      "subtitle": "An override replaces what the {{role}} role allows, for this person only.",
+      "none": "No overrides. This person follows the defaults for their role.",
+      "badge": "Override",
+      "roleDefault": "Role default: {{value}}",
+      "inherit": "Inherit",
+      "allow": "Allow",
+      "deny": "Deny",
+      "groupLabel": "Override for: {{permission}}",
+      "addOverride": "+ Add override",
+      "pickPermission": "Permission to override",
+      "pickPermissionPlaceholder": "Choose a permission…",
+      "readOnlyNote": "Only someone who can manage permissions may change these.",
+      "restrictedTitle": "Overrides are hidden",
+      "restrictedBody": "Changing one person's permissions needs the permission-management permission."
+    },
+    "login": {
+      "title": "Login methods",
+      "linkedAccounts": "Linked sign-in accounts",
+      "linkedCount_one": "{{count}} account linked",
+      "linkedCount_other": "{{count}} accounts linked",
+      "linked": "Linked",
+      "notLinked": "Not linked",
+      "phoneOtp": "Texted code",
+      "google": "Google account",
+      "emailPassword": "Email and password",
+      "adminNote": "The employee record stores the linked account ids, not which provider each one came from, so only the count is shown here."
+    },
+    "notes": {
+      "title": "Scheduling notes",
+      "placeholder": "Shift preferences, training plans, anything to know when scheduling.",
+      "visibility": "Visible to managers only."
+    },
+    "archiveModal": {
+      "title": "Archive this employee?",
+      "body": "They stay on file and drop out of scheduling and trade eligibility. Nothing is deleted, and you can set them back to Active later.",
+      "confirm": "Archive"
+    },
+    "shiftRoles": {
+      "title": "Shift roles & skill levels",
+      "addRole": "+ Add role",
+      "pickRole": "Role to add",
+      "pickRolePlaceholder": "Choose a role…",
+      "none": "No shift roles yet. Add one so this person can be scheduled.",
+      "primary": "Primary role",
+      "makePrimary": "Make primary",
+      "removeRole": "Remove {{role}}",
+      "levelForRole": "Skill level for {{role}}",
+      "legend": "L1 trainee · L2 independent · L3 can train others",
+      "readOnlyNote": "Changing a ranking needs permission to set skill levels."
+    },
+    "my": {
+      "title": "My profile",
+      "identity": "Employee #{{number}} · since {{date}}",
+      "rolesNote": "Roles and levels are set by your manager.",
+      "payTitle": "My pay",
+      "paySubtitle": "What we have on file for you.",
+      "payUnavailableTitle": "We can't show your pay right now",
+      "payUnavailableBody": "Nothing is wrong with your record on your side — ask a manager to check it if this keeps happening.",
+      "payNotSet": "No rate on file yet. Ask your manager.",
+      "perHour": "per hour",
+      "perWeek": "per week",
+      "perMonth": "per month",
+      "languageNote": "Changes the app and your notifications.",
+      "documentsTitle": "My documents",
+      "documentsEmptyTitle": "No documents yet",
+      "standingTitle": "My standing",
+      "standingSubtitle": "Progressive discipline · resets after 12 months without an incident.",
+      "standingEmptyTitle": "Nothing on your record"
+    },
+    "import": {
+      "title": "Import employees",
+      "subtitle": "One-time migration from 7shifts. Nothing is written until you confirm.",
+      "steps": "Import steps",
+      "step": {
+        "upload": "Upload",
+        "preview": "Preview",
+        "done": "Confirm"
+      },
+      "ownerOnly": "Only the owner can run the employee import.",
+      "uploadTitle": "1. Choose your 7shifts export",
+      "fileLabel": "CSV file",
+      "fileHint": "Expected columns: first name, last name, email, phone, punch ID, role, wage, status. Header names are matched loosely.",
+      "fileChosen": "Using {{name}}",
+      "pasteLabel": "Or paste the CSV text",
+      "pastePlaceholder": "First Name,Last Name,Email,Phone,Punch ID,Role,Wage,Status",
+      "dryRunPromise": "This only checks the file. Nobody is created yet.",
+      "runDryRun": "Check the file",
+      "checking": "Checking…",
+      "noFile": "Choose a file or paste some CSV text first.",
+      "readError": "Couldn't read that file.",
+      "previewError": "Couldn't check that file. Make sure it is a CSV export.",
+      "validRows": "Ready to import",
+      "errorRows": "Rows with problems",
+      "duplicateRows": "Duplicate punch IDs",
+      "archivedTitle": "Archived staff are imported on purpose",
+      "archivedBody_one": "{{count}} row will be created as Archived. Archived people are kept for the record and are left out of scheduling and trade eligibility everywhere.",
+      "archivedBody_other": "{{count}} rows will be created as Archived. Archived people are kept for the record and are left out of scheduling and trade eligibility everywhere.",
+      "willCreate": "2. Rows that will be created",
+      "nothingValid": "No row in this file can be imported. Fix the problems below and check it again.",
+      "row": "Row",
+      "field": "Field",
+      "problem": "Problem",
+      "errorsTitle": "Rows that will be skipped",
+      "errorsBody": "These rows are not imported. Row numbers match your spreadsheet — the header is row 1.",
+      "duplicatesTitle": "Duplicate punch IDs",
+      "duplicatesBody": "These punch IDs already exist on the roster or appear earlier in the file. They are skipped, never overwritten.",
+      "commitHint_one": "{{count}} person will be created",
+      "commitHint_other": "{{count}} people will be created",
+      "commit_one": "Import {{count}} person",
+      "commit_other": "Import {{count}} people",
+      "importing": "Importing…",
+      "commitError": "The import didn't finish. Check the roster before trying again.",
+      "toastCommitted_one": "{{count}} employee imported",
+      "toastCommitted_other": "{{count}} employees imported",
+      "doneTitle": "3. Import finished",
+      "doneBody": "Created {{created}}. Skipped {{skipped}}.",
+      "importAnother": "Import another file",
+      "goToRoster": "Go to the roster"
+    }
   }
 }

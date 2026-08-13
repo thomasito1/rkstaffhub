@@ -288,9 +288,328 @@
     }
   },
   "roles": {
-    "owner": "Propietario"
+    "owner": "Propietario",
+    "gm": "Gerente general",
+    "manager": "Gerente",
+    "supervisor": "Encargado",
+    "staff": "Personal"
   },
   "placeholder": {
     "phaseNote": "Esta pantalla llega en la Fase {{phase}}."
+  },
+  "departments": {
+    "FOH": "Salón",
+    "BOH": "Cocina",
+    "Admin": "Administración"
+  },
+  "employmentTypes": {
+    "hourly-tipped": "Por hora · con propinas",
+    "hourly": "Por hora",
+    "salaried-weekly": "Asalariado · semanal",
+    "salaried-monthly": "Asalariado · mensual",
+    "non-clocking": "No marca entrada"
+  },
+  "permissionKeys": {
+    "schedule": {
+      "view": "Ver el horario",
+      "create": "Armar un horario",
+      "edit": "Editar turnos",
+      "publish": "Publicar el horario"
+    },
+    "availability": {
+      "viewAll": "Ver la disponibilidad de todos",
+      "approve": "Aprobar disponibilidad"
+    },
+    "trades": {
+      "request": "Ofrecer un turno para cambio",
+      "approve": "Aprobar cambios de turno",
+      "manualAssign": "Asignar a mano un turno cambiado"
+    },
+    "timeclock": {
+      "punchSelf": "Marcar su propia entrada y salida"
+    },
+    "punches": {
+      "viewAll": "Ver los marcajes de todos",
+      "edit": "Editar marcajes"
+    },
+    "tips": {
+      "reportSelf": "Reportar sus propias propinas",
+      "viewAll": "Ver las propinas de todos",
+      "edit": "Editar propinas reportadas"
+    },
+    "timeoff": {
+      "request": "Pedir tiempo libre",
+      "approve": "Aprobar tiempo libre"
+    },
+    "tasks": {
+      "complete": "Completar tareas",
+      "manage": "Crear y asignar tareas"
+    },
+    "payroll": {
+      "view": "Ver la nómina",
+      "export": "Exportar la nómina",
+      "lockPeriod": "Cerrar y reabrir un período de pago"
+    },
+    "employees": {
+      "view": "Ver los registros de empleados",
+      "edit": "Editar los registros de empleados",
+      "editPay": "Ver y editar la paga",
+      "rankSkills": "Asignar puestos y niveles de habilidad"
+    },
+    "discipline": {
+      "view": "Ver expedientes disciplinarios",
+      "issue": "Emitir una acción disciplinaria"
+    },
+    "policies": {
+      "manage": "Administrar políticas y manuales"
+    },
+    "settings": {
+      "manage": "Cambiar la configuración de la app"
+    },
+    "permissions": {
+      "manage": "Administrar los permisos"
+    },
+    "ai": {
+      "configureKeys": "Administrar las claves de los proveedores de IA",
+      "generateSchedule": "Generar un borrador de horario con IA"
+    }
+  },
+  "people": {
+    "employeeNumber": "Empleado n.º {{number}}",
+    "levelShort": "N{{level}}",
+    "list": {
+      "title": "Personal",
+      "subtitle": "Todo el equipo, activo y archivado",
+      "addEmployee": "+ Agregar empleado",
+      "importCsv": "Importar CSV",
+      "searchPlaceholder": "Buscar por nombre, número de marcaje o correo",
+      "viewProfile": "Ver perfil",
+      "archive": "Archivar empleado",
+      "noRoles": "Sin puestos asignados",
+      "count_one": "{{count}} persona",
+      "count_other": "{{count}} personas",
+      "errorTitle": "No se pudo cargar la lista",
+      "errorBody": "Algo salió mal al leer la lista de empleados. Inténtalo de nuevo.",
+      "emptyRosterTitle": "Todavía no hay nadie en la lista",
+      "emptyRosterBody": "Agrega tu primer empleado o importa la exportación de 7shifts."
+    },
+    "columns": {
+      "employee": "Empleado",
+      "roles": "Puestos de turno",
+      "employmentType": "Tipo de empleo"
+    },
+    "fields": {
+      "firstName": "Nombre",
+      "lastName": "Apellido",
+      "legalName": "Nombre legal",
+      "preferredName": "Nombre preferido",
+      "employeeNumber": "Número de marcaje",
+      "employmentType": "Tipo de empleo",
+      "phone": "Teléfono",
+      "birthday": "Fecha de nacimiento",
+      "address": "Dirección",
+      "street": "Calle y número",
+      "city": "Ciudad",
+      "state": "Estado",
+      "zip": "Código postal",
+      "pronouns": "Pronombres",
+      "contactName": "Nombre",
+      "hourlyRate": "Tarifa por hora",
+      "salaryAmount": "Sueldo",
+      "hireDate": "Fecha de ingreso"
+    },
+    "toast": {
+      "saved": "Cambios guardados",
+      "saveFailed": "No se pudieron guardar los cambios",
+      "archived": "Se archivó a {{name}}",
+      "archiveFailed": "No se pudo archivar a esa persona",
+      "created": "Empleado agregado",
+      "createFailed": "No se pudo agregar a esa persona"
+    },
+    "add": {
+      "title": "Agregar empleado",
+      "subtitle": "El resto del perfil se puede completar después.",
+      "create": "Crear empleado",
+      "saving": "Creando…",
+      "note": "Las personas nuevas quedan como Pendientes hasta que acepten su invitación.",
+      "errors": {
+        "firstName": "Escribe un nombre.",
+        "lastName": "Escribe un apellido.",
+        "email": "Escribe un correo electrónico válido.",
+        "employeeNumber": "El número de marcaje es obligatorio: es la clave que se comparte con la nómina."
+      }
+    },
+    "profile": {
+      "breadcrumb": "Ruta de navegación",
+      "identity": "Empleado n.º {{number}} · contratado el {{date}}",
+      "archiveEmployee": "Archivar empleado",
+      "saving": "Guardando…",
+      "sections": "Secciones del perfil",
+      "notFoundTitle": "Ese empleado no existe",
+      "notFoundBody": "Quizá el registro se archivó o el enlace está mal.",
+      "backToRoster": "Volver a la lista"
+    },
+    "tabs": {
+      "details": "Detalles",
+      "schedule": "Horario",
+      "punches": "Marcajes",
+      "documents": "Documentos",
+      "disciplinary": "Disciplina"
+    },
+    "personal": {
+      "title": "Información personal"
+    },
+    "emergency": {
+      "title": "Contacto de emergencia"
+    },
+    "employment": {
+      "title": "Empleo",
+      "adminOnly": "Solo administración",
+      "rateInvalid": "Escribe un monto como 11.00.",
+      "salaryHint": "Se paga por período de pago, no por hora.",
+      "noRateOnFile": "Todavía no hay una tarifa registrada.",
+      "clockRequired": "Debe marcar",
+      "clockRequiredHint": "Tiene que marcar entrada y salida en cada turno.",
+      "tipsRequired": "Debe reportar propinas",
+      "tipsRequiredHint": "Tiene que reportar sus propinas al marcar la salida.",
+      "archiveNote": "Las personas archivadas se conservan en el expediente y quedan fuera del horario."
+    },
+    "pay": {
+      "restrictedTitle": "La paga está oculta",
+      "restricted": {
+        "no-permission": "Ver la paga requiere el permiso correspondiente, y no lo tienes.",
+        "below-level": "Solo puedes ver la paga de personas cuyo nivel de acceso esté por debajo del tuyo. Tu mismo nivel no cuenta.",
+        "unavailable": "No podemos mostrar la paga de esta persona. O no está registrada o no es visible para ti, y no vamos a adivinar cuál de las dos."
+      }
+    },
+    "admin": {
+      "restrictedTitle": "Los datos administrativos están ocultos",
+      "restricted": {
+        "no-permission": "Ver los datos administrativos requiere permiso para consultar los registros de empleados.",
+        "below-level": "Los datos administrativos solo se abren para personas cuyo nivel de acceso esté por debajo del tuyo.",
+        "unavailable": "No podemos mostrar los datos administrativos de esta persona: o no hay nada registrado o no son visibles para ti."
+      }
+    },
+    "overrides": {
+      "title": "Excepciones de permisos",
+      "subtitle": "Una excepción reemplaza lo que permite el nivel {{role}}, solo para esta persona.",
+      "none": "Sin excepciones. Esta persona sigue los valores predeterminados de su nivel.",
+      "badge": "Excepción",
+      "roleDefault": "Predeterminado del nivel: {{value}}",
+      "inherit": "Heredar",
+      "allow": "Permitir",
+      "deny": "Denegar",
+      "groupLabel": "Excepción para: {{permission}}",
+      "addOverride": "+ Agregar excepción",
+      "pickPermission": "Permiso a modificar",
+      "pickPermissionPlaceholder": "Elige un permiso…",
+      "readOnlyNote": "Solo quien administra los permisos puede cambiar esto.",
+      "restrictedTitle": "Las excepciones están ocultas",
+      "restrictedBody": "Cambiar los permisos de una persona requiere el permiso de administración de permisos."
+    },
+    "login": {
+      "title": "Métodos de acceso",
+      "linkedAccounts": "Cuentas de acceso vinculadas",
+      "linkedCount_one": "{{count}} cuenta vinculada",
+      "linkedCount_other": "{{count}} cuentas vinculadas",
+      "linked": "Vinculada",
+      "notLinked": "Sin vincular",
+      "phoneOtp": "Código por mensaje",
+      "google": "Cuenta de Google",
+      "emailPassword": "Correo y contraseña",
+      "adminNote": "El registro del empleado guarda los identificadores de las cuentas vinculadas, no de qué proveedor viene cada una, así que aquí solo se muestra la cantidad."
+    },
+    "notes": {
+      "title": "Notas de programación",
+      "placeholder": "Preferencias de turno, planes de capacitación, cualquier cosa a tener en cuenta al armar el horario.",
+      "visibility": "Visible solo para los gerentes."
+    },
+    "archiveModal": {
+      "title": "¿Archivar a esta persona?",
+      "body": "Se queda en el expediente y sale del horario y de los cambios de turno. No se borra nada y puedes volver a ponerla en Activo más adelante.",
+      "confirm": "Archivar"
+    },
+    "shiftRoles": {
+      "title": "Puestos y niveles de habilidad",
+      "addRole": "+ Agregar puesto",
+      "pickRole": "Puesto a agregar",
+      "pickRolePlaceholder": "Elige un puesto…",
+      "none": "Todavía no hay puestos. Agrega uno para poder programar a esta persona.",
+      "primary": "Puesto principal",
+      "makePrimary": "Hacer principal",
+      "removeRole": "Quitar {{role}}",
+      "levelForRole": "Nivel de habilidad para {{role}}",
+      "legend": "N1 en formación · N2 autónomo · N3 puede capacitar a otros",
+      "readOnlyNote": "Cambiar un nivel requiere permiso para asignar niveles de habilidad."
+    },
+    "my": {
+      "title": "Mi perfil",
+      "identity": "Empleado n.º {{number}} · desde {{date}}",
+      "rolesNote": "Tus puestos y niveles los asigna tu gerente.",
+      "payTitle": "Mi paga",
+      "paySubtitle": "Lo que tenemos registrado para ti.",
+      "payUnavailableTitle": "Ahora no podemos mostrar tu paga",
+      "payUnavailableBody": "No hay nada mal de tu lado: pídele a un gerente que revise tu registro si esto sigue pasando.",
+      "payNotSet": "Todavía no hay una tarifa registrada. Habla con tu gerente.",
+      "perHour": "por hora",
+      "perWeek": "por semana",
+      "perMonth": "por mes",
+      "languageNote": "Cambia la app y tus notificaciones.",
+      "documentsTitle": "Mis documentos",
+      "documentsEmptyTitle": "Todavía no hay documentos",
+      "standingTitle": "Mi situación",
+      "standingSubtitle": "Disciplina progresiva · se reinicia tras 12 meses sin incidentes.",
+      "standingEmptyTitle": "No hay nada en tu expediente"
+    },
+    "import": {
+      "title": "Importar empleados",
+      "subtitle": "Migración única desde 7shifts. No se guarda nada hasta que confirmes.",
+      "steps": "Pasos de la importación",
+      "step": {
+        "upload": "Cargar",
+        "preview": "Revisar",
+        "done": "Confirmar"
+      },
+      "ownerOnly": "Solo el propietario puede ejecutar la importación de empleados.",
+      "uploadTitle": "1. Elige tu exportación de 7shifts",
+      "fileLabel": "Archivo CSV",
+      "fileHint": "Columnas esperadas: nombre, apellido, correo, teléfono, número de marcaje, puesto, sueldo y estado. Los encabezados se reconocen de forma flexible.",
+      "fileChosen": "Usando {{name}}",
+      "pasteLabel": "O pega el texto del CSV",
+      "pastePlaceholder": "Nombre,Apellido,Correo,Teléfono,Número de marcaje,Puesto,Sueldo,Estado",
+      "dryRunPromise": "Esto solo revisa el archivo. Todavía no se crea a nadie.",
+      "runDryRun": "Revisar el archivo",
+      "checking": "Revisando…",
+      "noFile": "Primero elige un archivo o pega el texto del CSV.",
+      "readError": "No se pudo leer ese archivo.",
+      "previewError": "No se pudo revisar ese archivo. Asegúrate de que sea una exportación en CSV.",
+      "validRows": "Listas para importar",
+      "errorRows": "Filas con problemas",
+      "duplicateRows": "Números de marcaje repetidos",
+      "archivedTitle": "El personal archivado se importa a propósito",
+      "archivedBody_one": "{{count}} fila se creará como Archivada. Las personas archivadas se conservan en el expediente y quedan fuera del horario y de los cambios de turno en todas partes.",
+      "archivedBody_other": "{{count}} filas se crearán como Archivadas. Las personas archivadas se conservan en el expediente y quedan fuera del horario y de los cambios de turno en todas partes.",
+      "willCreate": "2. Filas que se van a crear",
+      "nothingValid": "Ninguna fila de este archivo se puede importar. Corrige los problemas de abajo y vuelve a revisarlo.",
+      "row": "Fila",
+      "field": "Campo",
+      "problem": "Problema",
+      "errorsTitle": "Filas que se van a omitir",
+      "errorsBody": "Estas filas no se importan. Los números de fila coinciden con tu hoja de cálculo: el encabezado es la fila 1.",
+      "duplicatesTitle": "Números de marcaje repetidos",
+      "duplicatesBody": "Estos números de marcaje ya existen en la lista o aparecen antes en el archivo. Se omiten, nunca se sobrescriben.",
+      "commitHint_one": "Se creará {{count}} persona",
+      "commitHint_other": "Se crearán {{count}} personas",
+      "commit_one": "Importar {{count}} persona",
+      "commit_other": "Importar {{count}} personas",
+      "importing": "Importando…",
+      "commitError": "La importación no terminó. Revisa la lista antes de intentarlo otra vez.",
+      "toastCommitted_one": "{{count}} empleado importado",
+      "toastCommitted_other": "{{count}} empleados importados",
+      "doneTitle": "3. Importación terminada",
+      "doneBody": "Creados: {{created}}. Omitidos: {{skipped}}.",
+      "importAnother": "Importar otro archivo",
+      "goToRoster": "Ir a la lista"
+    }
   }
 }

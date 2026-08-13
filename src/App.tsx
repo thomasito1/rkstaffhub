@@ -1,12 +1,16 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 
 import { AppShell } from '@/components/shell/AppShell'
-import { RequireAuth } from '@/components/guards/RouteGuards'
+import { RequireAuth, RequirePermission } from '@/components/guards/RouteGuards'
 import { ComponentGallery } from '@/pages/dev/ComponentGallery'
 import { PlaceholderPage } from '@/pages/PlaceholderPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { InviteAcceptPage } from '@/pages/auth/InviteAcceptPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
+import { EmployeeListPage } from '@/pages/people/EmployeeListPage'
+import { EmployeeProfilePage } from '@/pages/people/EmployeeProfilePage'
+import { MyProfilePage } from '@/pages/people/MyProfilePage'
+import { ImportWizardPage } from '@/pages/people/ImportWizardPage'
 
 /**
  * Phase 0 routing.
@@ -60,8 +64,33 @@ export default function App() {
         />
         <Route path="more" element={<PlaceholderPage titleKey="nav.more" phase={0} />} />
 
-        {/* People routes are added once the employee screens land. */}
-        <Route path="people" element={<PlaceholderPage titleKey="nav.people" phase={0} />} />
+        {/* People — Phase 0. The roster and any other person's profile need
+            employees.view; your own profile never does. */}
+        <Route
+          path="people"
+          element={
+            <RequirePermission permission="employees.view">
+              <EmployeeListPage />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="people/import"
+          element={
+            <RequirePermission permission="employees.edit">
+              <ImportWizardPage />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="people/:employeeId"
+          element={
+            <RequirePermission permission="employees.view">
+              <EmployeeProfilePage />
+            </RequirePermission>
+          }
+        />
+        <Route path="profile" element={<MyProfilePage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />
