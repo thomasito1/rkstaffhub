@@ -229,9 +229,11 @@ describe('auditLog is append-only from the server', () => {
 
 describe('later-phase collections are denied by default', () => {
   it('denies reads of collections no phase has enabled yet', async () => {
+    // schedules/availability/shiftTemplates/timeOff moved OUT of this list when
+    // Phase 1 scheduling rules landed — see scheduling.rules.test.ts.
     const owner = ctx('uid-emp-owner', 'emp-owner', 'owner')
     await assertFails(getDoc(doc(owner, 'punches/punch-1')))
-    await assertFails(getDoc(doc(owner, 'schedules/2026-08-10')))
+    await assertFails(getDoc(doc(owner, 'trades/trade-1')))
     await assertFails(getDoc(doc(owner, 'tipReports/tip-1')))
   })
 })

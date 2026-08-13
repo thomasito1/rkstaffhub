@@ -205,14 +205,34 @@ New during Phase 0. Ordered by when they block work:
 
 ## Known issues / cleanup backlog
 
-- **QUARANTINED: one dirty denial** in `employees/{id}/private/admin` allow-write.
-  It denies by throwing rather than returning false. The rules are correct —
-  33/33 rules tests pass, including equal-rank denial. **Revisit before Phase 2
-  expands the rules.** Surfaced by `npm run test:rules:clean`, which fails by
-  design; full ruled-out list is in that script's header so nobody retraces it.
-  Root cause of the sibling site, now fixed: rules do not memoize function
-  results, so repeated `roleDefaults()`/`myOverrides()` calls in one condition
-  multiply document accesses until evaluation blows up.
+- **RESOLVED — the "dirty denials" were never a defect.** Firestore evaluates a
+  write rule **twice**: once before it has fetched anything (every `get()` in the
+  expression reports "evaluation error"), then again after fetching, cleanly.
+  Independently verified with probe rules: a write rule whose `get()` sits behind
+  a **false** guard still logs the error, while the identical `get()` on a *read*
+  rule, and a write rule with no `get()`, are both silent. So the artifact is
+  unavoidable for any write rule that consults a permission document, and no
+  amount of guarding suppresses it — the earlier bisection could not have
+  succeeded. `scripts/check-rules-clean.mjs` now parses the decision trace and
+  fails only when a rule errors and **never reaches a verdict**; genuine dirty
+  denials still break the build. Reports **0 dirty denials, 12 first-pass
+  artifacts**. The quarantine comment in `firestore.rules` is now historical.
+
+### Not enforced in rules — deliberate, needs the Phase 2 callable
+
+- **The Thursday 23:59 ET availability deadline.** Rules have no tz database, so
+  "Thursday 23:59 ET" is 03:59Z or 04:59Z depending on the week. Deriving it from
+  the `weekId` string needs `int()` over client-controlled substrings, which
+  throws on a malformed id; comparing against a deadline field on the document
+  would mean the submitting client picks its own lock. Rules enforce the
+  expressible half (own availability only, never review your own); the deadline
+  moves to the callable.
+- **Staff shift reads are department-scoped, which breaks `listShifts()` for
+  staff.** Firestore fails a whole query if any matched document is denied, and
+  `listShifts()` filters department client-side — so a staff member's unfiltered
+  call on a mixed FOH/BOH week is denied outright and the db layer maps it to
+  `[]`. Fix is pushing `department` into the query (Phase 2 change to
+  `src/lib/db/schedules.ts`). The rule was NOT widened to paper over it.
 
 ### Phase 3 payroll math — RULED, build on this from the start
 

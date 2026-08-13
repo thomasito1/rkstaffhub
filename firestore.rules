@@ -24,11 +24,32 @@ rules_version = '2';
 // an expression that throws on the deny path can equally throw on an ALLOW path
 // once a document shape changes, turning a legitimate grant into a mystery 403.
 //
-// So: every get() is guarded by exists(), and every field read uses
-// .get(field, default) rather than dot access. Defaults FAIL CLOSED — a missing
-// employee doc resolves to accessRole 'owner' (the highest rank), so a missing
-// parent can never widen access. Never introduce an unguarded get() or a bare
-// field access below.
+// So: every get() is guarded by exists(), and every field read uses `in` plus
+// indexing rather than a chained .get(field, default) or bare dot access.
+// Defaults FAIL CLOSED — a missing employee doc resolves to accessRole 'owner'
+// (the highest rank), so a missing parent can never widen access. Never
+// introduce an unguarded get() or a bare field access below.
+//
+// ── "evaluation error" ON A WRITE RULE IS NOT A DEFECT (measured Aug 2026) ───
+// A WRITE rule is evaluated TWICE. The first pass runs before the emulator has
+// fetched anything — its purpose is to discover which documents the rule wants
+// — so every get() in the expression is unresolved and reports "evaluation
+// error at L…". The emulator then fetches and re-evaluates, and that second
+// pass is the verdict, which is why such a trace always ends with a clean
+// `false for '<op>' @ L<same line>`. READ rules have no speculative pass and
+// never show it.
+//
+// This is unavoidable for any write rule that consults a permission document —
+// i.e. every write rule here — and guarding does NOT suppress it: a get()
+// throws in pass one even when its exists() guard is false, even behind a
+// ternary, and even in the branch that is never taken. Probe results and the
+// full method are recorded in scripts/check-rules-clean.mjs, which now fails
+// only on an evaluation error that never reaches a verdict. Do not rewrite a
+// rule to chase one of these; do not re-run the bisection.
+//
+// The hygiene above still stands on its own merits: it is what keeps a rule
+// CORRECT when a document is missing or a field absent, which is a different
+// problem and a real one.
 // ─────────────────────────────────────────────────────────────────────────────
 
 service cloud.firestore {
@@ -175,6 +196,77 @@ service cloud.firestore {
       );
     }
 
+    // ── department scoping (spec §5, §6, §17) ────────────────────────────────
+    // A manager approves for THEIR department; owner and GM are house-wide.
+    //
+    // `department` is not a custom claim, so it costs one employee read per
+    // side. Both are resolved ONCE per condition and passed down as parameters,
+    // for the same non-memoization reason documented above.
+    //
+    // The two sides fail closed to DIFFERENT sentinels on purpose. A single
+    // shared sentinel would make two departmentless documents compare EQUAL,
+    // which would turn a pair of broken records into a grant.
+
+    function actorDeptOf(data) {
+      return 'department' in data ? data.department : '__no_actor_dept__';
+    }
+
+    function myDepartment() {
+      return (hasIdentity() && exists(employeePath(myEmployeeId())))
+        ? actorDeptOf(get(employeePath(myEmployeeId())).data)
+        : '__no_actor_dept__';
+    }
+
+    function targetDeptOf(data) {
+      return 'department' in data ? data.department : '__no_target_dept__';
+    }
+
+    function departmentOfTarget(employeeId) {
+      return exists(employeePath(employeeId))
+        ? targetDeptOf(get(employeePath(employeeId)).data)
+        : '__no_target_dept__';
+    }
+
+    // Owner and GM run the whole house and are not department-scoped (spec §4).
+    function ownerOrGm() {
+      return myRole() == 'owner' || myRole() == 'gm';
+    }
+
+    // ONE call to myDepartment() and ONE to departmentOfTarget() per condition.
+    function scopedTo(employeeId) {
+      return hasIdentity()
+        && (ownerOrGm() || myDepartment() == departmentOfTarget(employeeId));
+    }
+
+    // Two schedule permissions read from ONE already-resolved pair of maps —
+    // calling hasPerm() twice would double every document access.
+    function canEditSchedules(overrides, defaults, role) {
+      return effectivePerm('schedule.create', overrides, defaults, role)
+          || effectivePerm('schedule.edit', overrides, defaults, role);
+    }
+
+    // ── schedule publication state ───────────────────────────────────────────
+    // A week is live only once it has been published or republished. Anything
+    // else — including a missing or malformed status — is a DRAFT, and a draft
+    // is never visible to staff.
+
+    function isLiveStatus(status) {
+      return status == 'published' || status == 'republished';
+    }
+
+    function schedulePath(weekId) {
+      return /databases/$(database)/documents/schedules/$(safeId(weekId));
+    }
+
+    function liveStatusOf(data) {
+      return 'status' in data && isLiveStatus(data.status);
+    }
+
+    // Missing week document ⇒ NOT published. Fails closed.
+    function weekIsPublished(weekId) {
+      return exists(schedulePath(weekId)) && liveStatusOf(get(schedulePath(weekId)).data);
+    }
+
     // ── employees ────────────────────────────────────────────────────────────
     // Non-sensitive profile. Any signed-in employee may read the roster — names,
     // roles and departments are needed to render a schedule. Sensitive data
@@ -314,6 +406,332 @@ service cloud.firestore {
       allow write: if false; // Cloud Function only.
     }
 
+    // ── availability ─────────────────────────────────────────────────────────
+    // `availability/{weekId}_{employeeId}`, plus the rolling baseline at
+    // `availability/recurring_{employeeId}` (the sentinel week key — see the
+    // header of src/lib/db/availability.ts). One path match covers both.
+    //
+    // §5: staff submit their OWN availability; managers holding
+    // `availability.approve` submit or review on someone's behalf, scoped to
+    // their department (owner/GM run the whole house).
+    //
+    // ── THE THURSDAY 23:59 ET DEADLINE IS **NOT** ENFORCED HERE ──────────────
+    // §5 locks a week's submissions at Thursday 23:59 America/New_York. Rules
+    // cannot express that:
+    //   • There is no timezone database in the rules language. "Thursday 23:59
+    //     ET" is 03:59 UTC Friday in EDT and 04:59 UTC Friday in EST, and which
+    //     one applies depends on the week. Hard-coding either is wrong for half
+    //     the year, and src/lib/deadlines.ts exists precisely because that
+    //     wrongness is not acceptable.
+    //   • Deriving the deadline from the weekId string would need int() over
+    //     substrings of client-controlled data — which THROWS on a malformed id
+    //     and would hand us exactly the dirty denial this file is disciplined
+    //     against.
+    //   • Comparing against a deadline timestamp ON THE DOCUMENT would work,
+    //     but no such field exists: submitAvailability() writes none, and a
+    //     field the submitting client supplies is a lock the client picks.
+    // So the deadline is enforced in two other places and honestly nowhere
+    // else: submitAvailability() raises AvailabilityLockedError client-side
+    // (UX), and the Phase 2 `submitAvailability` callable will enforce it
+    // server-side with real tz math before writing. What the rules below DO
+    // enforce is the half that is expressible and that actually protects the
+    // data: you may only write YOUR OWN availability, and you may never review
+    // your own submission.
+
+    match /availability/{docId} {
+
+      function incomingEmployeeId() {
+        return (request.resource != null && 'employeeId' in request.resource.data)
+          ? request.resource.data.employeeId
+          : '__nobody__';
+      }
+
+      function existingEmployeeId() {
+        return (resource != null && 'employeeId' in resource.data)
+          ? resource.data.employeeId
+          : '__nobody__';
+      }
+
+      // On create there is no `resource`, so the payload names the subject; on
+      // update and delete the STORED value is authoritative, which is what
+      // stops a payload from re-pointing someone else's document at you.
+      function subjectEmployeeId() {
+        return resource != null ? existingEmployeeId() : incomingEmployeeId();
+      }
+
+      // Document id and payload must agree — `{weekId}_{employeeId}`, spec §3.
+      // Holds for the baseline too, whose weekId field is the sentinel
+      // 'recurring'. Keeps a staff member from parking their own submission
+      // under a colleague's key.
+      function idMatchesPayload() {
+        return request.resource != null
+          && 'weekId' in request.resource.data
+          && 'employeeId' in request.resource.data
+          && docId == request.resource.data.weekId + '_' + request.resource.data.employeeId;
+      }
+
+      // A submission arrives unreviewed. Staff may write this shape and no
+      // other, so "approve my own availability" is not a reachable state.
+      function isUnreviewed() {
+        return request.resource != null
+          && 'status' in request.resource.data
+          && request.resource.data.status == 'pending'
+          && (!('reviewedBy' in request.resource.data)
+              || request.resource.data.reviewedBy == null)
+          && (!('reviewedAt' in request.resource.data)
+              || request.resource.data.reviewedAt == null);
+      }
+
+      function selfSubmission() {
+        return isSelf(incomingEmployeeId())
+          && isSelf(subjectEmployeeId())
+          && idMatchesPayload()
+          && isUnreviewed();
+      }
+
+      // Withdrawing a temporary override (clearTemporaryAvailability) is a
+      // delete, so `request.resource` is null and none of the payload guards
+      // above can run — ownership of the STORED document is the whole test.
+      function selfWithdrawal() {
+        return request.resource == null && isSelf(existingEmployeeId());
+      }
+
+      // ONE resolution of each map, passed down. See the note above hasPerm().
+      function mayReview(overrides, defaults, role) {
+        return effectivePerm('availability.approve', overrides, defaults, role)
+          && scopedTo(subjectEmployeeId());
+      }
+
+      allow read: if hasIdentity()
+                  && (isSelf(existingEmployeeId()) || hasPerm('availability.viewAll'));
+
+      allow write: if hasIdentity()
+                   && (selfSubmission()
+                       || selfWithdrawal()
+                       || mayReview(myOverrides(), roleDefaults(), myRole()));
+    }
+
+    // ── schedules/{weekId} ───────────────────────────────────────────────────
+    // The week document is the unit of publication (§6).
+    //
+    // A DRAFT MUST NEVER REACH STAFF. Staff hold `schedule.view`, so that key
+    // alone cannot be the gate — the gate is the week's own status. Anything
+    // that is not explicitly 'published' or 'republished' is a draft, including
+    // a document with a missing or unrecognised status.
+
+    match /schedules/{weekId} {
+
+      function incomingStatus() {
+        return (request.resource != null && 'status' in request.resource.data)
+          ? request.resource.data.status
+          : 'draft';
+      }
+
+      function storedStatus() {
+        return (resource != null && 'status' in resource.data)
+          ? resource.data.status
+          : 'draft';
+      }
+
+      function isLiveNow() {
+        return resource != null && liveStatusOf(resource.data);
+      }
+
+      // Crossing the publish line in EITHER direction is a publish action:
+      // pulling a live week back to draft un-tells everyone they are working.
+      function crossesPublishLine() {
+        return incomingStatus() != storedStatus()
+          && (isLiveStatus(incomingStatus()) || isLiveStatus(storedStatus()));
+      }
+
+      function mayRead(overrides, defaults, role) {
+        return effectivePerm('schedule.view', overrides, defaults, role)
+          && (isLiveNow() || canEditSchedules(overrides, defaults, role));
+      }
+
+      function mayWrite(overrides, defaults, role) {
+        return canEditSchedules(overrides, defaults, role)
+          && (!crossesPublishLine()
+              || effectivePerm('schedule.publish', overrides, defaults, role));
+      }
+
+      allow read: if hasIdentity() && mayRead(myOverrides(), roleDefaults(), myRole());
+      allow create, update: if hasIdentity()
+                            && mayWrite(myOverrides(), roleDefaults(), myRole());
+      // Weeks are history. Cancel the shifts, never drop the week.
+      allow delete: if false;
+
+      // ── schedules/{weekId}/shifts/{shiftId} ────────────────────────────────
+      // Editors see everything. Staff see a shift only when ALL of:
+      //   • the parent week is published, and
+      //   • the shift itself is published (a shift added after a publish sits
+      //     at 'draft' until someone republishes — that is what makes the §6
+      //     republish step real rather than decorative), and
+      //   • it is their own shift or their own department (§17).
+      //
+      // KNOWN CONSEQUENCE — read this before "fixing" a broken staff query.
+      // Firestore evaluates a rule against every document a query matches and
+      // fails the WHOLE query if any one of them is denied; it does not filter.
+      // listShifts() narrows department client-side, so a staff member calling
+      // it unfiltered for a mixed FOH/BOH week is denied outright (the db layer
+      // maps that to []). The fix is to push `department` into the query, which
+      // is a Phase 2 change to src/lib/db/schedules.ts. Widening this rule to
+      // make the convenience query work would trade the §17 boundary for a
+      // convenience, so it stays.
+
+      match /shifts/{shiftId} {
+
+        function shiftIsLive() {
+          return resource != null
+            && 'status' in resource.data
+            && resource.data.status == 'published';
+        }
+
+        function isMyShift() {
+          return resource != null
+            && 'employeeId' in resource.data
+            && resource.data.employeeId == myEmployeeId();
+        }
+
+        function isMyDepartment(myDept) {
+          return resource != null
+            && 'department' in resource.data
+            && resource.data.department == myDept;
+        }
+
+        function incomingShiftStatus() {
+          return (request.resource != null && 'status' in request.resource.data)
+            ? request.resource.data.status
+            : 'draft';
+        }
+
+        function storedShiftStatus() {
+          return (resource != null && 'status' in resource.data)
+            ? resource.data.status
+            : 'draft';
+        }
+
+        // Flipping a shift live is publishing, whatever else the write does.
+        function goesLive() {
+          return incomingShiftStatus() == 'published'
+            && storedShiftStatus() != 'published';
+        }
+
+        function mayReadShift(overrides, defaults, role) {
+          return canEditSchedules(overrides, defaults, role)
+            || (effectivePerm('schedule.view', overrides, defaults, role)
+                && shiftIsLive()
+                && weekIsPublished(weekId)
+                && (isMyShift() || isMyDepartment(myDepartment())));
+        }
+
+        function mayWriteShift(overrides, defaults, role) {
+          return canEditSchedules(overrides, defaults, role)
+            && (!goesLive()
+                || effectivePerm('schedule.publish', overrides, defaults, role));
+        }
+
+        allow read: if hasIdentity()
+                    && mayReadShift(myOverrides(), roleDefaults(), myRole());
+        allow write: if hasIdentity()
+                     && mayWriteShift(myOverrides(), roleDefaults(), myRole());
+      }
+    }
+
+    // ── shiftTemplates ───────────────────────────────────────────────────────
+    // Day-part headcount + skill requirements (§6). Read by everyone who can
+    // look at a schedule — the builder renders met/unmet badges from these and
+    // they contain no personal data. `schedule.edit` writes.
+
+    match /shiftTemplates/{templateId} {
+      allow read: if signedIn();
+      allow write: if hasPerm('schedule.edit');
+    }
+
+    // ── timeOff ──────────────────────────────────────────────────────────────
+    // Staff raise their own request and read it back; approving takes
+    // `timeoff.approve` AND the requester's department (owner/GM excepted).
+    //
+    // Reads are NOT department-scoped, deliberately. Approvers work from a
+    // queue — one query across every pending request — and a per-document
+    // department test would fail that whole query rather than filter it (same
+    // Firestore query semantics as the shifts note above). A time-off request
+    // carries a date range and a reason, not compensation or discipline, and
+    // §17 does not list it as sensitive; the boundary worth defending is who
+    // may APPROVE, which is scoped below.
+
+    match /timeOff/{requestId} {
+
+      function incomingEmployeeId() {
+        return (request.resource != null && 'employeeId' in request.resource.data)
+          ? request.resource.data.employeeId
+          : '__nobody__';
+      }
+
+      function existingEmployeeId() {
+        return (resource != null && 'employeeId' in resource.data)
+          ? resource.data.employeeId
+          : '__nobody__';
+      }
+
+      function subjectEmployeeId() {
+        return resource != null ? existingEmployeeId() : incomingEmployeeId();
+      }
+
+      // The shape a requester may write: pending, unreviewed, no verdict.
+      // This is what stops "approve my own time off" — a staff member can only
+      // ever move their request between pending states.
+      function isUnreviewed() {
+        return request.resource != null
+          && 'status' in request.resource.data
+          && request.resource.data.status == 'pending'
+          && (!('reviewedBy' in request.resource.data)
+              || request.resource.data.reviewedBy == null)
+          && (!('reviewedAt' in request.resource.data)
+              || request.resource.data.reviewedAt == null);
+      }
+
+      // An already-reviewed request is closed to its owner: reopening an
+      // approved absence by editing it would silently un-approve the coverage
+      // a manager already planned around.
+      function stillOpen() {
+        return resource == null
+          || (('status' in resource.data) && resource.data.status == 'pending');
+      }
+
+      function ownRequest() {
+        return isSelf(subjectEmployeeId())
+          && isSelf(incomingEmployeeId())
+          && isUnreviewed()
+          && stillOpen();
+      }
+
+      function mayApprove(overrides, defaults, role) {
+        return effectivePerm('timeoff.approve', overrides, defaults, role)
+          && scopedTo(subjectEmployeeId());
+      }
+
+      function mayRequest(overrides, defaults, role) {
+        return effectivePerm('timeoff.request', overrides, defaults, role)
+          && ownRequest();
+      }
+
+      allow read: if hasIdentity()
+                  && (isSelf(existingEmployeeId()) || hasPerm('timeoff.approve'));
+
+      allow create, update: if hasIdentity()
+                            && writeTimeOff(myOverrides(), roleDefaults(), myRole());
+
+      // Requests are the paper trail for an absence — withdrawn is a status,
+      // not an erasure.
+      allow delete: if false;
+
+      function writeTimeOff(overrides, defaults, role) {
+        return mayRequest(overrides, defaults, role)
+          || mayApprove(overrides, defaults, role);
+      }
+    }
+
     // ── invites ──────────────────────────────────────────────────────────────
     // The invitee is SIGNED OUT when they open an invite link, so reading an
     // invite by token is served by the getInvite Cloud Function, not by a rule.
@@ -334,9 +752,10 @@ service cloud.firestore {
     }
 
     // ── default deny ─────────────────────────────────────────────────────────
-    // Collections for later phases (schedules, availability, punches, trades,
-    // tipReports, tasks, policies, signatures, disciplinaryActions, payPeriods)
-    // are intentionally absent and therefore denied. Each phase adds its own
+    // Collections for later phases (punches, trades, tipReports, tasks,
+    // taskInstances, policies, signatures, disciplinaryActions,
+    // disciplinaryLadder, payPeriods) are intentionally absent and therefore
+    // denied. Each phase adds its own
     // match block together with its rules tests. Do not add a permissive
     // catch-all here.
 

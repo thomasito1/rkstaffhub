@@ -43,9 +43,13 @@ import { getAuth, type Auth } from 'firebase-admin/auth'
 import { FieldValue, Timestamp, getFirestore, type Firestore } from 'firebase-admin/firestore'
 
 import { ROLE_DEFAULTS } from '@/lib/permissions/defaults'
+import { WEEKDAY_KEYS } from '@/types/models'
 import type {
   AccessRole,
   AppSettings,
+  AvailabilityDay,
+  AvailabilityStatus,
+  AvailabilityType,
   Department,
   EmployeeShiftRole,
   EmployeeStatus,
@@ -53,6 +57,11 @@ import type {
   Language,
   PermissionKey,
   ShiftRole,
+  ShiftTemplateRequirement,
+  SkillLevel,
+  TimeOffCategory,
+  TimeOffStatus,
+  WeekdayKey,
 } from '@/types/models'
 
 // ── safety rails ─────────────────────────────────────────────────────────────
@@ -895,6 +904,314 @@ const INVITE_CREATED_BY_NUMBER = '1051'
 const INVITE_TOKEN = 'dev-invite-9f4c2a71b3e84d5fa0c6e8d219b7c534'
 const INVITE_TTL_DAYS = 14
 
+// ── the scheduling week: Mon Aug 10 – Sun Aug 16 2026 ────────────────────────
+//
+// Seeded so the running app can be put side by side with the mockups:
+//   .superdesign/export/10-availability-glance-view-desktop-en.html
+//   .superdesign/export/11-schedule-builder-desktop-en.html
+//   .superdesign/export/36-time-off-desktop-en.html
+//
+// ── THE LABOR FOOTER IS THE CONTRACT ─────────────────────────────────────────
+// Mockup 11's footer is the number this week has to reproduce EXACTLY:
+//
+//   Mon 288 · Tue 302 · Wed 330 · Thu 358 · Fri 452 · Sat 486 · Sun 328
+//   week 141.5 hrs · $2,544 · 42.0% against $6,117.00 of projected sales
+//
+// Labor cost is `hourlyRate x hours` (spec §6), so those dollars are not a
+// decoration to be typed in — they are a consequence of who is on the floor and
+// for how long. assertLaborReconciles() below recomputes them from the shift
+// list and refuses to seed if they disagree, which is the only way the mockup
+// comparison stays honest as the roster changes.
+//
+// WHAT THAT ARITHMETIC FORCED, and it is worth understanding before editing a
+// shift here. $2,544 over 141.5 hours is a blended $17.98/hr. The FOH cast is
+// tipped at $10.50–$14.00 and the highest hourly FOH rate in the roster is Val
+// Sariol at $18.00, so an FOH-only week CANNOT average $18 — the week is
+// necessarily BOH-weighted, and the kitchen (Oli $22, Jorge $19, Marisol $16)
+// carries most of the hours. Two consequences follow, and both are deliberate:
+//
+//   1. Mockup 11 draws its shift cards much longer than these (Allison across
+//      six days, Isaac 11:00a–11:00p on Saturday). Those cards sum to ~84 hrs of
+//      $11–$13.50 labor on their own, which leaves the remaining 57 hrs needing
+//      $27/hr to reach $2,544 — above every rate in the roster. The mockup's
+//      cards and the mockup's footer are not consistent with each other. The
+//      brief says the totals win, so the cards were shortened and the cast
+//      rebalanced; the ROLE BANDS, the STATIONS, the Wednesday open shift, the
+//      one availability conflict and the one overtime week all survive.
+//   2. Mockup 11 puts the overtime chip on Isaac's Saturday bar card. No FOH
+//      tipped employee can reach 40 hrs inside a $2,544 week (Isaac at 40 hrs is
+//      $540, and the remaining 101 hrs would then need $19.80/hr, i.e. Oli and
+//      Jorge at ~45 hrs each and no servers at all). So the genuine >40 hr week
+//      belongs to the kitchen lead — Oli Fonseca, 44.0 hrs — and OT_SHIFT_NOTE
+//      is attached to his Saturday shift. It is a real overtime case rather than
+//      a chip drawn on a 8-hour week.
+//
+// Open shifts and salaried staff are excluded from BOTH hours and cost: an open
+// shift has no employee and therefore no rate, and §6 excludes salaried people
+// from hourly cost math. Counting salaried HOURS while excluding their cost
+// would quietly raise the blended rate the remaining shifts have to hit.
+
+const SEED_WEEK_ID = '2026-08-10'
+
+/** Mon→Sun dates of SEED_WEEK_ID, in the same order as WEEKDAY_KEYS. */
+const SEED_WEEK_DATES: Record<WeekdayKey, string> = {
+  mon: '2026-08-10',
+  tue: '2026-08-11',
+  wed: '2026-08-12',
+  thu: '2026-08-13',
+  fri: '2026-08-14',
+  sat: '2026-08-15',
+  sun: '2026-08-16',
+}
+
+/** Mockup 11's footer, to the dollar. Enforced, never typed into a document. */
+const EXPECTED_DAILY_COST: Record<WeekdayKey, number> = {
+  mon: 288, tue: 302, wed: 330, thu: 358, fri: 452, sat: 486, sun: 328,
+}
+const EXPECTED_DAILY_HOURS: Record<WeekdayKey, number> = {
+  mon: 16, tue: 17, wed: 18.5, thu: 20, fri: 25, sat: 27, sun: 18,
+}
+const EXPECTED_WEEK_HOURS = 141.5
+const EXPECTED_WEEK_COST = 2544
+const EXPECTED_WEEK_LABOR_PCT = 42
+
+/**
+ * Manual projected sales — spec §6 has no POS integration in v1, so this is the
+ * number a manager types into the week.
+ *
+ * Chosen to reproduce mockup 11's per-day labor pills exactly (44/43/42/41/39/
+ * 38/45 %) while summing to the $6,117.00 the brief specifies. The week reads
+ * 2544/6117 = 41.6 %, which is the 42 % the mockup shows.
+ */
+const PROJECTED_SALES: Record<WeekdayKey, number> = {
+  mon: 648, tue: 695, wed: 778, thu: 863, fri: 1145, sat: 1263, sun: 725,
+}
+const EXPECTED_WEEK_SALES = 6117
+
+// ── availability (mockup 10) ─────────────────────────────────────────────────
+// Twelve rows, in the mockup's display order. `recurring` rows land at
+// availability/recurring_{employeeId} — the sentinel week key, see the header of
+// src/lib/db/availability.ts — and roll forward on their own; `temporary` rows
+// land at availability/{weekId}_{employeeId} and win for this week only.
+//
+// A day with no entry is 'available' (§5's permissive default), so only the
+// exceptions are listed here.
+
+type DayOverride = readonly [WeekdayKey, 'unavailable'] | readonly [WeekdayKey, 'partial', string, string]
+
+interface SeedAvailability {
+  employeeNumber: string
+  type: AvailabilityType
+  status: AvailabilityStatus
+  overrides: readonly DayOverride[]
+}
+
+const SEED_AVAILABILITY: SeedAvailability[] = [
+  // Allison Rodriguez — Server L2
+  { employeeNumber: '1041', type: 'recurring', status: 'approved',
+    overrides: [['sat', 'partial', '11:00', '23:00'], ['sun', 'unavailable']] },
+  // Emily Roman — Server L1
+  { employeeNumber: '1042', type: 'recurring', status: 'approved',
+    overrides: [['wed', 'unavailable']] },
+  // Rebekah Rosales — Server L3 (week-specific, still awaiting review)
+  { employeeNumber: '1052', type: 'temporary', status: 'pending', overrides: [] },
+  // Micah Lozon — Server L2. His Saturday partial is what makes the Saturday
+  // shift below a genuine availability conflict rather than a drawn chip.
+  { employeeNumber: '1045', type: 'recurring', status: 'approved',
+    overrides: [['mon', 'unavailable'], ['tue', 'unavailable'], ['sat', 'partial', '10:00', '15:00']] },
+  // Isaac Boynton — Bartender L3
+  { employeeNumber: '1043', type: 'recurring', status: 'approved', overrides: [] },
+  // Kevin Andricain — Bartender L2
+  { employeeNumber: '1044', type: 'temporary', status: 'pending',
+    overrides: [['thu', 'partial', '12:00', '16:00'], ['sun', 'unavailable']] },
+  // Daniela Zaragoza — Host L2. Thu/Fri off matches her time-off request below.
+  { employeeNumber: '1046', type: 'temporary', status: 'approved',
+    overrides: [['thu', 'unavailable'], ['fri', 'unavailable']] },
+  // Miley Estremera — Host L1
+  { employeeNumber: '1053', type: 'recurring', status: 'approved', overrides: [] },
+  // Karla Ceballos — Server L1
+  { employeeNumber: '1054', type: 'recurring', status: 'approved',
+    overrides: [['mon', 'partial', '09:00', '15:00']] },
+  // Anthony Di Fatta — Runner L1
+  { employeeNumber: '1047', type: 'temporary', status: 'approved', overrides: [] },
+  // Steph Fages — Shift Supervisor L3
+  { employeeNumber: '1049', type: 'recurring', status: 'approved', overrides: [] },
+  // Val Sariol — Shift Supervisor L2. Her Wednesday shift sits inside this
+  // window on purpose: a partial day is not a conflict when the shift fits.
+  { employeeNumber: '1055', type: 'recurring', status: 'approved',
+    overrides: [['wed', 'partial', '11:00', '16:00']] },
+]
+
+// ── shifts (mockup 11) ───────────────────────────────────────────────────────
+
+const CONFLICT_SHIFT_NOTE =
+  'Availability conflict — Micah is only available 10:00–15:00 on Saturday (spec §6 warns, does not block).'
+const OT_SHIFT_NOTE =
+  'Overtime projection — this shift puts Oli over 40 h for the week (44.0 h total).'
+
+interface SeedShift {
+  /** Omit for an OPEN shift — the unassigned row per role (§6). */
+  employeeNumber?: string
+  day: WeekdayKey
+  startTime: string
+  endTime: string
+  roleId: string
+  requiredSkillLevel: SkillLevel
+  department: Department
+  station: string
+  notes?: string
+  isOnCall?: boolean
+}
+
+const SEED_SHIFTS: SeedShift[] = [
+  // ── Mon 10 — 16.0 h / $288
+  { employeeNumber: '1055', day: 'mon', startTime: '16:00', endTime: '21:00', roleId: 'shift-supervisor', requiredSkillLevel: 2, department: 'FOH', station: 'Floor' },
+  { employeeNumber: '1041', day: 'mon', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { employeeNumber: '1048', day: 'mon', startTime: '14:00', endTime: '21:00', roleId: 'kitchen-lead', requiredSkillLevel: 3, department: 'BOH', station: 'Hot Line' },
+
+  // ── Tue 11 — 17.0 h / $302
+  { employeeNumber: '1044', day: 'tue', startTime: '17:00', endTime: '21:00', roleId: 'bartender', requiredSkillLevel: 2, department: 'FOH', station: 'Main Bar' },
+  { employeeNumber: '1048', day: 'tue', startTime: '15:00', endTime: '20:00', roleId: 'kitchen-lead', requiredSkillLevel: 3, department: 'BOH', station: 'Hot Line' },
+  { employeeNumber: '1058', day: 'tue', startTime: '16:00', endTime: '20:00', roleId: 'hot-line-cook', requiredSkillLevel: 2, department: 'BOH', station: 'Hot Line' },
+  { employeeNumber: '1060', day: 'tue', startTime: '09:00', endTime: '13:00', roleId: 'prep-cook', requiredSkillLevel: 1, department: 'BOH', station: 'Prep' },
+
+  // ── Wed 12 — 18.5 h / $330, plus the mockup's unassigned Server card
+  { employeeNumber: '1055', day: 'wed', startTime: '11:30', endTime: '16:00', roleId: 'shift-supervisor', requiredSkillLevel: 2, department: 'FOH', station: 'Floor' },
+  { employeeNumber: '1041', day: 'wed', startTime: '15:30', endTime: '19:30', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { employeeNumber: '1048', day: 'wed', startTime: '14:00', endTime: '19:00', roleId: 'kitchen-lead', requiredSkillLevel: 3, department: 'BOH', station: 'Hot Line' },
+  { employeeNumber: '1058', day: 'wed', startTime: '16:00', endTime: '21:00', roleId: 'hot-line-cook', requiredSkillLevel: 2, department: 'BOH', station: 'Hot Line' },
+  { day: 'wed', startTime: '11:00', endTime: '16:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+
+  // ── Thu 13 — 20.0 h / $358
+  { employeeNumber: '1055', day: 'thu', startTime: '16:00', endTime: '21:00', roleId: 'shift-supervisor', requiredSkillLevel: 2, department: 'FOH', station: 'Floor' },
+  { employeeNumber: '1045', day: 'thu', startTime: '18:00', endTime: '22:00', roleId: 'server', requiredSkillLevel: 2, department: 'FOH', station: 'Floor' },
+  { employeeNumber: '1048', day: 'thu', startTime: '15:00', endTime: '20:00', roleId: 'kitchen-lead', requiredSkillLevel: 3, department: 'BOH', station: 'Hot Line' },
+  { employeeNumber: '1058', day: 'thu', startTime: '15:00', endTime: '21:00', roleId: 'hot-line-cook', requiredSkillLevel: 2, department: 'BOH', station: 'Hot Line' },
+
+  // ── Fri 14 — 25.0 h / $452
+  { employeeNumber: '1055', day: 'fri', startTime: '17:00', endTime: '21:00', roleId: 'shift-supervisor', requiredSkillLevel: 2, department: 'FOH', station: 'Floor' },
+  { employeeNumber: '1043', day: 'fri', startTime: '17:00', endTime: '21:00', roleId: 'bartender', requiredSkillLevel: 2, department: 'FOH', station: 'Main Bar' },
+  { employeeNumber: '1048', day: 'fri', startTime: '15:00', endTime: '20:00', roleId: 'kitchen-lead', requiredSkillLevel: 3, department: 'BOH', station: 'Hot Line' },
+  { employeeNumber: '1058', day: 'fri', startTime: '14:00', endTime: '22:00', roleId: 'hot-line-cook', requiredSkillLevel: 3, department: 'BOH', station: 'Hot Line' },
+  { employeeNumber: '1060', day: 'fri', startTime: '09:00', endTime: '13:00', roleId: 'prep-cook', requiredSkillLevel: 1, department: 'BOH', station: 'Prep' },
+
+  // ── Sat 15 — 27.0 h / $486, carrying both warnings
+  { employeeNumber: '1055', day: 'sat', startTime: '16:30', endTime: '21:00', roleId: 'shift-supervisor', requiredSkillLevel: 2, department: 'FOH', station: 'Floor' },
+  { employeeNumber: '1043', day: 'sat', startTime: '19:00', endTime: '23:00', roleId: 'bartender', requiredSkillLevel: 2, department: 'FOH', station: 'Main Bar' },
+  { employeeNumber: '1045', day: 'sat', startTime: '15:30', endTime: '19:30', roleId: 'server', requiredSkillLevel: 2, department: 'FOH', station: 'Bar Area', notes: CONFLICT_SHIFT_NOTE },
+  { employeeNumber: '1048', day: 'sat', startTime: '11:00', endTime: '21:30', roleId: 'kitchen-lead', requiredSkillLevel: 3, department: 'BOH', station: 'Hot Line', notes: OT_SHIFT_NOTE },
+  { employeeNumber: '1058', day: 'sat', startTime: '17:00', endTime: '21:00', roleId: 'hot-line-cook', requiredSkillLevel: 2, department: 'BOH', station: 'Hot Line' },
+
+  // ── Sun 16 — 18.0 h / $328
+  { employeeNumber: '1055', day: 'sun', startTime: '11:00', endTime: '17:00', roleId: 'shift-supervisor', requiredSkillLevel: 2, department: 'FOH', station: 'Floor' },
+  { employeeNumber: '1047', day: 'sun', startTime: '12:00', endTime: '17:30', roleId: 'runner', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { employeeNumber: '1048', day: 'sun', startTime: '11:00', endTime: '17:30', roleId: 'kitchen-lead', requiredSkillLevel: 3, department: 'BOH', station: 'Hot Line' },
+]
+
+// ── shiftTemplates — day-part headcount + skill floors (spec §6) ─────────────
+// Templates describe REQUIREMENTS; they never create shifts. The builder reads
+// them to render the met/unmet badge per day-part. "4 Servers min-L1 with at
+// least one L3" is two lines, because a requirement carries a single
+// minSkillLevel — the L3 is its own line of count 1.
+
+const DAY_PARTS = [
+  { key: 'lunch', label: 'Lunch', startTime: '11:00', endTime: '16:00' },
+  { key: 'dinner', label: 'Dinner', startTime: '16:00', endTime: '23:00' },
+] as const
+
+const req = (
+  roleId: string,
+  count: number,
+  minSkillLevel: SkillLevel,
+): ShiftTemplateRequirement => ({ roleId, count, minSkillLevel })
+
+const TEMPLATE_REQUIREMENTS: Record<
+  WeekdayKey,
+  { lunch: ShiftTemplateRequirement[]; dinner: ShiftTemplateRequirement[] }
+> = {
+  mon: {
+    lunch: [req('server', 1, 1), req('prep-cook', 1, 1)],
+    dinner: [req('server', 1, 2), req('shift-supervisor', 1, 2), req('hot-line-cook', 1, 2)],
+  },
+  tue: {
+    lunch: [req('server', 1, 1), req('prep-cook', 1, 1)],
+    dinner: [req('server', 1, 2), req('bartender', 1, 2), req('hot-line-cook', 1, 2)],
+  },
+  wed: {
+    lunch: [req('server', 2, 1), req('prep-cook', 1, 1)],
+    dinner: [req('server', 1, 2), req('shift-supervisor', 1, 2), req('hot-line-cook', 1, 2)],
+  },
+  thu: {
+    lunch: [req('server', 1, 1), req('prep-cook', 1, 1)],
+    dinner: [req('server', 2, 2), req('shift-supervisor', 1, 2), req('hot-line-cook', 1, 2)],
+  },
+  fri: {
+    lunch: [req('server', 2, 1), req('host', 1, 1), req('prep-cook', 1, 2)],
+    dinner: [
+      req('server', 3, 1), req('server', 1, 3), req('bartender', 2, 2),
+      req('host', 1, 1), req('shift-supervisor', 1, 2),
+      req('hot-line-cook', 1, 3), req('expo', 1, 1),
+    ],
+  },
+  sat: {
+    lunch: [req('server', 2, 1), req('host', 1, 1), req('prep-cook', 1, 2)],
+    dinner: [
+      req('server', 4, 1), req('server', 1, 3), req('bartender', 2, 2),
+      req('host', 1, 1), req('runner', 1, 1), req('shift-supervisor', 1, 2),
+      req('hot-line-cook', 1, 3), req('expo', 1, 1), req('dishwasher', 1, 1),
+    ],
+  },
+  sun: {
+    lunch: [req('server', 2, 1), req('host', 1, 1), req('runner', 1, 1)],
+    dinner: [req('server', 1, 2), req('bartender', 1, 2), req('hot-line-cook', 1, 2)],
+  },
+}
+
+// ── timeOff (mockup 36) ──────────────────────────────────────────────────────
+// Dates are inclusive plain "YYYY-MM-DD" strings — how a person asks for time
+// off, with no instant and no timezone in the comparison.
+//
+// `conflicts` is NOT written from this table: it is computed from the shifts
+// actually seeded above, because an approver has to see what they are really
+// about to break. Mockup 36 draws a "Scheduled Aug 13" chip on Daniela's row,
+// but mockup 10 has Daniela unavailable that day and the schedule correctly
+// does not use her — so her conflicts array comes out empty, and that is the
+// honest answer rather than the drawn one.
+
+interface SeedTimeOff {
+  id: string
+  employeeNumber: string
+  startDate: string
+  endDate: string
+  category: TimeOffCategory
+  reason: string
+  status: TimeOffStatus
+  /** Employee number of the reviewer, for anything already decided. */
+  reviewedByNumber?: string
+  declineReason?: string
+}
+
+/** Denise Lasarte (GM) reviews everything already decided in the mockup. */
+const TIME_OFF_REVIEWER = '1051'
+
+const SEED_TIME_OFF: SeedTimeOff[] = [
+  { id: 'to-2026-08-13-daniela', employeeNumber: '1046', startDate: '2026-08-13', endDate: '2026-08-14',
+    category: 'unpaid', reason: 'Family visiting from out of state', status: 'pending' },
+  { id: 'to-2026-08-15-robin', employeeNumber: '1039', startDate: '2026-08-15', endDate: '2026-08-16',
+    category: 'paid', reason: 'Weekend away', status: 'approved', reviewedByNumber: TIME_OFF_REVIEWER },
+  { id: 'to-2026-08-24-micah', employeeNumber: '1045', startDate: '2026-08-24', endDate: '2026-08-26',
+    category: 'unpaid', reason: 'Moving apartments', status: 'pending' },
+  { id: 'to-2026-08-28-isaac', employeeNumber: '1043', startDate: '2026-08-28', endDate: '2026-08-28',
+    category: 'paid', reason: 'Medical appointment', status: 'pending' },
+  { id: 'to-2026-08-03-emily', employeeNumber: '1042', startDate: '2026-08-03', endDate: '2026-08-04',
+    category: 'unpaid', reason: 'Personal', status: 'approved', reviewedByNumber: TIME_OFF_REVIEWER },
+  { id: 'to-2026-08-08-karla', employeeNumber: '1054', startDate: '2026-08-08', endDate: '2026-08-08',
+    category: 'unpaid', reason: 'Personal', status: 'declined', reviewedByNumber: TIME_OFF_REVIEWER,
+    declineReason: 'Saturday coverage' },
+  { id: 'to-2026-08-31-anthony', employeeNumber: '1047', startDate: '2026-08-31', endDate: '2026-08-31',
+    category: 'paid', reason: 'Family event', status: 'approved', reviewedByNumber: TIME_OFF_REVIEWER },
+]
+
 // ── writers ──────────────────────────────────────────────────────────────────
 
 /** Deterministic ids keep the seed idempotent and readable in the emulator UI. */
@@ -1207,6 +1524,345 @@ async function seedEmployees(
   return { docs: EMPLOYEES.length * 3, archived }
 }
 
+// ── scheduling writers ───────────────────────────────────────────────────────
+
+const EMPLOYEE_BY_NUMBER = new Map(EMPLOYEES.map((e) => [e.employeeNumber, e]))
+
+function employeeOrThrow(employeeNumber: string): SeedEmployee {
+  const e = EMPLOYEE_BY_NUMBER.get(employeeNumber)
+  if (!e) throw new Error(`Seed references unknown employeeNumber ${employeeNumber}`)
+  return e
+}
+
+/** "HH:mm" → minutes since midnight. */
+function minutesOf(hhmm: string): number {
+  const [h, m] = hhmm.split(':')
+  if (h === undefined || m === undefined) throw new Error(`Bad time "${hhmm}"`)
+  return Number(h) * 60 + Number(m)
+}
+
+/** Shift length in hours. A shift ending before it starts crossed midnight. */
+function shiftHours(startTime: string, endTime: string): number {
+  const start = minutesOf(startTime)
+  const end = minutesOf(endTime)
+  return ((end <= start ? end + 24 * 60 : end) - start) / 60
+}
+
+/** Deterministic — one shift per person per day in this week's plan. */
+function shiftDocId(s: SeedShift): string {
+  return s.employeeNumber
+    ? `sh-${s.day}-${s.employeeNumber}`
+    : `sh-${s.day}-open-${s.roleId}`
+}
+
+/**
+ * Money in cents throughout. A week of 0.5-hour increments at $13.50 will drift
+ * in binary floating point long before it reaches $2,544, and a reconciliation
+ * that fails by a rounding cent is worse than no reconciliation at all.
+ */
+function costCents(hourlyRate: number, hours: number): number {
+  return Math.round(hourlyRate * 100 * hours)
+}
+
+interface LaborTotals {
+  hoursByDay: Record<WeekdayKey, number>
+  centsByDay: Record<WeekdayKey, number>
+  weekHours: number
+  weekCents: number
+  hoursByEmployee: Map<string, number>
+}
+
+/**
+ * Recompute mockup 11's footer from the shifts. Open shifts carry no employee
+ * and salaried staff carry no hourlyRate; both are excluded from hours AND cost
+ * (see the section header for why splitting those two would be wrong).
+ */
+function computeLabor(): LaborTotals {
+  const hoursByDay = {} as Record<WeekdayKey, number>
+  const centsByDay = {} as Record<WeekdayKey, number>
+  for (const key of WEEKDAY_KEYS) {
+    hoursByDay[key] = 0
+    centsByDay[key] = 0
+  }
+  const hoursByEmployee = new Map<string, number>()
+
+  for (const s of SEED_SHIFTS) {
+    if (!s.employeeNumber) continue
+    const employee = employeeOrThrow(s.employeeNumber)
+    if (employee.hourlyRate === null) continue
+
+    const hours = shiftHours(s.startTime, s.endTime)
+    hoursByDay[s.day] += hours
+    centsByDay[s.day] += costCents(employee.hourlyRate, hours)
+    hoursByEmployee.set(
+      s.employeeNumber,
+      (hoursByEmployee.get(s.employeeNumber) ?? 0) + hours,
+    )
+  }
+
+  return {
+    hoursByDay,
+    centsByDay,
+    weekHours: WEEKDAY_KEYS.reduce((a, k) => a + hoursByDay[k], 0),
+    weekCents: WEEKDAY_KEYS.reduce((a, k) => a + centsByDay[k], 0),
+    hoursByEmployee,
+  }
+}
+
+/**
+ * Refuse to seed a week whose labor does not reproduce the mockup footer.
+ *
+ * This is the same instinct as assertUniqueRoleColors(): the value of seed data
+ * that can be diffed against a design is entirely in it actually matching, and
+ * a silent drift is only discovered by someone holding the two side by side and
+ * doubting their own eyes.
+ */
+function assertLaborReconciles(totals: LaborTotals): void {
+  const problems: string[] = []
+
+  for (const key of WEEKDAY_KEYS) {
+    const hours = totals.hoursByDay[key]
+    const dollars = totals.centsByDay[key] / 100
+    if (hours !== EXPECTED_DAILY_HOURS[key]) {
+      problems.push(`${key} hours: got ${hours}, expected ${EXPECTED_DAILY_HOURS[key]}`)
+    }
+    if (dollars !== EXPECTED_DAILY_COST[key]) {
+      problems.push(`${key} cost: got $${dollars.toFixed(2)}, expected $${EXPECTED_DAILY_COST[key]}`)
+    }
+  }
+  if (totals.weekHours !== EXPECTED_WEEK_HOURS) {
+    problems.push(`week hours: got ${totals.weekHours}, expected ${EXPECTED_WEEK_HOURS}`)
+  }
+  if (totals.weekCents !== EXPECTED_WEEK_COST * 100) {
+    problems.push(
+      `week cost: got $${(totals.weekCents / 100).toFixed(2)}, expected $${EXPECTED_WEEK_COST}`,
+    )
+  }
+  const sales = WEEKDAY_KEYS.reduce((a, k) => a + PROJECTED_SALES[k], 0)
+  if (sales !== EXPECTED_WEEK_SALES) {
+    problems.push(`projected sales: got $${sales}, expected $${EXPECTED_WEEK_SALES}`)
+  }
+
+  if (problems.length > 0) {
+    throw new Error(
+      'Labor does not reconcile with mockup 11 — adjust the SHIFTS, never the\n' +
+        'expected totals (spec §6: cost is hourlyRate x hours):\n  ' +
+        problems.join('\n  '),
+    )
+  }
+}
+
+/** Availability days, all seven keys materialised; unlisted days are available. */
+function availabilityDays(overrides: readonly DayOverride[]): Record<WeekdayKey, AvailabilityDay> {
+  const days = {} as Record<WeekdayKey, AvailabilityDay>
+  for (const key of WEEKDAY_KEYS) days[key] = { status: 'available', from: null, to: null }
+  for (const o of overrides) {
+    days[o[0]] =
+      o[1] === 'partial'
+        ? { status: 'partial', from: o[2], to: o[3] }
+        : { status: 'unavailable', from: null, to: null }
+  }
+  return days
+}
+
+async function seedAvailability(): Promise<number> {
+  const batch = db.batch()
+  for (const a of SEED_AVAILABILITY) {
+    const employeeId = employeeDocId(employeeOrThrow(a.employeeNumber).employeeNumber)
+    // Recurring belongs to no single week, so it uses the sentinel key.
+    const weekId = a.type === 'recurring' ? 'recurring' : SEED_WEEK_ID
+    const reviewed = a.status !== 'pending'
+    batch.set(db.collection('availability').doc(`${weekId}_${employeeId}`), {
+      employeeId,
+      weekId,
+      type: a.type,
+      days: availabilityDays(a.overrides),
+      status: a.status,
+      reviewedBy: reviewed ? employeeDocId(TIME_OFF_REVIEWER) : null,
+      reviewedAt: reviewed ? Timestamp.fromDate(new Date('2026-08-06T14:00:00Z')) : null,
+      submittedAt: Timestamp.fromDate(new Date('2026-08-05T18:00:00Z')),
+      declineReason: null,
+      locationId: null,
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    })
+  }
+  await batch.commit()
+  return SEED_AVAILABILITY.length
+}
+
+/**
+ * The published week plus its shifts.
+ *
+ * Shifts are written with deterministic ids and the week is then swept for any
+ * document the current plan no longer produces — without that sweep, editing a
+ * shift out of SEED_SHIFTS would leave the old one behind and the labor footer
+ * in the app would stop matching the one this script just verified.
+ */
+async function seedSchedule(): Promise<{ shifts: number; open: number; removed: number }> {
+  const scheduleRef = db.collection('schedules').doc(SEED_WEEK_ID)
+
+  await scheduleRef.set({
+    weekId: SEED_WEEK_ID,
+    status: 'published',
+    // Friday 23:59 ET the week before — the §6 publish target, met.
+    publishedAt: Timestamp.fromDate(new Date('2026-08-08T03:59:00Z')),
+    publishedBy: employeeDocId('1050'),
+    laborTargetPct: EXPECTED_WEEK_LABOR_PCT,
+    aiDraftMeta: null,
+    // Manual projection (§6, no POS integration in v1). Not read by
+    // src/lib/db/schedules.ts yet — the labor footer that consumes it is a
+    // Phase 2 view — so it is stored alongside the documented fields rather
+    // than replacing any of them.
+    projectedSales: PROJECTED_SALES,
+    projectedSalesTotal: EXPECTED_WEEK_SALES,
+    locationId: null,
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
+  })
+
+  const shiftsRef = scheduleRef.collection('shifts')
+  const planned = new Set(SEED_SHIFTS.map(shiftDocId))
+
+  const batch = db.batch()
+  let open = 0
+  for (const s of SEED_SHIFTS) {
+    if (!s.employeeNumber) open += 1
+    batch.set(shiftsRef.doc(shiftDocId(s)), {
+      employeeId: s.employeeNumber ? employeeDocId(s.employeeNumber) : null,
+      date: SEED_WEEK_DATES[s.day],
+      startTime: s.startTime,
+      endTime: s.endTime,
+      roleId: s.roleId,
+      requiredSkillLevel: s.requiredSkillLevel,
+      department: s.department,
+      station: s.station,
+      notes: s.notes ?? null,
+      isOnCall: s.isOnCall ?? false,
+      // The week is published, so its shifts are live. A shift added after a
+      // publish would sit at 'draft' until someone republished (§6).
+      status: 'published',
+      locationId: null,
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    })
+  }
+  await batch.commit()
+
+  const existing = await shiftsRef.get()
+  const stale = existing.docs.filter((d) => !planned.has(d.id))
+  if (stale.length > 0) {
+    const cleanup = db.batch()
+    for (const d of stale) cleanup.delete(d.ref)
+    await cleanup.commit()
+  }
+
+  return { shifts: SEED_SHIFTS.length, open, removed: stale.length }
+}
+
+async function seedShiftTemplates(): Promise<number> {
+  const batch = db.batch()
+  let count = 0
+  for (const day of WEEKDAY_KEYS) {
+    for (const part of DAY_PARTS) {
+      const label = day.charAt(0).toUpperCase() + day.slice(1)
+      batch.set(db.collection('shiftTemplates').doc(`${day}-${part.key}`), {
+        name: `${label} ${part.label}`,
+        dayOfWeek: day,
+        startTime: part.startTime,
+        endTime: part.endTime,
+        requirements: TEMPLATE_REQUIREMENTS[day][part.key],
+        locationId: null,
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      })
+      count += 1
+    }
+  }
+  await batch.commit()
+  return count
+}
+
+/**
+ * Shift ids in the seeded week that overlap a request's inclusive date range —
+ * §6 requires the approver to see what approving would break, and computing it
+ * at approval time only would hide the damage until it was too late to plan
+ * around.
+ */
+function conflictingShiftIds(employeeNumber: string, startDate: string, endDate: string): string[] {
+  return SEED_SHIFTS.filter((s) => {
+    if (s.employeeNumber !== employeeNumber) return false
+    const date = SEED_WEEK_DATES[s.day]
+    return date >= startDate && date <= endDate
+  }).map(shiftDocId)
+}
+
+async function seedTimeOff(): Promise<{ docs: number; conflicts: number }> {
+  const batch = db.batch()
+  let conflicts = 0
+
+  for (const t of SEED_TIME_OFF) {
+    employeeOrThrow(t.employeeNumber)
+    const conflictIds = conflictingShiftIds(t.employeeNumber, t.startDate, t.endDate)
+    conflicts += conflictIds.length
+    const reviewed = t.status !== 'pending'
+    batch.set(db.collection('timeOff').doc(t.id), {
+      employeeId: employeeDocId(t.employeeNumber),
+      startDate: t.startDate,
+      endDate: t.endDate,
+      category: t.category,
+      reason: t.reason,
+      status: t.status,
+      reviewedBy: t.reviewedByNumber ? employeeDocId(t.reviewedByNumber) : null,
+      reviewedAt: reviewed ? Timestamp.fromDate(new Date('2026-08-07T15:00:00Z')) : null,
+      conflicts: conflictIds,
+      declineReason: t.declineReason ?? null,
+      locationId: null,
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    })
+  }
+  await batch.commit()
+  return { docs: SEED_TIME_OFF.length, conflicts }
+}
+
+/** The reconciliation, printed so the mockup comparison is visible, not implied. */
+function printLabor(totals: LaborTotals): void {
+  const pct = (cents: number, sales: number) => (cents / 100 / sales) * 100
+
+  console.log('\n  Labor reconciliation — mockup 11 footer')
+  console.log('    day    hours       cost       sales   labor%   pill  expected')
+  for (const key of WEEKDAY_KEYS) {
+    const dollars = totals.centsByDay[key] / 100
+    const sales = PROJECTED_SALES[key]
+    const ratio = pct(totals.centsByDay[key], sales)
+    console.log(
+      `    ${key}  ${totals.hoursByDay[key].toFixed(1).padStart(6)}  ${('$' + dollars.toFixed(2)).padStart(9)}  ${('$' + sales.toFixed(2)).padStart(10)}  ${ratio.toFixed(2).padStart(6)}%  ${(Math.round(ratio) + '%').padStart(5)}  $${EXPECTED_DAILY_COST[key]} / ${EXPECTED_DAILY_HOURS[key]} h`,
+    )
+  }
+  const weekSales = WEEKDAY_KEYS.reduce((a, k) => a + PROJECTED_SALES[k], 0)
+  const weekDollars = totals.weekCents / 100
+  const weekRatio = pct(totals.weekCents, weekSales)
+  console.log(
+    `    week ${totals.weekHours.toFixed(1).padStart(6)}  ${('$' + weekDollars.toFixed(2)).padStart(9)}  ${('$' + weekSales.toFixed(2)).padStart(10)}  ${weekRatio.toFixed(2).padStart(6)}%  ${(Math.round(weekRatio) + '%').padStart(5)}  $${EXPECTED_WEEK_COST} / ${EXPECTED_WEEK_HOURS} h`,
+  )
+  // The `pill` column is what mockup 11 renders. 2544/6117 = 41.59 %, which the
+  // footer shows as its 42 % — the mockup rounds to whole percent and prints a
+  // trailing .0, it does not carry a real decimal.
+  console.log(
+    `    reconciled ✓  every day and the week match the mockup to the dollar;` +
+      ` week pill ${Math.round(weekRatio)}% = mockup's ${EXPECTED_WEEK_LABOR_PCT}.0%`,
+  )
+
+  const overtime = [...totals.hoursByEmployee.entries()].filter(([, h]) => h > 40)
+  for (const [employeeNumber, hours] of overtime) {
+    const e = employeeOrThrow(employeeNumber)
+    console.log(
+      `    overtime  ${e.firstName} ${e.lastName} ${hours.toFixed(1)} h (>40 h, spec §6 warns)`,
+    )
+  }
+}
+
 // ── run ──────────────────────────────────────────────────────────────────────
 
 /** Rank order for the credentials table — most privileged first. */
@@ -1268,6 +1924,15 @@ async function main(): Promise<void> {
   const employees = await seedEmployees(authUsers.uidByNumber)
   const invites = await seedInvites()
 
+  // Verified BEFORE anything scheduling-shaped is written: a week whose labor
+  // does not match the mockup is not worth seeding.
+  const labor = computeLabor()
+  assertLaborReconciles(labor)
+  const availability = await seedAvailability()
+  const schedule = await seedSchedule()
+  const templates = await seedShiftTemplates()
+  const timeOff = await seedTimeOff()
+
   const byRole = new Map<AccessRole, number>()
   for (const e of EMPLOYEES) byRole.set(e.accessRole, (byRole.get(e.accessRole) ?? 0) + 1)
 
@@ -1313,6 +1978,23 @@ async function main(): Promise<void> {
     }`,
   )
   console.log('  invites/*                 ', invites, 'document (pending)')
+
+  const pendingAvailability = SEED_AVAILABILITY.filter((a) => a.status === 'pending').length
+  console.log('  availability/*            ', availability, 'documents')
+  console.log(
+    `      recurring ${SEED_AVAILABILITY.filter((a) => a.type === 'recurring').length} · temporary ${SEED_AVAILABILITY.filter((a) => a.type === 'temporary').length} · pending review ${pendingAvailability}`,
+  )
+  console.log(`  schedules/${SEED_WEEK_ID}      1 document (published)`)
+  console.log(
+    `      shifts ${schedule.shifts} (${schedule.open} open)${schedule.removed > 0 ? ` · ${schedule.removed} stale removed` : ''}`,
+  )
+  console.log('  shiftTemplates/*          ', templates, 'documents (7 days x 2 day-parts)')
+  console.log('  timeOff/*                 ', timeOff.docs, 'documents')
+  console.log(
+    `      pending ${SEED_TIME_OFF.filter((t) => t.status === 'pending').length} · approved ${SEED_TIME_OFF.filter((t) => t.status === 'approved').length} · declined ${SEED_TIME_OFF.filter((t) => t.status === 'declined').length} · shift conflicts ${timeOff.conflicts}`,
+  )
+
+  printLabor(labor)
 
   printCredentials(authUsers.uidByNumber)
 
