@@ -611,5 +611,20 @@
       "importAnother": "Import another file",
       "goToRoster": "Go to the roster"
     }
+  },
+  "conflicts": {
+    "inactiveEmployee": "This employee is {{status}} and can't be scheduled.",
+    "wrongRole": "They don't work this role and no role they hold covers it.",
+    "skillTooLow": "Level {{has}} — this shift requires Level {{needs}}.",
+    "timeOff": "They have approved time off on this day.",
+    "doubleBooked": "Already scheduled {{start}}–{{end}} that day.",
+    "unavailable": "They marked themselves unavailable this day.",
+    "partialOutsideHours": "Outside their available hours ({{from}}–{{to}}).",
+    "overtime": "Projected {{projected}} hrs this week, over the {{threshold}} hr threshold.",
+    "blockedTitle": "This assignment is blocked",
+    "warningTitle": "Scheduled with a warning",
+    "overrideCta": "Assign anyway",
+    "overrideReasonLabel": "Reason for override",
+    "overrideReasonHelp": "Required. Recorded in the audit log with your name."
   }
 }

@@ -611,5 +611,20 @@
       "importAnother": "Importar otro archivo",
       "goToRoster": "Ir a la lista"
     }
+  },
+  "conflicts": {
+    "inactiveEmployee": "Este empleado está {{status}} y no se puede programar.",
+    "wrongRole": "No tiene este puesto ni ninguno que lo pueda cubrir.",
+    "skillTooLow": "Nivel {{has}} — este turno requiere Nivel {{needs}}.",
+    "timeOff": "Tiene tiempo libre aprobado ese día.",
+    "doubleBooked": "Ya tiene un turno de {{start}} a {{end}} ese día.",
+    "unavailable": "Se marcó como no disponible ese día.",
+    "partialOutsideHours": "Fuera de sus horas disponibles ({{from}}–{{to}}).",
+    "overtime": "Proyección de {{projected}} h esta semana, por encima del límite de {{threshold}} h.",
+    "blockedTitle": "Esta asignación está bloqueada",
+    "warningTitle": "Programado con una advertencia",
+    "overrideCta": "Asignar de todos modos",
+    "overrideReasonLabel": "Motivo de la excepción",
+    "overrideReasonHelp": "Obligatorio. Se registra en el historial de auditoría con tu nombre."
   }
 }
