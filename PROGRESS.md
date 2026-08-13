@@ -13,20 +13,37 @@ Phases are sequential. Do not build later-phase features early, even scaffolding
 | --- | --- | --- |
 | 1 | Vite + React + TS + Tailwind + router + i18n + PWA scaffold | ✅ Done |
 | 2 | Design tokens → `tailwind.config.js` | ✅ Done |
-| 3 | Core UI kit + `/dev/components` gallery | 🔄 In progress |
-| 4 | Desktop + mobile shells | 🔄 In progress |
-| 5 | Firebase wiring, emulators, seed script | 🔄 In progress |
-| 6 | Auth: Google + email, linking, invite flow | ⬜ Not started |
-| 7 | Employees: CRUD, list + profile screens, CSV import | 🔄 Data layer in progress |
-| 8 | Access control: permissions, guards, rules + tests | ✅ Core + rules done; route guards pending |
-| 9 | Phase 0 checkpoint | ⬜ Blocked on 3–7 |
+| 3 | Core UI kit + `/dev/components` gallery | ✅ Done |
+| 4 | Desktop + mobile shells | ✅ Done |
+| 5 | Firebase wiring, emulators, seed script | ✅ Done |
+| 6 | Auth: Google + email, linking, invite flow | ✅ Done |
+| 6b | Cloud Functions: claims + invite acceptance (`functions/`) | ✅ Done |
+| 7 | Employees: CRUD, list + profile screens, CSV import | ✅ Done |
+| 8 | Access control: permissions, guards, rules + tests | ✅ Done |
+| 9 | Phase 0 checkpoint | ✅ **Awaiting Rafa's review** |
 
-### Verified so far
+**Phase 0 is complete and stopped for review. Do not start Phase 1 without a go.**
 
-- `npm run build` — passing
-- `npm run test` — 21 permission unit tests passing
-- `npm run test:rules:emulated` — 21 Firestore rules tests passing against the emulator
-- `npm run i18n:check` — locale parity enforced (fails on missing keys or untranslated copy-paste)
+### Verified
+
+| Check | Result |
+| --- | --- |
+| `npm run build` | ✅ typecheck (strict + `noUncheckedIndexedAccess`) + production build |
+| `npm run test` | ✅ 43 tests — 21 permissions, 22 CSV import |
+| `npm run test:rules:emulated` | ✅ 21 rules tests against the live Firestore emulator |
+| `npm run i18n:check` | ✅ 479 keys, en/es parity |
+| `npm run seed` | ✅ idempotent — double-run verified: 25 employees, 50 private docs, 14 roles, 23 auth accounts + claims, 1 pending invite |
+| `functions/` build + emulator | ✅ 4 functions load; 44-assertion end-to-end check against the live suite passed (invite preview, token-enumeration parity, accept, idempotent retry, permission gates, role-change trigger) |
+| `npm run dev` | ✅ serves 200, compiles clean |
+
+Seed + rules tests were also run together against one emulator instance to
+confirm the rules hold against realistic seeded data, not just fixtures.
+
+### Commits
+
+9 commits on `main`, one per completed task, no broken builds:
+foundation → security → UI kit → shells → auth context → data layer → docs →
+auth screens → routing → people.
 
 ---
 
@@ -96,36 +113,57 @@ From spec §21, to confirm when each phase reaches them:
    (Aug 3–16). Spec §11 defaults weekly. Needed before Phase 3.
 6. Skill levels fixed at 1–3 — confirm 3 tiers is enough.
 
-New during Phase 0:
+New during Phase 0. Ordered by when they block work:
 
-7. **Sign off on the subdocument split** (item 1 above).
-10. **Real surnames for Rafa, Tom, Anthony and Oli.** The mockups only ever show
-    them by first name, so they are seeded with `lastName: ''`. This is the thing
-    most likely to look broken in the roster UI.
-11. **Kitchen Lead has no colour.** It appears only in mockup 32's table and is
-    absent from design-system.md §2, so it currently reuses Hot Line Cook's
-    `#B45309` — two roles rendering identically on the schedule grid. Needs a real
-    colour before Phase 1 draws the builder.
-12. **`minSkillLevelToCover` is stored in the direction `models.ts` documents**
-    (the floor sits on the role being covered *into*). Mockup 32 phrases the same
-    control from the opposite direction. Same practical outcome, opposite storage.
-    **Confirm before Phase 2 builds trade eligibility on it** — spec §7 condition 2
-    is the heart of the product.
-13. **No `jobTitle` field exists.** "Assistant Manager" is now a title with nowhere
-    to live: Armando and Robin carry `accessRole: 'manager'` narrowed by a real
-    override (`discipline.issue: false`). If any screen must *display* "Assistant
-    Manager", `Employee` needs a `jobTitle` field.
-14. **Salaried amounts need checking.** Mockup 26 shows per-period figures
-    ($1,730.77 Daphne, $2,019.23 Denise); the seed stores derived monthly salaries
-    (3750 / 4375). Verify the annualisation before Phase 3.
-15. **Geofence coordinates are a best-effort geocode** (25.9773, -80.3225) of the
+**Before Phase 1 (scheduling):**
+
+7. **Kitchen Lead has no colour.** It appears only in mockup 32's table and is
+   absent from design-system.md §2, so it currently reuses Hot Line Cook's
+   `#B45309` — two roles rendering identically on the schedule grid.
+8. **Real surnames for Rafa, Tom, Anthony and Oli.** The mockups only ever show
+   them by first name, so they are seeded with `lastName: ''`. This is the thing
+   most likely to look broken in the roster UI.
+
+**Before Phase 2 (trades + clock):**
+
+9. **`minSkillLevelToCover` direction.** It is stored the way `models.ts`
+   documents it — the floor sits on the role being covered *into*. Mockup 32
+   phrases the same control from the opposite direction. Same practical outcome,
+   opposite storage. **Spec §7 condition 2 is the heart of the product**, so
+   confirm before eligibility is built on it.
+10. **Geofence coordinates are a best-effort geocode** (25.9773, -80.3225) of the
     Miramar address. Confirm on-site alongside §21 item 1.
-8. Payroll figures in mockup `26` (rates, hours, `$9,864.50` total) and the daily
-   labor splits in mockup `11` are illustrative, not real Rosalia's numbers. They
-   were constructed to be internally consistent. Real values needed before Phase 3.
-9. `34-ai-providers` shows real Anthropic model ids (`claude-opus-5`, Sonnet 5,
-   Haiku 4.5) but placeholder OpenAI/Google names. Confirm which providers you
-   actually want configured before Phase 5.
+
+**Before Phase 3 (payroll):**
+
+11. **Salaried amounts.** Mockup 26 shows per-period figures ($1,730.77 Daphne,
+    $2,019.23 Denise); the seed stores derived monthly salaries (3750 / 4375).
+    Verify the annualisation.
+12. **Payroll figures are illustrative.** Mockup 26's rates, hours and
+    `$9,864.50` total, and mockup 11's daily labor splits, were constructed to be
+    internally consistent — they are not real Rosalia's numbers.
+
+**Before Phase 5 (AI):**
+
+13. `34-ai-providers` shows real Anthropic model ids (`claude-opus-5`, Sonnet 5,
+    Haiku 4.5) but placeholder OpenAI/Google names. Confirm which providers you
+    actually want configured.
+
+**Anytime — schema additions, cheap now and costly later:**
+
+14. **Sign off on the subdocument split** (decision 1 above). This is the one
+    with real architectural weight.
+15. **No `jobTitle` field exists.** "Assistant Manager" is now a title with
+    nowhere to live: Armando and Robin carry `accessRole: 'manager'` narrowed by a
+    real override (`discipline.issue: false`). If any screen must *display*
+    "Assistant Manager", `Employee` needs a `jobTitle` field.
+16. **`AuditAction` has no invite/claims member.** The union in
+    `src/types/models.ts` is verbatim spec §17 and stops at `permission.change`.
+    The three Functions that move claims around (invite acceptance, manual
+    re-sync, the role-change trigger) all log as `permission.change`,
+    distinguished by `targetType` (`invite` | `employee`) and `reason`
+    (`invite.accept` | `claims.resync` | `role.change`). If you want them distinct
+    in the Phase 6 audit viewer, `AuditAction` needs `invite.accept` adding.
 
 ---
 
@@ -138,18 +176,12 @@ New during Phase 0:
   `firestore.rules` before Phase 1 adds more collections.
 - **No ESLint config yet.** `npm run lint` is declared but will fail until one is
   added.
-- **Two Cloud Functions are required and neither exists yet.** Custom claims
-  (`role`, `employeeId`) are assumed by `firestore.rules`, `storage.rules` and
-  `AuthProvider`, but nothing sets them. Needed:
-  - `acceptInvite(token, …)` — validates the token, binds the auth uid to the
-    employee doc, sets claims.
-  - **`getInvite(token)`** — surfaced while building the invite screen. The
-    person opening an invite link is *signed out*, and `firestore.rules` gates
-    `invites/{id}` behind `employees.edit`, so step 1 of the flow cannot read the
-    invite directly — and the password path needs the invited address to create
-    the account. Until it exists, the invite page shows a retryable "couldn't
-    open this invitation" card, which is also the correct state for a revoked or
-    mistyped token.
+- **`firebase-functions` is pinned to v6, not v7.** `firebase-tools@13` calls the
+  removed `functions.config()` inside its emulator runtime shim; against
+  `firebase-functions@7` the worker dies with "Your function was killed because it
+  raised an unhandled error" on the first request. v6 exposes the identical v2 API
+  (`onCall`, `onDocumentUpdated`, `setGlobalOptions`). Unpin only together with a
+  `firebase-tools` major upgrade, and re-run the emulator check afterwards.
 - **Legal links are placeholders.** The login screens point at `#privacy` and
   `#terms`. Real routes or external URLs needed before anyone signs in for real.
 - **Spanish screens unproven.** All 49 mockups are English. Layouts are built for
@@ -162,8 +194,10 @@ New during Phase 0:
 ```bash
 npm install
 npm run dev                    # http://localhost:5173
-npm run emulators              # Firestore/Auth/Storage/Functions + UI on :4000
-npm run seed                   # populate emulator with the persona cast
+npm run functions:install      # once — functions/ is its own npm package
+npm run functions:build        # compile functions/src → functions/lib
+npm run emulators              # builds functions, then Firestore/Auth/Storage/Functions + UI on :4000
+npm run seed                   # persona cast + auth accounts + claims + one live invite
 npm run build                  # typecheck + production build
 npm run test                   # unit tests
 npm run test:rules:emulated    # security rules against the emulator
@@ -176,3 +210,48 @@ change is needed.
 
 **Review surface:** `/dev/components` renders every UI-kit primitive for visual
 comparison against `.superdesign/export/01-design-system-desktop-en.html`.
+
+---
+
+## How to review Phase 0
+
+```bash
+npm install
+npm run functions:install  # once — functions/ has its own node_modules
+npm run emulators          # terminal 1 — builds functions, then leaves the suite running
+
+# terminal 2 — once. Both hosts are required; the seed refuses to run without them.
+FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 \
+FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 \
+npm run seed
+
+npm run dev                # terminal 3
+```
+
+The seed prints a **credentials table**: every active employee, one shared dev
+password (`rkdev2026`), grouped by access role. Sign in as an owner, the GM, a
+manager, a supervisor and a staff member to see §4 in effect. It also prints a
+live invite link for **Nadia Salgado**, the one seeded employee with no account —
+open it signed out to walk `getInvite` → sign-up → `acceptInvite` → claims →
+`status: active`. Re-running the seed resets that invite so the flow can be
+walked again.
+
+Then walk these, mockup side by side:
+
+| Route | Compare against |
+| --- | --- |
+| `/dev/components` | `01-design-system-desktop-en.html` |
+| `/login` | `01-login-desktop-en.html` and `01-login-mobile-en.html` |
+| `/invite?token=…` | `02-invite-acceptance-desktop-en.html` |
+| `/people` | no mockup — follows mockup 09's admin-table pattern |
+| `/people/:id` | `04-profile-admin-desktop-en.html` |
+| `/profile` | `03-profile-staff-mobile-en.html` |
+| `/people/import` | no mockup — spec §18 |
+| any app route | shells: `05-dashboard-overview` / `07-staff-home` |
+
+Resize across 768px to switch shells. Use device emulation on an iPhone-class
+viewport to check the safe-area insets.
+
+Signing in works: `functions/` issues the `employeeId` / `role` custom claims
+that `AuthProvider` resolves the employee from, and the seed pre-issues them for
+everyone already onboarded. Use the credentials table the seed prints.

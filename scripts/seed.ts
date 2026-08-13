@@ -1,13 +1,17 @@
 /**
  * Emulator seed — RK StaffHub.
  *
- *   npm run emulators:exec -- --only firestore "npx tsx scripts/seed.ts"
- *   # or, against an already-running emulator suite:
- *   FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 npm run seed
+ *   # against a running emulator suite (auth + firestore both required):
+ *   FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 \
+ *   FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 \
+ *   npm run seed
+ *
+ *   # or in one shot:
+ *   npm run emulators:exec -- "npx tsx scripts/seed.ts"
  *
  * WHY firebase-admin AND NOT src/lib/firebase.ts
  * ----------------------------------------------
- * Two reasons, both hard:
+ * Three reasons, all hard:
  *   1. src/lib/firebase.ts reads `import.meta.env`, which does not exist under
  *      tsx/Node — importing it here would throw before the first write.
  *   2. The seed writes documents (compensation, permissionOverrides, the
@@ -15,19 +19,28 @@
  *      holder of employees.editPay / permissions.manage write. The admin SDK
  *      bypasses rules, which is exactly what a seed needs and exactly what the
  *      app must never do.
+ *   3. Custom claims (`employeeId`, `role`) can only be written by a privileged
+ *      SDK. Without them AuthProvider.tsx resolves no employee and every
+ *      authenticated screen is unreachable — so the seed sets them directly for
+ *      the already-onboarded staff, exactly as the acceptInvite Function does
+ *      for a new hire.
  *
- * SAFETY: refuses to run unless FIRESTORE_EMULATOR_HOST is set AND the project
- * id is a `demo-` project. CLAUDE.md: this app must never touch the existing
+ * SAFETY: refuses to run unless BOTH emulator hosts are set AND the project id
+ * is a `demo-` project. CLAUDE.md: this app must never touch the existing
  * Leah/ERP Firestore, and an admin-SDK script pointed at production would have
- * no rules standing between it and that data.
+ * no rules standing between it and that data. The auth half is stricter still —
+ * it creates sign-in accounts with a published password, which must never exist
+ * anywhere but a throwaway emulator.
  *
  * IDEMPOTENT: every document has a deterministic id and is written with set()
- * (full overwrite). Re-running converges to exactly this state; it never
+ * (full overwrite); every auth user has a deterministic uid and is created or
+ * updated in place. Re-running converges to exactly this state; it never
  * duplicates a person and never leaves half-updated documents behind.
  */
 
 import { initializeApp, type App } from 'firebase-admin/app'
-import { FieldValue, getFirestore, type Firestore } from 'firebase-admin/firestore'
+import { getAuth, type Auth } from 'firebase-admin/auth'
+import { FieldValue, Timestamp, getFirestore, type Firestore } from 'firebase-admin/firestore'
 
 import { ROLE_DEFAULTS } from '@/lib/permissions/defaults'
 import type {
@@ -46,11 +59,20 @@ import type {
 
 const PROJECT_ID = process.env.GCLOUD_PROJECT ?? process.env.FIREBASE_PROJECT ?? 'demo-rk-staffhub'
 const EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST
+const AUTH_EMULATOR_HOST = process.env.FIREBASE_AUTH_EMULATOR_HOST
 
-if (!EMULATOR_HOST) {
+if (!EMULATOR_HOST || !AUTH_EMULATOR_HOST) {
   console.error(
-    'Refusing to seed: FIRESTORE_EMULATOR_HOST is not set.\n' +
-      'Run via `npm run emulators:exec -- --only firestore "npx tsx scripts/seed.ts"`.',
+    'Refusing to seed: the emulator hosts are not both set.\n' +
+      `  FIRESTORE_EMULATOR_HOST     ${EMULATOR_HOST ?? '(unset)'}\n` +
+      `  FIREBASE_AUTH_EMULATOR_HOST ${AUTH_EMULATOR_HOST ?? '(unset)'}\n\n` +
+      'This seed creates Firebase Auth accounts with a known dev password and\n' +
+      'writes custom claims. Both are catastrophic outside an emulator, so it\n' +
+      'refuses to run unless the Auth emulator is demonstrably in play.\n\n' +
+      'Start the suite with `npm run emulators`, then:\n' +
+      '  FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 \\\n' +
+      '  FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 \\\n' +
+      '  npm run seed',
   )
   process.exit(1)
 }
@@ -65,6 +87,18 @@ if (!PROJECT_ID.startsWith('demo-')) {
 
 const app: App = initializeApp({ projectId: PROJECT_ID })
 const db: Firestore = getFirestore(app)
+const auth: Auth = getAuth(app)
+
+/**
+ * The password every seeded account signs in with. Deliberately printed to the
+ * console at the end of a run: these accounts only exist inside an emulator
+ * that is wiped on restart, and a review is useless if Rafa cannot log in.
+ * Override with SEED_DEV_PASSWORD if a longer one is ever needed.
+ */
+const DEV_PASSWORD = process.env.SEED_DEV_PASSWORD ?? 'rkdev2026'
+
+/** Where the app is served in dev — used only to print a usable invite link. */
+const APP_ORIGIN = process.env.SEED_APP_ORIGIN ?? 'http://localhost:5173'
 
 // ── settings/app ─────────────────────────────────────────────────────────────
 
@@ -791,6 +825,31 @@ const EMPLOYEES: SeedEmployee[] = [
     hireDate: '2025-06-02',
   },
 
+  // ── pending invite (spec §2) ──────────────────────────────────────────────
+  // A new hire whose record exists but who has never signed in: status
+  // 'pending', no authUids, no auth account, and a live invite token below.
+  // She is the ONLY seeded person without a password, on purpose — she is how
+  // the invite → accept → claims → active path gets walked end to end.
+  {
+    employeeNumber: '1062',
+    firstName: 'Nadia',
+    lastName: 'Salgado',
+    email: 'nadia.salgado@example.com',
+    phone: '(305) 555-0162',
+    language: 'es',
+    accessRole: 'staff',
+    department: 'FOH',
+    status: 'pending',
+    employmentType: 'hourly-tipped',
+    clockRequired: true,
+    tipsRequired: true,
+    hourlyRate: 11,
+    salaryAmount: null,
+    salaryPeriod: null,
+    shiftRoles: [role('server', 1, true), role('host', 1)],
+    hireDate: '2026-08-17',
+  },
+
   // ── archived (spec §18: kept for the record, excluded from scheduling) ─────
   {
     employeeNumber: '1036',
@@ -815,11 +874,189 @@ const EMPLOYEES: SeedEmployee[] = [
   },
 ]
 
+// ── invite (spec §2) ─────────────────────────────────────────────────────────
+
+/** The employee the seeded invite belongs to. */
+const INVITE_EMPLOYEE_NUMBER = '1062'
+/** Whoever "sent" it — a GM holds employees.edit, so this is a realistic sender. */
+const INVITE_CREATED_BY_NUMBER = '1051'
+/**
+ * Fixed so the link can be pasted from these notes on every run. A real invite
+ * token is a random secret generated by the admin who creates the invite; this
+ * one is a dev fixture and is worthless outside an emulator.
+ */
+const INVITE_TOKEN = 'dev-invite-9f4c2a71b3e84d5fa0c6e8d219b7c534'
+const INVITE_TTL_DAYS = 14
+
 // ── writers ──────────────────────────────────────────────────────────────────
 
 /** Deterministic ids keep the seed idempotent and readable in the emulator UI. */
 function employeeDocId(employeeNumber: string): string {
   return `emp-${employeeNumber}`
+}
+
+/**
+ * Deterministic uid, so re-running updates the same account instead of piling
+ * up duplicates, and so employee.authUids can be written in the same batch that
+ * creates the employee.
+ */
+function devUid(employeeNumber: string): string {
+  return `dev-uid-${employeeNumber}`
+}
+
+/**
+ * A person only gets a sign-in account if they could actually sign in:
+ *   - 'pending'  → hasn't accepted their invite yet (that's the whole point)
+ *   - 'archived' → gone; an account would be a live credential for an ex-employee
+ *   - 'inactive' → suspended
+ */
+function canSignIn(e: SeedEmployee): boolean {
+  return e.status === 'active'
+}
+
+function fullName(e: SeedEmployee): string {
+  return [e.preferredName ?? e.firstName, e.lastName].filter(Boolean).join(' ')
+}
+
+function authErrorCode(err: unknown): string {
+  return typeof err === 'object' && err !== null && 'code' in err
+    ? String((err as { code: unknown }).code)
+    : ''
+}
+
+/** Delete whichever account currently holds this address, if any. */
+async function deleteAuthUserByEmail(email: string): Promise<boolean> {
+  try {
+    const existing = await auth.getUserByEmail(email)
+    await auth.deleteUser(existing.uid)
+    return true
+  } catch (err) {
+    if (authErrorCode(err) === 'auth/user-not-found') return false
+    throw err
+  }
+}
+
+/**
+ * Create or update one account. Two collisions are handled because both happen
+ * in practice on a re-run:
+ *   - the uid already exists → update it in place (password, email, name)
+ *   - the *email* is held by a different uid → that account was made by the
+ *     invite flow during a manual test; delete it so the deterministic uid wins
+ */
+async function ensureAuthUser(
+  uid: string,
+  email: string,
+  displayName: string,
+): Promise<'created' | 'updated'> {
+  try {
+    const byEmail = await auth.getUserByEmail(email)
+    if (byEmail.uid !== uid) await auth.deleteUser(byEmail.uid)
+  } catch (err) {
+    if (authErrorCode(err) !== 'auth/user-not-found') throw err
+  }
+
+  try {
+    await auth.updateUser(uid, {
+      email,
+      emailVerified: true,
+      password: DEV_PASSWORD,
+      displayName,
+      disabled: false,
+    })
+    return 'updated'
+  } catch (err) {
+    if (authErrorCode(err) !== 'auth/user-not-found') throw err
+    await auth.createUser({
+      uid,
+      email,
+      emailVerified: true,
+      password: DEV_PASSWORD,
+      displayName,
+      disabled: false,
+    })
+    return 'created'
+  }
+}
+
+/**
+ * Accounts + claims for everyone who has already onboarded.
+ *
+ * The claims written here are byte-for-byte what functions/src/claims.ts issues
+ * on invite acceptance — `{ employeeId, role }`, nothing else. AuthProvider.tsx
+ * reads `employeeId` to resolve the employee; firestore.rules reads `role` for
+ * every permission check. Skip either and the app is a login screen with
+ * nothing behind it.
+ *
+ * The pending invitee is deliberately left with no account at all; any stale
+ * one from a previous manual walk-through is removed so the invite flow starts
+ * clean on every seed.
+ */
+async function seedAuthUsers(): Promise<{
+  created: number
+  updated: number
+  skipped: number
+  cleared: number
+  uidByNumber: Map<string, string>
+}> {
+  const uidByNumber = new Map<string, string>()
+  let created = 0
+  let updated = 0
+  let skipped = 0
+  let cleared = 0
+
+  for (const e of EMPLOYEES) {
+    if (!canSignIn(e)) {
+      skipped += 1
+      if (await deleteAuthUserByEmail(e.email)) cleared += 1
+      continue
+    }
+
+    const uid = devUid(e.employeeNumber)
+    const outcome = await ensureAuthUser(uid, e.email, fullName(e))
+    if (outcome === 'created') created += 1
+    else updated += 1
+
+    await auth.setCustomUserClaims(uid, {
+      employeeId: employeeDocId(e.employeeNumber),
+      role: e.accessRole,
+    })
+
+    uidByNumber.set(e.employeeNumber, uid)
+  }
+
+  return { created, updated, skipped, cleared, uidByNumber }
+}
+
+/**
+ * One pending invite, so the full flow is reviewable: open the link signed out,
+ * `getInvite` renders the preview, `acceptInvite` binds the uid, sets claims and
+ * flips Nadia from 'pending' to 'active'.
+ *
+ * `expiresAt` is a rolling window from the moment of seeding rather than a fixed
+ * date — a hardcoded one would silently expire and make the flow untestable a
+ * fortnight later. The document id is fixed, so re-seeding resets a consumed
+ * invite to pending instead of creating a second one.
+ */
+async function seedInvites(): Promise<number> {
+  const expiresAt = Timestamp.fromMillis(Date.now() + INVITE_TTL_DAYS * 24 * 60 * 60 * 1000)
+  const invitee = EMPLOYEES.find((e) => e.employeeNumber === INVITE_EMPLOYEE_NUMBER)
+  if (!invitee) throw new Error(`Seed invite target ${INVITE_EMPLOYEE_NUMBER} is missing`)
+
+  await db
+    .collection('invites')
+    .doc(`invite-${INVITE_EMPLOYEE_NUMBER}`)
+    .set({
+      employeeId: employeeDocId(INVITE_EMPLOYEE_NUMBER),
+      email: invitee.email,
+      token: INVITE_TOKEN,
+      status: 'pending',
+      createdAt: FieldValue.serverTimestamp(),
+      createdBy: employeeDocId(INVITE_CREATED_BY_NUMBER),
+      acceptedAt: null,
+      expiresAt,
+    })
+
+  return 1
 }
 
 async function seedPermissions(): Promise<number> {
@@ -862,13 +1099,16 @@ async function seedShiftRoles(): Promise<number> {
  * myOverrides() does a get() on private/admin, so a person without one would
  * fail every permission check.
  */
-async function seedEmployees(): Promise<{ docs: number; archived: number }> {
+async function seedEmployees(
+  uidByNumber: Map<string, string>,
+): Promise<{ docs: number; archived: number }> {
   const batch = db.batch()
   let archived = 0
 
   for (const e of EMPLOYEES) {
     if (e.status === 'archived') archived += 1
     const ref = db.collection('employees').doc(employeeDocId(e.employeeNumber))
+    const uid = uidByNumber.get(e.employeeNumber)
 
     batch.set(ref, {
       employeeNumber: e.employeeNumber,
@@ -892,8 +1132,11 @@ async function seedEmployees(): Promise<{ docs: number; archived: number }> {
       shiftRoles: e.shiftRoles,
       hireDate: e.hireDate,
       terminationDate: e.terminationDate ?? null,
-      // Empty until someone actually signs in; the invite Function links UIDs.
-      authUids: [],
+      // Pre-bound to the seeded dev account so the app is sign-in-able without
+      // walking the invite flow 24 times. Empty for the pending invitee — the
+      // acceptInvite Function is what puts a uid there, and that is the path
+      // being demonstrated.
+      authUids: uid ? [uid] : [],
       locationId: null,
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
@@ -919,13 +1162,64 @@ async function seedEmployees(): Promise<{ docs: number; archived: number }> {
 
 // ── run ──────────────────────────────────────────────────────────────────────
 
+/** Rank order for the credentials table — most privileged first. */
+const ROLE_ORDER: AccessRole[] = ['owner', 'gm', 'manager', 'supervisor', 'staff']
+
+/**
+ * The point of the whole exercise: a table Rafa can sign in from, one row per
+ * access role, so the permission differences in §4 are visible by logging in
+ * rather than by reading code.
+ */
+function printCredentials(uidByNumber: Map<string, string>): void {
+  const signInable = EMPLOYEES.filter((e) => uidByNumber.has(e.employeeNumber)).sort(
+    (a, b) =>
+      ROLE_ORDER.indexOf(a.accessRole) - ROLE_ORDER.indexOf(b.accessRole) ||
+      a.firstName.localeCompare(b.firstName),
+  )
+
+  const emailWidth = Math.max(5, ...signInable.map((e) => e.email.length))
+  const nameWidth = Math.max(4, ...signInable.map((e) => fullName(e).length))
+
+  console.log('\n── Sign-in credentials (emulator only) ' + '─'.repeat(34))
+  console.log(
+    `  ${'EMAIL'.padEnd(emailWidth)}  ${'PASSWORD'.padEnd(DEV_PASSWORD.length)}  ${'ROLE'.padEnd(10)}  ${'DEPT'.padEnd(5)}  NAME`,
+  )
+  console.log(
+    `  ${'-'.repeat(emailWidth)}  ${'-'.repeat(DEV_PASSWORD.length)}  ${'-'.repeat(10)}  ${'-'.repeat(5)}  ${'-'.repeat(nameWidth)}`,
+  )
+
+  let lastRole: AccessRole | null = null
+  for (const e of signInable) {
+    if (lastRole !== null && e.accessRole !== lastRole) console.log('')
+    lastRole = e.accessRole
+    console.log(
+      `  ${e.email.padEnd(emailWidth)}  ${DEV_PASSWORD}  ${e.accessRole.padEnd(10)}  ${e.department.padEnd(5)}  ${fullName(e)}`,
+    )
+  }
+
+  const invitee = EMPLOYEES.find((e) => e.employeeNumber === INVITE_EMPLOYEE_NUMBER)
+  console.log('\n── Pending invite (no account yet — walk the flow) ' + '─'.repeat(22))
+  console.log(`  employee   ${invitee ? fullName(invitee) : '?'} · ${invitee?.email ?? '?'}`)
+  console.log(`  status     pending → acceptInvite flips it to active`)
+  console.log(`  link       ${APP_ORIGIN}/invite?token=${INVITE_TOKEN}`)
+  console.log(`  expires    in ${INVITE_TTL_DAYS} days`)
+  console.log('\n  Sign-in method on that screen is your choice; the password one')
+  console.log(`  registers ${invitee?.email ?? 'the invitee'} with whatever you type.`)
+}
+
 async function main(): Promise<void> {
-  console.log(`\nSeeding ${PROJECT_ID} via emulator at ${EMULATOR_HOST}\n`)
+  console.log(`\nSeeding ${PROJECT_ID}`)
+  console.log(`  firestore  ${EMULATOR_HOST}`)
+  console.log(`  auth       ${AUTH_EMULATOR_HOST}\n`)
 
   const permissions = await seedPermissions()
   const settings = await seedSettings()
   const roles = await seedShiftRoles()
-  const employees = await seedEmployees()
+  // Auth accounts first: the uids they mint are written straight into
+  // employee.authUids, so the two never disagree.
+  const authUsers = await seedAuthUsers()
+  const employees = await seedEmployees(authUsers.uidByNumber)
+  const invites = await seedInvites()
 
   const byRole = new Map<AccessRole, number>()
   for (const e of EMPLOYEES) byRole.set(e.accessRole, (byRole.get(e.accessRole) ?? 0) + 1)
@@ -961,7 +1255,21 @@ async function main(): Promise<void> {
   console.log(
     `      overrides  ${withOverrides.length} (${withOverrides.map((e) => e.firstName).join(', ') || 'none'})`,
   )
-  console.log('\nSeed complete. Re-running is safe — every id is deterministic.\n')
+  console.log(
+    '  auth users                ',
+    authUsers.created + authUsers.updated,
+    'accounts with claims',
+  )
+  console.log(
+    `      created ${authUsers.created} · updated ${authUsers.updated} · no account ${authUsers.skipped}${
+      authUsers.cleared > 0 ? ` (${authUsers.cleared} stale removed)` : ''
+    }`,
+  )
+  console.log('  invites/*                 ', invites, 'document (pending)')
+
+  printCredentials(authUsers.uidByNumber)
+
+  console.log('\nSeed complete. Re-running is safe — every id and uid is deterministic.\n')
 }
 
 main().catch((err) => {
