@@ -1,0 +1,356 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="view-transition" content="same-origin">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/6f494236-40fa-4963-8e54-5b0acac1b9bb" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/13e7e78d-6808-4de8-9975-0ff2c121542d" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/867c9821-067a-492f-967f-290786d241f6" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/404feb0f-52dc-44aa-ac54-5b246c3f2066" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/ec1ad225-b3ec-4306-a73f-b5cd4dc98068" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/f930d899-b091-44ec-ace5-354c1aec79ec" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/2bf72ec2-ff83-4101-badb-ed2d6da84934" as="document">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    @view-transition {
+      navigation: auto;
+    }
+    ::view-transition-old(main-nav), ::view-transition-new(main-nav) {
+      animation: none;
+      mix-blend-mode: normal;
+    }
+    ::view-transition-old(main-content) {
+      animation: 0.25s ease-out both fade-out;
+    }
+    ::view-transition-new(main-content) {
+      animation: 0.25s ease-in 0.1s both fade-in;
+    }
+    @keyframes fade-out {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="w-[390px] h-[844px] mx-auto bg-gray-50 overflow-hidden relative shadow-2xl flex flex-col">
+    
+    <!-- iOS Top Safe Area (44px) -->
+    <div class="h-[44px] bg-white w-full flex items-center justify-between px-8 shrink-0 z-50">
+      <span class="text-[15px] font-semibold text-[#1F2937]">5:42</span>
+      <div class="flex items-center gap-1.5">
+        <iconify-icon icon="material-symbols:signal-cellular-4-bar-rounded" class="text-lg"></iconify-icon>
+        <iconify-icon icon="material-symbols:wifi" class="text-lg"></iconify-icon>
+        <iconify-icon icon="material-symbols:battery-full-rounded" class="text-xl rotate-180"></iconify-icon>
+      </div>
+    </div>
+
+    <!-- Sticky Sub-header Navigation -->
+    <div class="sticky top-0 bg-white border-b border-[#E5E7EB] z-40">
+      <div class="h-[52px] flex items-center justify-between px-4">
+        <a href="#" id="back-btn" class="p-2 -ml-2 text-[#1F2937]">
+          <iconify-icon icon="lucide:chevron-left" class="text-2xl"></iconify-icon>
+        </a>
+        <h1 class="text-[17px] font-semibold text-[#1F2937]">My profile</h1>
+        <button id="edit-profile-btn" class="text-[15px] font-semibold text-[#2563EB] pr-2">Edit</button>
+      </div>
+    </div>
+
+    <!-- Scrollable Content Area -->
+    <main class="flex-1 overflow-y-auto no-scrollbar" style="view-transition-name: main-content;">
+      <!-- Profile Header Section -->
+      <div class="bg-white px-4 pt-6 pb-4 flex flex-col items-center border-b border-[#E5E7EB]">
+        <div class="relative">
+          <div class="w-[88px] h-[88px] bg-[#E0E7FF] text-[#2563EB] rounded-full flex items-center justify-center text-[28px] font-bold border-2 border-white shadow-sm">
+            ML
+          </div>
+          <div class="absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full border border-[#E5E7EB] shadow-sm flex items-center justify-center text-[#6B7280]">
+            <iconify-icon icon="lucide:camera" class="text-lg"></iconify-icon>
+          </div>
+        </div>
+        <h2 class="text-[22px] font-semibold text-[#1F2937] mt-3">Micah Lozon</h2>
+        <p class="text-[13px] text-[#6B7280] tabular-nums mt-0.5">Employee #1045 · since Mar 2025</p>
+        
+        <div class="flex gap-2 mt-4">
+          <span class="px-3 py-1 bg-[#FEF3D9] text-[#F59E0B] text-[12px] font-semibold rounded-full border border-[#F59E0B1A]">Server · Level 2</span>
+          <span class="px-3 py-1 bg-[#E0F2FE] text-[#06B6D4] text-[12px] font-semibold rounded-full border border-[#06B6D41A]">Runner · Level 1</span>
+        </div>
+        <p class="text-[12px] text-[#6B7280] mt-3 mb-2">Roles and levels are set by your manager.</p>
+      </div>
+
+      <!-- Card Stack -->
+      <div class="p-4 space-y-4 pb-32">
+        
+        <!-- Card A: Personal Info -->
+        <div class="bg-white border border-[#E5E7EB] rounded-xl p-4">
+          <h3 class="text-[15px] font-semibold text-[#1F2937] mb-4">Personal information</h3>
+          <div class="space-y-4">
+            <div class="border-b border-gray-50 pb-3">
+              <p class="text-[12px] font-medium text-[#6B7280] uppercase tracking-wide">Preferred name</p>
+              <p class="text-[14px] text-[#1F2937] mt-0.5">Micah</p>
+            </div>
+            <div class="border-b border-gray-50 pb-3">
+              <p class="text-[12px] font-medium text-[#6B7280] uppercase tracking-wide">Email</p>
+              <p class="text-[14px] text-[#1F2937] mt-0.5">micah.lozon@example.com</p>
+            </div>
+            <div class="border-b border-gray-50 pb-3">
+              <p class="text-[12px] font-medium text-[#6B7280] uppercase tracking-wide">Phone</p>
+              <p class="text-[14px] text-[#1F2937] mt-0.5 tabular-nums">(305) 555-0142</p>
+            </div>
+            <div>
+              <p class="text-[12px] font-medium text-[#6B7280] uppercase tracking-wide">Address</p>
+              <p class="text-[14px] text-[#1F2937] mt-0.5">1420 SW 8th St, Miami, FL 33135</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card B: Emergency Contact -->
+        <div class="bg-white border border-[#E5E7EB] rounded-xl p-4">
+          <h3 class="text-[15px] font-semibold text-[#1F2937] mb-4">Emergency contact</h3>
+          <div class="space-y-4">
+            <div class="border-b border-gray-50 pb-3">
+              <p class="text-[12px] font-medium text-[#6B7280] uppercase tracking-wide">Name</p>
+              <p class="text-[14px] text-[#1F2937] mt-0.5">Rosa Lozon</p>
+            </div>
+            <div class="border-b border-gray-50 pb-3">
+              <p class="text-[12px] font-medium text-[#6B7280] uppercase tracking-wide">Relationship</p>
+              <p class="text-[14px] text-[#1F2937] mt-0.5">Mother</p>
+            </div>
+            <div>
+              <p class="text-[12px] font-medium text-[#6B7280] uppercase tracking-wide">Phone</p>
+              <p class="text-[14px] text-[#1F2937] mt-0.5 tabular-nums">(305) 555-0198</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card C: Login Methods -->
+        <div class="bg-white border border-[#E5E7EB] rounded-xl p-4">
+          <h3 class="text-[15px] font-semibold text-[#1F2937] mb-4">Login methods</h3>
+          <div class="space-y-5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <iconify-icon icon="flat-color-icons:google" class="text-2xl"></iconify-icon>
+                <div>
+                  <p class="text-[14px] font-medium text-[#1F2937]">Google</p>
+                  <p class="text-[12px] text-[#6B7280]">micah.lozon@example.com</p>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 bg-[#E6FFFA] text-[#14B8A6] text-[11px] font-bold rounded uppercase">Linked</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <iconify-icon icon="lucide:mail" class="text-2xl text-[#6B7280]"></iconify-icon>
+                <div>
+                  <p class="text-[14px] font-medium text-[#1F2937]">Email & password</p>
+                  <p class="text-[12px] text-[#6B7280]">Password set Jun 2, 2026</p>
+                </div>
+              </div>
+              <button class="text-[13px] font-semibold text-[#2563EB]">Change</button>
+            </div>
+            <div class="flex items-center justify-between opacity-45">
+              <div class="flex items-center gap-3">
+                <iconify-icon icon="lucide:smartphone" class="text-2xl text-[#6B7280]"></iconify-icon>
+                <div>
+                  <p class="text-[14px] font-medium text-[#1F2937]">Phone OTP</p>
+                  <p class="text-[12px] text-[#6B7280]">Connect phone for login</p>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 bg-gray-100 text-gray-500 text-[11px] font-bold rounded uppercase">Coming soon</span>
+            </div>
+            <button class="w-full pt-4 border-t border-[#F9FAFB] text-[14px] font-medium text-[#2563EB] text-left">
+              + Add a login method
+            </button>
+          </div>
+        </div>
+
+        <!-- Card D: Language -->
+        <div class="bg-white border border-[#E5E7EB] rounded-xl p-4">
+          <h3 class="text-[15px] font-semibold text-[#1F2937] mb-4">Language</h3>
+          <div class="flex bg-gray-100 p-1 rounded-lg mb-2">
+            <button class="flex-1 py-1.5 bg-white shadow-sm rounded-md text-[13px] font-semibold text-[#1F2937]">EN</button>
+            <button class="flex-1 py-1.5 text-[13px] font-medium text-[#6B7280]">ES</button>
+          </div>
+          <p class="text-[12px] text-[#6B7280]">Changes the app and your notifications.</p>
+        </div>
+
+        <!-- Card E: My Documents -->
+        <div class="bg-white border border-[#E5E7EB] rounded-xl p-4">
+          <h3 class="text-[15px] font-semibold text-[#1F2937] mb-4">My documents</h3>
+          <div class="space-y-4">
+            <a href="#" class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <iconify-icon icon="lucide:file-text" class="text-2xl text-[#6B7280]"></iconify-icon>
+                <div>
+                  <p class="text-[14px] font-medium text-[#1F2937] truncate w-[160px]">Employee Handbook v4.2</p>
+                  <p class="text-[12px] text-[#6B7280]">Signed Jul 14, 2026</p>
+                </div>
+              </div>
+              <iconify-icon icon="lucide:check-circle" class="text-[#14B8A6] text-xl"></iconify-icon>
+            </a>
+            <a href="https://p.superdesign.dev/draft/ec1ad225-b3ec-4306-a73f-b5cd4dc98068" class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <iconify-icon icon="lucide:file-warning" class="text-2xl text-[#F59E0B]"></iconify-icon>
+                <div>
+                  <p class="text-[14px] font-medium text-[#1F2937] truncate w-[160px]">Updated Tip Reporting Policy v2.0</p>
+                  <p class="text-[12px] text-[#6B7280]">Sent Aug 6, 2026</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-1">
+                <span class="px-2 py-0.5 bg-[#FEF3D9] text-[#F59E0B] text-[10px] font-bold rounded uppercase">Signature needed</span>
+                <iconify-icon icon="lucide:chevron-right" class="text-[#6B7280]"></iconify-icon>
+              </div>
+            </a>
+            <a href="#" class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <iconify-icon icon="lucide:file-check" class="text-2xl text-[#6B7280]"></iconify-icon>
+                <div>
+                  <p class="text-[14px] font-medium text-[#1F2937] truncate w-[160px]">Food Safety & Allergen Handling v1.8</p>
+                  <p class="text-[12px] text-[#6B7280]">Signed May 22, 2026</p>
+                </div>
+              </div>
+              <iconify-icon icon="lucide:check-circle" class="text-[#14B8A6] text-xl"></iconify-icon>
+            </a>
+            <a href="#" class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <iconify-icon icon="lucide:file" class="text-2xl text-[#6B7280]"></iconify-icon>
+                <div>
+                  <p class="text-[14px] font-medium text-[#1F2937] truncate w-[160px]">W-4 (2026)</p>
+                  <p class="text-[12px] text-[#6B7280]">Uploaded Mar 4, 2025</p>
+                </div>
+              </div>
+              <iconify-icon icon="lucide:download" class="text-[#2563EB] text-xl"></iconify-icon>
+            </a>
+          </div>
+        </div>
+
+        <!-- Card F: MY STANDING -->
+        <div class="bg-white border border-[#E5E7EB] rounded-xl p-4">
+          <div class="mb-6">
+            <h3 class="text-[15px] font-semibold text-[#1F2937]">My standing</h3>
+            <p class="text-[12px] text-[#6B7280]">Progressive discipline · resets after 12 months without an incident.</p>
+          </div>
+          
+          <div class="relative ml-3 space-y-0">
+            <!-- Vertical Stepper Rail -->
+            <div class="absolute left-[9px] top-2 bottom-8 w-[2px] bg-[#E5E7EB]"></div>
+            <div class="absolute left-[9px] top-[calc(60%+10px)] bottom-8 w-[2px] border-l-2 border-dashed border-[#E5E7EB] bg-transparent"></div>
+
+            <!-- Step 1: Verbal Warning 1 -->
+            <div class="flex gap-4 pb-8">
+              <div class="relative z-10 w-5 h-5 rounded-full bg-[#6B7280] flex items-center justify-center ring-4 ring-white">
+                <iconify-icon icon="lucide:check" class="text-white text-[12px]"></iconify-icon>
+              </div>
+              <div class="-mt-0.5">
+                <p class="text-[14px] font-medium text-[#6B7280]">Verbal warning</p>
+                <p class="text-[12px] text-[#6B7280] tabular-nums">May 3, 2026</p>
+              </div>
+            </div>
+
+            <!-- Step 2: Verbal Warning 2 -->
+            <div class="flex gap-4 pb-8">
+              <div class="relative z-10 w-5 h-5 rounded-full bg-[#6B7280] flex items-center justify-center ring-4 ring-white">
+                <iconify-icon icon="lucide:check" class="text-white text-[12px]"></iconify-icon>
+              </div>
+              <div class="-mt-0.5">
+                <p class="text-[14px] font-medium text-[#6B7280]">Verbal warning</p>
+                <p class="text-[12px] text-[#6B7280] tabular-nums">Jun 12, 2026</p>
+              </div>
+            </div>
+
+            <!-- Step 3: YOU ARE HERE - Written Warning -->
+            <div class="flex gap-4 pb-8">
+              <div class="relative z-10 w-5 h-5 rounded-full bg-[#2563EB] ring-4 ring-white"></div>
+              <div class="-mt-3 flex-1 bg-[#2563EB08] border border-[#2563EB33] rounded-lg p-3">
+                <p class="text-[11px] font-bold text-[#2563EB] tracking-widest uppercase mb-0.5">YOU ARE HERE</p>
+                <p class="text-[15px] font-semibold text-[#1F2937]">Written warning</p>
+                <p class="text-[12px] text-[#6B7280] tabular-nums">Issued Aug 12, 2026 · signed</p>
+              </div>
+            </div>
+
+            <!-- Step 4: Write-up -->
+            <div class="flex gap-4 pb-8 opacity-55">
+              <div class="relative z-10 w-5 h-5 rounded-full border border-[#E5E7EB] bg-white ring-4 ring-white"></div>
+              <div class="-mt-0.5">
+                <p class="text-[14px] font-medium text-[#1F2937]">Write-up</p>
+                <p class="text-[12px] text-[#6B7280]">Next step</p>
+              </div>
+            </div>
+
+            <!-- Step 5: Final Warning -->
+            <div class="flex gap-4 pb-8 opacity-55">
+              <div class="relative z-10 w-5 h-5 rounded-full border border-[#E5E7EB] bg-white ring-4 ring-white"></div>
+              <div class="-mt-0.5">
+                <p class="text-[14px] font-medium text-[#1F2937]">Final warning</p>
+                <p class="text-[12px] text-[#6B7280]">Then</p>
+              </div>
+            </div>
+
+            <!-- Step 6: Suspension -->
+            <div class="flex gap-4 opacity-55">
+              <div class="relative z-10 w-5 h-5 rounded-full border border-[#E5E7EB] bg-white ring-4 ring-white"></div>
+              <div class="-mt-0.5">
+                <p class="text-[14px] font-medium text-[#1F2937]">Suspension</p>
+                <p class="text-[12px] text-[#6B7280]">Then</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 p-3 bg-gray-50 rounded-lg border border-[#E5E7EB]">
+            <p class="text-[12px] text-[#6B7280] text-center">Your prior actions expire Jun 12, 2027 if there are no further incidents.</p>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- Bottom Tab Bar (56px) + Safe Area (34px) -->
+    <nav class="fixed bottom-0 w-[390px] bg-white border-t border-[#E5E7EB] z-50" style="view-transition-name: main-nav;">
+      <div class="h-[56px] flex items-center justify-between px-2">
+        <a href="https://p.superdesign.dev/draft/6f494236-40fa-4963-8e54-5b0acac1b9bb" id="nav-home" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280]">
+          <iconify-icon icon="lucide:home" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">Home</span>
+        </a>
+        <a href="#schedule" id="nav-schedule" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280]">
+          <iconify-icon icon="lucide:calendar" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">Schedule</span>
+        </a>
+        <a href="#clock" id="nav-clock" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280]">
+          <iconify-icon icon="lucide:clock" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">Clock</span>
+        </a>
+        <a href="https://p.superdesign.dev/draft/404feb0f-52dc-44aa-ac54-5b246c3f2066" id="nav-tasks" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280] relative">
+          <iconify-icon icon="lucide:clipboard-list" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">Tasks</span>
+        </a>
+        <a href="https://p.superdesign.dev/draft/867c9821-067a-492f-967f-290786d241f6" id="nav-more" class="flex-1 flex flex-col items-center justify-center gap-0.5">
+          <iconify-icon icon="lucide:more-horizontal" class="text-[22px] text-[#2563EB]"></iconify-icon>
+          <span class="text-[11px] font-medium text-[#2563EB]">More</span>
+        </a>
+      </div>
+      <!-- iOS Home Indicator Area (34px) -->
+      <div class="h-[34px] w-full flex items-center justify-center">
+        <div class="w-[134px] h-[5px] bg-black rounded-full opacity-20"></div>
+      </div>
+    </nav>
+
+  </div>
+</body></html>

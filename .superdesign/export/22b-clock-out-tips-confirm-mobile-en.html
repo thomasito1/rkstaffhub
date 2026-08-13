@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clock Out - Confirm Tips</title>
+  <meta name="view-transition" content="same-origin">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/6f494236-40fa-4963-8e54-5b0acac1b9bb" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/334a74f9-3028-4c0c-872d-a7ce915ee2ce" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/f33f9e0a-a28a-4c64-b384-c2ed13f88a44" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/a3b67654-5375-4c02-81dc-69c58542e6b8" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/57ce6bd1-5649-4bac-be59-fb116c763401" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/f6e95208-9895-464c-b389-aaf02b9efe23" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/e6e8347f-22ef-4291-b502-2e065ebfca6a" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/3620ea22-33b4-4f86-a400-d84af3d744d6" as="document">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    html { background-color: #ffffff; }
+    @view-transition { navigation: auto; }
+    ::view-transition { background-color: #ffffff; }
+    ::view-transition-old(main-content) {
+        animation: 0.25s ease-out both fade-out;
+    }
+    ::view-transition-new(main-content) {
+        animation: 0.25s ease-in 0.1s both fade-in;
+    }
+    @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  </style>
+</head>
+<body>
+  <div class="w-[390px] h-[844px] mx-auto bg-white overflow-hidden relative shadow-2xl flex flex-col">
+    
+    <!-- iOS Top Safe Area (44px) -->
+    <div class="h-[44px] bg-white w-full flex items-center justify-between px-8 shrink-0 z-50">
+      <span class="text-[15px] font-semibold text-[#1F2937]">10:04</span>
+      <div class="flex items-center gap-1.5">
+        <iconify-icon icon="material-symbols:signal-cellular-4-bar-rounded" class="text-lg"></iconify-icon>
+        <iconify-icon icon="material-symbols:wifi" class="text-lg"></iconify-icon>
+        <iconify-icon icon="material-symbols:battery-full-rounded" class="text-xl rotate-180"></iconify-icon>
+      </div>
+    </div>
+
+    <!-- Sticky Header -->
+    <header class="bg-white border-b border-[#E5E7EB] shrink-0 z-40">
+      <div class="h-[56px] flex items-center justify-between px-4">
+        <div class="flex items-center gap-3">
+          <a href="https://p.superdesign.dev/draft/57ce6bd1-5649-4bac-be59-fb116c763401" id="btn-back" class="p-1 -ml-1 text-[#1F2937]">
+            <iconify-icon icon="lucide:chevron-left" class="text-2xl"></iconify-icon>
+          </a>
+          <h1 class="text-[17px] font-semibold text-[#1F2937]">Clock Out</h1>
+        </div>
+        <span class="text-[13px] text-[#6B7280]">Step 3 of 3</span>
+      </div>
+      <!-- Progress Bar -->
+      <div class="h-[4px] w-full bg-[#E5E7EB]">
+        <div class="h-full w-full bg-[#2563EB]"></div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto no-scrollbar" style="view-transition-name: main-content">
+      <div class="p-6">
+        <!-- Confirmation Prompt -->
+        <div class="text-center mb-8">
+          <h2 class="text-[20px] font-semibold text-[#1F2937]">Confirm your tips</h2>
+          <p class="text-[13px] text-[#6B7280] mt-1 leading-relaxed">
+            Check the amount before you clock out. You'll need a manager to change it later.
+          </p>
+        </div>
+
+        <!-- Focal Amount Card -->
+        <div class="bg-white border border-[#E5E7EB] rounded-[16px] p-7 text-center shadow-sm mb-6">
+          <span class="text-[11px] font-bold text-[#6B7280] tracking-[0.05em] uppercase block mb-2">TOTAL TIPS</span>
+          <span class="text-[44px] font-semibold text-[#1F2937] tabular-nums leading-none block">$142.00</span>
+          <a href="https://p.superdesign.dev/draft/57ce6bd1-5649-4bac-be59-fb116c763401" id="edit-tips-link" class="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#2563EB] mt-4 py-1 px-3 bg-[#2563EB08] rounded-full">
+            <iconify-icon icon="lucide:pencil" class="text-xs"></iconify-icon>
+            Edit amount
+          </a>
+        </div>
+
+        <!-- Shift Summary Card -->
+        <div class="bg-white border border-[#E5E7EB] rounded-[16px] overflow-hidden mb-6 shadow-sm">
+          <div class="px-4 py-3 border-b border-[#E5E7EB] flex items-center justify-between">
+            <span class="text-[13px] font-medium text-[#6B7280]">Clocked in</span>
+            <span class="text-[14px] font-semibold text-[#1F2937] tabular-nums">3:28 PM</span>
+          </div>
+          <div class="px-4 py-3 border-b border-[#E5E7EB] flex items-center justify-between">
+            <span class="text-[13px] font-medium text-[#6B7280]">Clocked out</span>
+            <span class="text-[14px] font-semibold text-[#1F2937] tabular-nums">10:04 PM</span>
+          </div>
+          <div class="px-4 py-3 border-b border-[#E5E7EB] flex items-center justify-between">
+            <span class="text-[13px] font-medium text-[#6B7280]">Total hours</span>
+            <span class="text-[14px] font-semibold text-[#1F2937] tabular-nums">7.5 hrs</span>
+          </div>
+          <div class="px-4 py-3 flex items-center justify-between">
+            <span class="text-[13px] font-medium text-[#6B7280]">Role</span>
+            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#FEF3D9] text-[#F59E0B] uppercase tracking-wide">Server · L2</span>
+          </div>
+        </div>
+
+        <!-- Amber Notice -->
+        <div class="bg-[#FEF3D9] rounded-xl p-4 flex gap-3 border border-[#F59E0B22]">
+          <iconify-icon icon="lucide:alert-triangle" class="text-[#F59E0B] text-xl shrink-0 mt-0.5"></iconify-icon>
+          <p class="text-[13px] text-[#1F2937] leading-relaxed">
+            Once you clock out, only a manager can edit this punch or tip amount.
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Sticky Actions -->
+    <div class="p-4 pb-0 bg-white border-t border-[#E5E7EB] shrink-0">
+      <a href="https://p.superdesign.dev/draft/f6e95208-9895-464c-b389-aaf02b9efe23" id="cta-confirm" class="w-full h-[56px] bg-[#2563EB] text-white font-semibold rounded-[12px] flex items-center justify-center active:scale-[0.98] transition-all mb-3">
+        Confirm and clock out
+      </a>
+      <a href="https://p.superdesign.dev/draft/57ce6bd1-5649-4bac-be59-fb116c763401" id="cta-goback" class="w-full h-[52px] border border-[#E5E7EB] text-[#6B7280] font-semibold rounded-[12px] flex items-center justify-center active:bg-gray-50 transition-all">
+        Go back
+      </a>
+    </div>
+
+    <!-- iOS Home Indicator Safe Area (34px) -->
+    <div class="h-[34px] w-full flex items-center justify-center shrink-0">
+      <div class="w-[134px] h-[5px] bg-black rounded-full opacity-20"></div>
+    </div>
+
+  </div>
+</body>
+</html>

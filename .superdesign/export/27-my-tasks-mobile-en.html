@@ -1,0 +1,256 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="view-transition" content="same-origin">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/6f494236-40fa-4963-8e54-5b0acac1b9bb" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/13e7e78d-6808-4de8-9975-0ff2c121542d" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/867c9821-067a-492f-967f-290786d241f6" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/404feb0f-52dc-44aa-ac54-5b246c3f2066" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/ec1ad225-b3ec-4306-a73f-b5cd4dc98068" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/f930d899-b091-44ec-ace5-354c1aec79ec" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/2bf72ec2-ff83-4101-badb-ed2d6da84934" as="document">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-smoothing: grayscale;
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    @view-transition {
+      navigation: auto;
+    }
+    ::view-transition-old(main-nav),
+    ::view-transition-new(main-nav) {
+      animation: none;
+      mix-blend-mode: normal;
+    }
+    ::view-transition-old(main-content) {
+      animation: 0.25s ease-out both fade-out;
+    }
+    ::view-transition-new(main-content) {
+      animation: 0.25s ease-in 0.1s both fade-in;
+    }
+    @keyframes fade-out {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="w-[390px] h-[844px] mx-auto bg-[#F9FAFB] overflow-hidden relative shadow-2xl flex flex-col">
+    
+    <!-- iOS Top Safe Area (44px) -->
+    <div class="h-[44px] bg-white w-full flex items-center justify-between px-8 shrink-0 z-[60]">
+      <span class="text-[15px] font-semibold text-[#1F2937]">5:42</span>
+      <div class="flex items-center gap-1.5">
+        <iconify-icon icon="material-symbols:signal-cellular-4-bar-rounded" class="text-lg"></iconify-icon>
+        <iconify-icon icon="material-symbols:wifi" class="text-lg"></iconify-icon>
+        <iconify-icon icon="material-symbols:battery-full-rounded" class="text-xl rotate-180"></iconify-icon>
+      </div>
+    </div>
+
+    <!-- Sticky Header -->
+    <header class="sticky top-0 bg-white border-b border-[#E5E7EB] z-50 shrink-0 px-4 py-3 flex items-center justify-between">
+      <h1 class="text-[24px] font-semibold text-[#1F2937] tracking-tight">My tasks</h1>
+      <button id="filter-btn" class="p-2 text-[#6B7280] active:scale-95">
+        <iconify-icon icon="lucide:sliders-horizontal" class="text-2xl"></iconify-icon>
+      </button>
+    </header>
+
+    <!-- Scrollable Content -->
+    <main class="flex-1 overflow-y-auto no-scrollbar" style="view-transition-name: main-content;">
+      
+      <!-- Progress Strip -->
+      <div class="px-4 pt-4">
+        <div class="bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-sm">
+          <div class="flex justify-between items-center mb-2.5">
+            <span class="text-[15px] font-semibold text-[#1F2937]">3 of 7 done today</span>
+            <span class="text-[14px] font-semibold text-[#1F2937] tabular-nums">43%</span>
+          </div>
+          <div class="w-full h-1.5 bg-[#E5E7EB] rounded-full overflow-hidden">
+            <div class="h-full bg-[#14B8A6] rounded-full" style="width: 43%"></div>
+          </div>
+          <p class="text-[12px] text-[#6B7280] mt-3">Monday, Aug 10</p>
+        </div>
+      </div>
+
+      <!-- Task List Groups -->
+      <div class="px-4 py-6 space-y-8">
+        
+        <!-- Today -->
+        <section class="space-y-3">
+          <h3 class="text-[12px] font-semibold text-[#6B7280] uppercase tracking-widest flex items-center gap-2">
+            Today <span class="opacity-50">4</span>
+          </h3>
+          
+          <div class="space-y-3">
+            <!-- Task: Napkins -->
+            <div class="bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-sm flex items-start gap-4">
+              <div class="w-[26px] h-[26px] border-2 border-[#D1D5DB] rounded-lg mt-0.5 shrink-0"></div>
+              <div class="flex-1">
+                <p class="text-[15px] font-semibold text-[#1F2937] leading-tight">Restock server station napkins</p>
+                <p class="text-[12px] text-[#6B7280] mt-1">Server station</p>
+                <div class="mt-2">
+                  <span class="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#FEF3C7] text-[#D97706]">Due end of shift</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Task: POS Screens -->
+            <div class="bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-sm flex items-start gap-4">
+              <div class="w-[26px] h-[26px] border-2 border-[#D1D5DB] rounded-lg mt-0.5 shrink-0"></div>
+              <div class="flex-1">
+                <p class="text-[15px] font-semibold text-[#1F2937] leading-tight">Wipe down POS screens</p>
+                <p class="text-[12px] text-[#6B7280] mt-1">Front of house</p>
+                <div class="mt-2">
+                  <span class="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#FEF3C7] text-[#D97706]">Due end of shift</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Task: Silverware (Checked) -->
+            <div class="bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-sm flex items-start gap-4 opacity-55">
+              <div class="w-[26px] h-[26px] bg-[#14B8A6] rounded-lg mt-0.5 shrink-0 flex items-center justify-center">
+                <iconify-icon icon="lucide:check" class="text-white text-lg"></iconify-icon>
+              </div>
+              <div class="flex-1">
+                <p class="text-[15px] font-semibold text-[#6B7280] leading-tight line-through">Roll 40 sets of silverware</p>
+                <p class="text-[12px] text-[#6B7280] mt-1">Server station</p>
+                <p class="text-[12px] text-[#6B7280] mt-2">Done 4:12 PM</p>
+              </div>
+            </div>
+
+            <!-- Task: Photo Required -->
+            <div class="bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-sm flex items-start gap-4">
+              <div class="w-[26px] h-[26px] border-2 border-[#D1D5DB] rounded-lg mt-0.5 shrink-0"></div>
+              <div class="flex-1">
+                <div class="flex justify-between items-start">
+                  <p class="text-[15px] font-semibold text-[#1F2937] leading-tight">Patio umbrellas down</p>
+                </div>
+                <p class="text-[12px] text-[#6B7280] mt-1">Patio</p>
+                <div class="mt-2">
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#E0F2F1] text-[#14B8A6]">
+                    <iconify-icon icon="lucide:camera" class="text-[12px]"></iconify-icon>
+                    Photo required
+                  </span>
+                </div>
+                <!-- Photo Proof Area -->
+                <div class="mt-4 h-[72px] border-2 border-dashed border-[#E5E7EB] rounded-lg flex flex-col items-center justify-center gap-1 active:bg-gray-50">
+                  <iconify-icon icon="lucide:camera" class="text-2xl text-[#6B7280]"></iconify-icon>
+                  <span class="text-[13px] text-[#6B7280]">Take a photo to complete</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- This Week -->
+        <section class="space-y-3">
+          <h3 class="text-[12px] font-semibold text-[#6B7280] uppercase tracking-widest flex items-center gap-2">
+            This Week <span class="opacity-50">2</span>
+          </h3>
+          
+          <div class="space-y-3">
+            <!-- Deep Clean (Checked) -->
+            <div class="bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-sm flex items-start gap-4 opacity-55">
+              <div class="w-[26px] h-[26px] bg-[#14B8A6] rounded-lg mt-0.5 shrink-0 flex items-center justify-center">
+                <iconify-icon icon="lucide:check" class="text-white text-lg"></iconify-icon>
+              </div>
+              <div class="flex-1">
+                <p class="text-[15px] font-semibold text-[#6B7280] leading-tight line-through">Deep clean espresso machine</p>
+                <p class="text-[12px] text-[#6B7280] mt-1">Bar · due Friday</p>
+                <p class="text-[12px] text-[#6B7280] mt-2">Done Aug 9</p>
+              </div>
+            </div>
+            
+            <!-- Rotate Wine -->
+            <div class="bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-sm flex items-start gap-4">
+              <div class="w-[26px] h-[26px] border-2 border-[#D1D5DB] rounded-lg mt-0.5 shrink-0"></div>
+              <div class="flex-1">
+                <p class="text-[15px] font-semibold text-[#1F2937] leading-tight">Rotate wine inventory</p>
+                <p class="text-[12px] text-[#6B7280] mt-1">Bar · due Sunday</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- This Month -->
+        <section class="space-y-3">
+          <h3 class="text-[12px] font-semibold text-[#6B7280] uppercase tracking-widest flex items-center gap-2">
+            This Month <span class="opacity-50">1</span>
+          </h3>
+          
+          <div class="space-y-3">
+            <!-- Allergen Binder (Checked) -->
+            <div class="bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-sm flex items-start gap-4 opacity-55">
+              <div class="w-[26px] h-[26px] bg-[#14B8A6] rounded-lg mt-0.5 shrink-0 flex items-center justify-center">
+                <iconify-icon icon="lucide:check" class="text-white text-lg"></iconify-icon>
+              </div>
+              <div class="flex-1">
+                <p class="text-[15px] font-semibold text-[#6B7280] leading-tight line-through">Refresh allergen binder</p>
+                <p class="text-[12px] text-[#6B7280] mt-1">Server station · due Aug 31</p>
+                <p class="text-[12px] text-[#6B7280] mt-2">Done Aug 6</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <footer class="pt-4 text-center">
+           <p class="text-[12px] text-[#6B7280]">Per-shift tasks reset when your shift ends.</p>
+        </footer>
+
+      </div>
+
+      <!-- Padding for nav bar -->
+      <div class="h-24"></div>
+    </main>
+
+    <!-- Bottom Tab Bar (56px) + Safe Area (34px) -->
+    <nav class="fixed bottom-0 w-[390px] bg-white border-t border-[#E5E7EB] z-50" style="view-transition-name: main-nav;">
+      <div class="h-[56px] flex items-center justify-between px-2">
+        <a href="https://p.superdesign.dev/draft/6f494236-40fa-4963-8e54-5b0acac1b9bb" id="nav-home" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280]">
+          <iconify-icon icon="lucide:home" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">Home</span>
+        </a>
+        <a href="#schedule" id="nav-schedule" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280]">
+          <iconify-icon icon="lucide:calendar" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">Schedule</span>
+        </a>
+        <a href="#clock" id="nav-clock" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280]">
+          <iconify-icon icon="lucide:clock" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">Clock</span>
+        </a>
+        <a href="https://p.superdesign.dev/draft/404feb0f-52dc-44aa-ac54-5b246c3f2066" id="nav-tasks" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#2563EB] relative">
+          <iconify-icon icon="lucide:clipboard-list" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">Tasks</span>
+          <span class="absolute top-1.5 right-6 w-4 h-4 bg-[#2563EB] text-white text-[10px] flex items-center justify-center rounded-full ring-2 ring-white font-bold">4</span>
+        </a>
+        <a href="https://p.superdesign.dev/draft/2f246d82-b262-4fc3-8640-ce0cb36076ac" id="nav-more" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280]">
+          <iconify-icon icon="lucide:more-horizontal" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">More</span>
+        </a>
+      </div>
+      <!-- iOS Home Indicator Area (34px) -->
+      <div class="h-[34px] w-full flex items-center justify-center">
+        <div class="w-[134px] h-[5px] bg-black rounded-full opacity-20"></div>
+      </div>
+    </nav>
+
+  </div>
+</body></html>

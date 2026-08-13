@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="view-transition" content="same-origin">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/e41c1dbf-ab6e-4198-9a9c-bac8186686fa" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/42a6f9d7-0c51-4adc-94a9-a0a222936749" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/bc8a5a6a-c94b-449f-ae27-06dc2bcb6919" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/c5863524-43ad-4278-9718-cff501724d2b" as="document">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      color: #1F2937;
+    }
+    .tabular {
+      font-variant-numeric: tabular-nums;
+    }
+    @view-transition {
+      navigation: auto;
+    }
+    ::view-transition-old(main-nav),
+    ::view-transition-new(main-nav),
+    ::view-transition-old(top-bar),
+    ::view-transition-new(top-bar) {
+      animation: none;
+      mix-blend-mode: normal;
+    }
+    ::view-transition-old(main-content) {
+      animation: 0.25s ease-out both fade-out;
+    }
+    ::view-transition-new(main-content) {
+      animation: 0.25s ease-in 0.1s both fade-in;
+    }
+    @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+    .schedule-grid {
+      display: grid;
+      grid-template-columns: 220px repeat(7, 1fr);
+    }
+  </style>
+</head>
+<body>
+  <div class="flex h-screen min-w-[1440px] bg-white overflow-hidden">
+    <!-- LEFT ICON RAIL (60px) -->
+    <aside style="view-transition-name: main-nav" class="w-[60px] h-full bg-[#F5F4F2] border-r border-[#E5E7EB] flex flex-col items-center py-6 shrink-0 z-40">
+      <div class="flex flex-col gap-2 items-center w-full">
+        <a href="https://p.superdesign.dev/draft/e41c1dbf-ab6e-4198-9a9c-bac8186686fa" id="rail-home" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/50 transition-colors group">
+          <iconify-icon icon="lucide:home" class="text-[20px] text-[#6B7280] group-hover:text-[#1F2937]"></iconify-icon>
+        </a>
+        <a href="https://p.superdesign.dev/draft/73518504-0082-4378-82ba-91f66801e173" id="rail-schedule" class="w-10 h-10 flex items-center justify-center bg-white rounded-lg shadow-sm">
+          <iconify-icon icon="lucide:calendar" class="text-[20px] text-[#2563EB]"></iconify-icon>
+        </a>
+        <a href="#clock" id="rail-clock" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/50 transition-colors group">
+          <iconify-icon icon="lucide:clock" class="text-[20px] text-[#6B7280] group-hover:text-[#1F2937]"></iconify-icon>
+        </a>
+        <a href="#pool" id="rail-pool" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/50 transition-colors group relative">
+          <iconify-icon icon="lucide:users-round" class="text-[20px] text-[#6B7280] group-hover:text-[#1F2937]"></iconify-icon>
+          <span class="absolute top-2 right-2 w-2 h-2 bg-[#EF4444] rounded-full ring-2 ring-[#F5F4F2]"></span>
+        </a>
+        <a href="#tasks" id="rail-tasks" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/50 transition-colors group relative">
+          <iconify-icon icon="lucide:check-square" class="text-[20px] text-[#6B7280] group-hover:text-[#1F2937]"></iconify-icon>
+          <span class="absolute -top-1 -right-1 flex items-center justify-center min-w-[16px] h-4 px-1 bg-[#EF4444] text-white text-[10px] font-bold rounded-full border border-[#F5F4F2]">3</span>
+        </a>
+        <a href="#people" id="rail-people" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/50 transition-colors group">
+          <iconify-icon icon="lucide:contact" class="text-[20px] text-[#6B7280] group-hover:text-[#1F2937]"></iconify-icon>
+        </a>
+        <a href="#hr" id="rail-hr" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/50 transition-colors group">
+          <iconify-icon icon="lucide:file-text" class="text-[20px] text-[#6B7280] group-hover:text-[#1F2937]"></iconify-icon>
+        </a>
+        <a href="#reports" id="rail-reports" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/50 transition-colors group">
+          <iconify-icon icon="lucide:bar-chart-3" class="text-[20px] text-[#6B7280] group-hover:text-[#1F2937]"></iconify-icon>
+        </a>
+      </div>
+      <div class="mt-auto">
+        <a href="#settings" id="rail-settings" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/50 transition-colors group">
+          <iconify-icon icon="lucide:settings" class="text-[20px] text-[#6B7280] group-hover:text-[#1F2937]"></iconify-icon>
+        </a>
+      </div>
+    </aside>
+
+    <!-- MAIN WRAPPER -->
+    <div class="flex-1 flex flex-col min-w-0">
+      <!-- TOP BAR -->
+      <header style="view-transition-name: top-bar" class="h-[60px] bg-white border-b border-[#E5E7EB] flex items-center justify-between px-8 shrink-0 z-40">
+        <div class="flex items-center gap-8">
+          <div class="flex items-center gap-3">
+            <div class="w-7 h-7 bg-[#B4232A] rounded flex items-center justify-center">
+              <span class="text-white font-bold text-lg">R</span>
+            </div>
+            <span class="text-[#1F2937] text-[16px] font-semibold tracking-tight">Rosalia's Kitchen</span>
+          </div>
+          <div class="relative">
+            <iconify-icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280] text-lg"></iconify-icon>
+            <input type="text" placeholder="Search employeesBold, shifts..." class="w-[320px] h-[36px] bg-[#F8F8F7] border border-[#E5E7EB] rounded-lg pl-10 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-[#2563EB]/20">
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-6">
+          <div class="flex items-center bg-[#F8F8F7] p-1 rounded-lg border border-[#E5E7EB]">
+            <button class="px-3 py-1 text-xs font-semibold bg-white text-[#1F2937] rounded shadow-sm border border-[#E5E7EB]">EN</button>
+            <button class="px-3 py-1 text-xs font-semibold text-[#6B7280]">ES</button>
+          </div>
+          <button class="relative flex items-center justify-center w-8 h-8">
+            <iconify-icon icon="lucide:bell" class="text-[20px] text-[#6B7280]"></iconify-icon>
+            <span class="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 bg-[#EF4444] text-white text-[10px] font-bold rounded-full">4</span>
+          </button>
+          <div class="flex items-center gap-3 pl-2 border-l border-[#E5E7EB]">
+            <div class="flex flex-col items-end">
+              <span class="text-sm font-semibold">Rafa</span>
+              <span class="text-[11px] text-[#6B7280]">Owner</span>
+            </div>
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Rafa&backgroundColor=b4232a" alt="Avatar" class="w-8 h-8 rounded-full border border-[#E5E7EB]">
+          </div>
+        </div>
+      </header>
+
+      <!-- PAGE CONTENT -->
+      <main style="view-transition-name: main-content" class="flex-1 flex flex-col overflow-hidden relative">
+        <!-- PAGE HEADER -->
+        <div class="px-8 py-5 border-b border-[#E5E7EB] flex items-center justify-between shrink-0">
+          <div class="flex items-center gap-6">
+            <h1 class="text-[28px] font-semibold tracking-tight">Schedule</h1>
+            
+            <!-- Segmented Toggle -->
+            <div class="flex bg-[#F3F4F6] p-1 rounded-lg">
+              <button class="px-4 py-1.5 text-[13px] font-medium text-[#6B7280]">Day</button>
+              <button class="px-4 py-1.5 text-[13px] font-semibold bg-white text-[#1F2937] rounded shadow-sm">Week</button>
+            </div>
+
+            <!-- Dept Selector -->
+            <div class="relative">
+              <button class="flex items-center gap-2 px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-[13px] font-medium">
+                <span>FOH</span>
+                <iconify-icon icon="lucide:chevron-down"></iconify-icon>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button class="flex items-center gap-2 px-4 py-2 bg-[#FEF3D9] text-[#B45309] rounded-lg text-[13px] font-semibold border border-[#FDE68A]">
+              <iconify-icon icon="lucide:alert-triangle" class="text-base"></iconify-icon>
+              4 Warnings
+            </button>
+            <a href="https://p.superdesign.dev/draft/bc8a5a6a-c94b-449f-ae27-06dc2bcb6919" id="btn-ai-gen" class="flex items-center gap-2 px-4 py-2 border border-[#E5E7EB] rounded-lg text-[13px] font-semibold hover:bg-[#F8F8F7] transition-colors">
+              <iconify-icon icon="lucide:sparkles" class="text-base text-[#8B5CF6]"></iconify-icon>
+              Generate with AI
+            </a>
+            <a href="https://p.superdesign.dev/draft/c5863524-43ad-4278-9718-cff501724d2b" id="btn-publish" class="px-4 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-lg text-[13px] font-semibold shadow-sm transition-colors">
+              Publish schedule
+            </a>
+          </div>
+        </div>
+
+        <!-- SUB HEADER / NAVIGATOR -->
+        <div class="px-8 py-3 bg-[#F9FAFB] border-b border-[#E5E7EB] flex items-center justify-between shrink-0">
+          <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
+              <button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-200 transition-colors border border-[#E5E7EB] bg-white">
+                <iconify-icon icon="lucide:chevron-left"></iconify-icon>
+              </button>
+              <span class="text-[15px] font-semibold">Aug 10 – Aug 16, 2026</span>
+              <button class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-200 transition-colors border border-[#E5E7EB] bg-white">
+                <iconify-icon icon="lucide:chevron-right"></iconify-icon>
+              </button>
+            </div>
+            <button class="px-3 py-1.5 text-[13px] font-medium text-[#6B7280] hover:text-[#1F2937]">Today</button>
+          </div>
+          <div class="flex items-center gap-4">
+             <div class="flex items-center gap-1.5 text-[12px] text-[#6B7280]">
+               <span class="w-2 h-2 rounded-full bg-[#10B981]"></span>
+               <span>Synced with POS</span>
+             </div>
+             <iconify-icon icon="lucide:printer" class="text-lg text-[#6B7280] cursor-pointer hover:text-[#1F2937]"></iconify-icon>
+          </div>
+        </div>
+
+        <!-- GRID AREA -->
+        <div class="flex-1 overflow-auto">
+          <!-- HEADER ROW -->
+          <div class="schedule-grid sticky top-0 bg-white border-b border-[#E5E7EB] z-30">
+            <div class="h-[72px] flex items-center px-4 border-r border-[#E5E7EB]">
+              <span class="text-[11px] font-semibold uppercase text-[#6B7280] tracking-wider">Employee</span>
+            </div>
+            <!-- Day Columns -->
+            <div class="h-[72px] flex flex-col items-center justify-center border-r border-[#E5E7EB]">
+              <span class="text-[11px] font-semibold text-[#6B7280]">MON 10</span>
+              <span class="text-[15px] font-semibold mt-0.5">10</span>
+              <span class="text-[11px] text-[#6B7280] mt-0.5">Fcst 42</span>
+            </div>
+            <div class="h-[72px] flex flex-col items-center justify-center border-r border-[#E5E7EB]">
+              <span class="text-[11px] font-semibold text-[#6B7280]">TUE 11</span>
+              <span class="text-[15px] font-semibold mt-0.5">11</span>
+              <span class="text-[11px] text-[#6B7280] mt-0.5">Fcst 45</span>
+            </div>
+            <div class="h-[72px] flex flex-col items-center justify-center border-r border-[#E5E7EB]">
+              <span class="text-[11px] font-semibold text-[#6B7280]">WED 12</span>
+              <span class="text-[15px] font-semibold mt-0.5">12</span>
+              <span class="text-[11px] text-[#6B7280] mt-0.5">Fcst 51</span>
+            </div>
+            <div class="h-[72px] flex flex-col items-center justify-center border-r border-[#E5E7EB]">
+              <span class="text-[11px] font-semibold text-[#6B7280]">THU 13</span>
+              <span class="text-[15px] font-semibold mt-0.5">13</span>
+              <span class="text-[11px] text-[#6B7280] mt-0.5">Fcst 58</span>
+            </div>
+            <div class="h-[72px] flex flex-col items-center justify-center border-r border-[#E5E7EB]">
+              <span class="text-[11px] font-semibold text-[#6B7280]">FRI 14</span>
+              <span class="text-[15px] font-semibold mt-0.5">14</span>
+              <span class="text-[11px] text-[#6B7280] mt-0.5">Fcst 74</span>
+            </div>
+            <div class="h-[72px] flex flex-col items-center justify-center border-r border-[#E5E7EB]">
+              <span class="text-[11px] font-semibold text-[#6B7280]">SAT 15</span>
+              <span class="text-[15px] font-semibold mt-0.5">15</span>
+              <span class="text-[11px] text-[#6B7280] mt-0.5">Fcst 82</span>
+            </div>
+            <div class="h-[72px] flex flex-col items-center justify-center">
+              <span class="text-[11px] font-semibold text-[#6B7280]">SUN 16</span>
+              <span class="text-[15px] font-semibold mt-0.5">16</span>
+              <span class="text-[11px] text-[#6B7280] mt-0.5">Fcst 47</span>
+            </div>
+          </div>
+
+          <!-- BODY GROUPS -->
+          
+          <!-- ROLE: SERVER (#F5A623) -->
+          <div class="flex flex-col">
+            <div class="w-full h-8 bg-[#F5A623]/10 flex items-center justify-between px-4 border-b border-[#E5E7EB]">
+              <span class="text-[11px] font-bold text-[#F5A623] uppercase tracking-widest">Server</span>
+              <span class="text-[11px] font-medium text-[#6B7280]">Total: 84.5 hrs</span>
+            </div>
+
+            <!-- Employee Row: Allison -->
+            <div class="schedule-grid border-b border-[#E5E7EB]">
+              <div class="p-3 border-r border-[#E5E7EB] flex items-center gap-3">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Allison" class="w-7 h-7 rounded-full bg-gray-100">
+                <div class="flex flex-col min-w-0">
+                  <span class="text-[14px] font-medium truncate">Allison Rodriguez</span>
+                  <span class="text-[12px] text-[#6B7280]">28.5 hrs</span>
+                </div>
+              </div>
+              <!-- MON -->
+              <div class="p-1 border-r border-[#E5E7EB] flex items-center justify-center">
+                <div class="w-full h-[52px] bg-[#F5A623]/15 border-l-[3px] border-[#F5A623] rounded-md p-1.5 relative">
+                  <div class="text-[12px] font-bold tabular">10:30a–4:00p</div>
+                  <div class="text-[11px] text-[#6B7280]">Floor</div>
+                  <span class="absolute top-1 right-1 text-[9px] font-bold bg-white w-4 h-4 flex items-center justify-center rounded border border-[#E5E7EB]">S</span>
+                </div>
+              </div>
+              <!-- TUE -->
+              <div class="p-1 border-r border-[#E5E7EB]"></div>
+              <!-- WED -->
+              <div class="p-1 border-r border-[#E5E7EB] flex items-center justify-center">
+                <div class="w-full h-[52px] bg-[#F5A623]/15 border-l-[3px] border-[#F5A623] rounded-md p-1.5 relative">
+                  <div class="text-[12px] font-bold tabular">3:30p–10:00p</div>
+                  <div class="text-[11px] text-[#6B7280]">Floor</div>
+                </div>
+              </div>
+              <!-- THU -->
+              <div class="p-1 border-r border-[#E5E7EB] flex items-center justify-center">
+                <div class="w-full h-[52px] bg-[#F5A623]/15 border-l-[3px] border-[#F5A623] rounded-md p-1.5 relative">
+                  <div class="text-[12px] font-bold tabular">3:30p–10:00p</div>
+                  <div class="text-[11px] text-[#6B7280]">Floor</div>
+                </div>
+              </div>
+              <!-- FRI -->
+              <div class="p-1 border-r border-[#E5E7EB] flex items-center justify-center">
+                <div class="w-full h-[52px] bg-[#F5A623]/15 border-l-[3px] border-[#F5A623] rounded-md p-1.5 relative">
+                  <div class="text-[12px] font-bold tabular">3:30p–10:00p</div>
+                  <div class="text-[11px] text-[#6B7280]">Patio</div>
+                </div>
+              </div>
+              <!-- SAT -->
+              <div class="p-1 border-r border-[#E5E7EB] flex items-center justify-center">
+                <div class="w-full h-[52px] bg-[#F5A623]/15 border-l-[3px] border-[#F5A623] rounded-md p-1.5 relative">
+                  <div class="text-[12px] font-bold tabular">3:30p–11:00p</div>
+                  <div class="text-[11px] text-[#6B7280]">Patio</div>
+                </div>
+              </div>
+              <!-- SUN -->
+              <div class="p-1">
+                <div class="w-full h-[52px] bg-[#F5A623]/15 border-l-[3px] border-[#F5A623] rounded-md p-1.5 relative">
+                  <div class="text-[12px] font-bold tabular">10:30a–4:00p</div>
+                  <div class="text-[11px] text-[#6B7280]">Floor</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Micah Lozon (Conflict) -->
+            <div class="schedule-grid border-b border-[#E5E7EB]">
+              <div class="p-3 border-r border-[#E5E7EB] flex items-center gap-3">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Micah" class="w-7 h-7 rounded-full bg-gray-100">
+                <div class="flex flex-col min-w-0">
+                  <span class="text-[14px] font-medium truncate">Micah Lozon</span>
+                  <span class="text-[12px] text-[#6B7280]">18.0 hrs</span>
+                </div>
+              </div>
+              <div class="p-1 border-r border-[#E5E7EB]"></div>
+              <div class="p-1 border-r border-[#E5E7EB]"></div>
+              <div class="p-1 border-r border-[#E5E7EB]"></div>
+              <!-- THU: CONFLICT -->
+              <div class="p-1 border-r border-[#E5E7EB] flex items-center justify-center">
+                <div class="w-full h-[52px] bg-[#FDE8E8] border border-[#EF4444] border-l-[3px] rounded-md p-1.5 relative">
+                  <div class="text-[12px] font-bold tabular">3:30p–10:00p</div>
+                  <div class="text-[11px] text-[#6B7280]">Floor</div>
+                  <iconify-icon icon="lucide:alert-triangle" class="absolute top-1 right-1 text-[#EF4444] text-[10px]"></iconify-icon>
+                </div>
+              </div>
+              <div class="p-1 border-r border-[#E5E7EB] flex items-center justify-center">
+                 <div class="w-full h-[52px] bg-[#F5A623]/15 border-l-[3px] border-[#F5A623] rounded-md p-1.5 relative">
+                  <div class="text-[12px] font-bold tabular">3:30p–10:00p</div>
+                  <div class="text-[11px] text-[#6B7280]">Floor</div>
+                </div>
+              </div>
+              <div class="p-1 border-r border-[#E5E7EB] flex items-center justify-center">
+                 <div class="w-full h-[52px] bg-[#F5A623]/15 border-l-[3px] border-[#F5A623] rounded-md p-1.5 relative">
+                  <div class="text-[12px] font-bold tabular">3:30p–11:00p</div>
+                  <div class="text-[11px] text-[#6B7280]">Bar Area</div>
+                </div>
+              </div>
+              <div class="p-1"></div>
+            </div>
+
+            <!-- OPEN SHIFTS -->
+            <div class="schedule-grid border-b border-[#E5E7EB] border-dashed">
+              <div class="p-3 border-r border-[#E5E7EB] flex items-center">
+                <span class="text-[12px] font-semibold text-gray-400 italic">OPEN SHIFTS</span>
+              </div>
+              <div class="p-1 border-r border-[#E5E7EB]"></div>
+              <div class="p-1 border-r border-[#E5E7EB]"></div>
+              <div class="p-1 border-r border-[#E5E7EB]">
+                <div class="w-full h-[48px] border border-dashed border-[#F5A623] bg-[#F5A623]/5 rounded-md flex flex-col justify-center p-1.5">
+                  <div class="text-[11px] font-bold tabular">11:00a–4:00p</div>
+                  <div class="text-[10px] text-[#6B7280]">Unassigned</div>
+                </div>
+              </div>
+              <div class="p-1 border-r border-[#E5E7EB]"></div>
+              <div class="p-1 border-r border-[#E5E7EB]"></div>
+              <div class="p-1 border-r border-[#E5E7EB]"></div>
+              <div class="p-1"></div>
+            </div>
+
+            <!-- Add Employee Ghost -->
+            <div class="schedule-grid h-10 border-b border-[#E5E7EB] border-dashed">
+               <div class="col-span-8 flex items-center px-4">
+                 <button class="text-[12px] font-medium text-[#6B7280] hover:text-[#1F2937] flex items-center gap-1.5">
+                   <iconify-icon icon="lucide:plus"></iconify-icon>
+                   Add employee
+                 </button>
+               </div>
+            </div>
+          </div>
+
+          <!-- ROLE: BARTENDER (#8B5CF6) -->
+          <div class="flex flex-col">
+            <div class="w-full h-8 bg-[#8B5CF6]/10 flex items-center justify-between px-4 border-b border-[#E5E7EB]">
+              <span class="text-[11px] font-bold text-[#8B5CF6] uppercase tracking-widest">Bartender</span>
+              <span class="text-[11px] font-medium text-[#6B7280]">Total: 42.0 hrs</span>
+            </div>
+            
+            <!-- Employee Row: Isaac (Overtime Warning) -->
+            <div class="schedule-grid border-b border-[#E5E7EB]">
+              <div class="p-3 border-r border-[#E5E7EB] flex items-center gap-3">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Isaac" class="w-7 h-7 rounded-full bg-gray-100">
+                <div class="flex flex-col min-w-0">
+                  <span class="text-[14px] font-medium truncate">Isaac Boynton</span>
+                  <span class="text-[12px] text-[#6B7280]">40.5 hrs</span>
+                </div>
+              </div>
+              <div class="p-1 border-r border-[#E5E7EB] flex items-center justify-center">
+                 <div class="w-full h-[52px] bg-[#8B5CF6]/15 border-l-[3px] border-[#8B5CF6] rounded-md p-1.5 relative">
+                  <div class="text-[12px] font-bold tabular">3:30p–10:00p</div>
+                  <div class="text-[11px] text-[#6B7280]">Main Bar</div>
+                </div>
+              </div>
+              <div class="p-1 border-r border-[#E5E7EB]"></div>
+              <div class="p-1 border-r border-[#E5E7EB]"></div>
+              <div class="p-1 border-r border-[#E5E7EB]"></div>
+              <div class="p-1 border-r border-[#E5E7EB] flex items-center justify-center">
+                 <div class="w-full h-[52px] bg-[#8B5CF6]/15 border-l-[3px] border-[#8B5CF6] rounded-md p-1.5 relative">
+                  <div class="text-[12px] font-bold tabular">3:30p–11:00p</div>
+                  <div class="text-[11px] text-[#6B7280]">Main Bar</div>
+                </div>
+              </div>
+              <!-- SAT: Overtime Warning -->
+              <div class="p-1 border-r border-[#E5E7EB] flex items-center justify-center">
+                <div class="w-full h-[52px] bg-[#8B5CF6]/15 border-l-[3px] border-[#8B5CF6] rounded-md p-1.5 relative">
+                  <div class="text-[12px] font-bold tabular">11:00a–11:00p</div>
+                  <div class="text-[11px] text-[#6B7280]">Main Bar</div>
+                  <iconify-icon icon="lucide:clock" class="absolute top-1 right-1 text-[#F59E0B] text-[10px]"></iconify-icon>
+                </div>
+              </div>
+              <div class="p-1"></div>
+            </div>
+
+            <!-- Add Employee Ghost -->
+            <div class="schedule-grid h-10 border-b border-[#E5E7EB] border-dashed">
+               <div class="col-span-8 flex items-center px-4">
+                 <button class="text-[12px] font-medium text-[#6B7280] flex items-center gap-1.5">
+                   <iconify-icon icon="lucide:plus"></iconify-icon>
+                   Add employee
+                 </button>
+               </div>
+            </div>
+          </div>
+
+          <!-- OTHER ROLES COMPACTED FOR PREVIEW -->
+          <div class="w-full h-8 bg-[#F97316]/10 flex items-center px-4 border-b border-[#E5E7EB]">
+             <span class="text-[11px] font-bold text-[#F97316] uppercase tracking-widest">Host</span>
+          </div>
+          <div class="w-full h-8 bg-[#06B6D4]/10 flex items-center px-4 border-b border-[#E5E7EB]">
+             <span class="text-[11px] font-bold text-[#06B6D4] uppercase tracking-widest">Runner</span>
+          </div>
+          <div class="w-full h-8 bg-[#22C55E]/10 flex items-center px-4 border-b border-[#E5E7EB]">
+             <span class="text-[11px] font-bold text-[#22C55E] uppercase tracking-widest">Shift Supervisor</span>
+          </div>
+           <div class="w-full h-8 bg-[#EC4899]/10 flex items-center px-4 border-b border-[#E5E7EB]">
+             <span class="text-[11px] font-bold text-[#EC4899] uppercase tracking-widest">Manager / MOD</span>
+          </div>
+
+        </div>
+
+        <!-- FOOTER BAR -->
+        <footer class="h-[74px] bg-white border-t border-[#E5E7EB] z-40 shrink-0 schedule-grid">
+          <div class="flex items-center px-4 border-r border-[#E5E7EB] bg-[#F9FAFB]">
+            <span class="text-[13px] font-bold">Labor</span>
+          </div>
+          <!-- MON -->
+          <div class="flex flex-col items-center justify-center border-r border-[#E5E7EB] p-2">
+            <span class="px-2 py-0.5 bg-[#FEF3D9] text-[#B45309] text-[10px] font-bold rounded-full mb-1">44%</span>
+            <span class="text-[12px] tabular">16.0 hrs</span>
+            <span class="text-[12px] font-semibold tabular">$288</span>
+          </div>
+          <!-- TUE -->
+          <div class="flex flex-col items-center justify-center border-r border-[#E5E7EB] p-2">
+            <span class="px-2 py-0.5 bg-[#FEF3D9] text-[#B45309] text-[10px] font-bold rounded-full mb-1">43%</span>
+            <span class="text-[12px] tabular">17.0 hrs</span>
+            <span class="text-[12px] font-semibold tabular">$302</span>
+          </div>
+          <!-- WED -->
+          <div class="flex flex-col items-center justify-center border-r border-[#E5E7EB] p-2">
+            <span class="px-2 py-0.5 bg-[#CCFBF1] text-[#0F766E] text-[10px] font-bold rounded-full mb-1">42%</span>
+            <span class="text-[12px] tabular">18.5 hrs</span>
+            <span class="text-[12px] font-semibold tabular">$330</span>
+          </div>
+          <!-- THU -->
+          <div class="flex flex-col items-center justify-center border-r border-[#E5E7EB] p-2">
+            <span class="px-2 py-0.5 bg-[#CCFBF1] text-[#0F766E] text-[10px] font-bold rounded-full mb-1">41%</span>
+            <span class="text-[12px] tabular">20.0 hrs</span>
+            <span class="text-[12px] font-semibold tabular">$358</span>
+          </div>
+          <!-- FRI -->
+          <div class="flex flex-col items-center justify-center border-r border-[#E5E7EB] p-2">
+            <span class="px-2 py-0.5 bg-[#CCFBF1] text-[#0F766E] text-[10px] font-bold rounded-full mb-1">39%</span>
+            <span class="text-[12px] tabular">25.0 hrs</span>
+            <span class="text-[12px] font-semibold tabular">$452</span>
+          </div>
+          <!-- SAT -->
+          <div class="flex flex-col items-center justify-center border-r border-[#E5E7EB] p-2">
+            <span class="px-2 py-0.5 bg-[#CCFBF1] text-[#0F766E] text-[10px] font-bold rounded-full mb-1">38%</span>
+            <span class="text-[12px] tabular">27.0 hrs</span>
+            <span class="text-[12px] font-semibold tabular">$486</span>
+          </div>
+          <!-- SUN (Multi-Column span trick for total) -->
+          <div class="relative">
+            <div class="flex flex-col items-center justify-center p-2">
+              <span class="px-2 py-0.5 bg-[#FEF3D9] text-[#B45309] text-[10px] font-bold rounded-full mb-1">45%</span>
+              <span class="text-[12px] tabular">18.0 hrs</span>
+              <span class="text-[12px] font-semibold tabular">$328</span>
+            </div>
+            <div class="absolute right-0 top-0 bottom-0 flex items-center pr-6 bg-white pl-4 border-l border-gray-100">
+               <div class="text-right">
+                 <div class="text-[13px] font-bold text-[#1F2937]">Week total 141.5 hrs</div>
+                 <div class="text-[12px] text-[#6B7280]">$2,544 · 42.0%</div>
+               </div>
+            </div>
+          </div>
+        </footer>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

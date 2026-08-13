@@ -1,0 +1,110 @@
+{
+  "app": {
+    "name": "Rosalia's Kitchen",
+    "productName": "Staff Hub",
+    "loading": "Loading…"
+  },
+  "nav": {
+    "home": "Home",
+    "schedule": "Schedule",
+    "clock": "Clock",
+    "tasks": "Tasks",
+    "more": "More",
+    "shiftPool": "Shift pool",
+    "people": "People",
+    "hr": "HR",
+    "reports": "Reports",
+    "settings": "Settings",
+    "search": "Search employees, shifts…",
+    "notifications": "Notifications",
+    "openMenu": "Open menu",
+    "signOut": "Sign out"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save",
+    "saveChanges": "Save changes",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "continue": "Continue",
+    "done": "Done",
+    "approve": "Approve",
+    "decline": "Decline",
+    "retry": "Retry",
+    "undo": "Undo",
+    "search": "Search",
+    "clearFilters": "Clear filters",
+    "viewAll": "View all",
+    "required": "Required",
+    "optional": "Optional",
+    "comingSoon": "Coming soon",
+    "language": "Language",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "status": {
+    "pending": "Pending",
+    "approved": "Approved",
+    "declined": "Declined",
+    "draft": "Draft",
+    "published": "Published",
+    "active": "Active",
+    "archived": "Archived",
+    "inactive": "Inactive"
+  },
+  "filters": {
+    "location": "Location",
+    "department": "Department",
+    "role": "Role",
+    "type": "Type",
+    "status": "Status",
+    "allDepartments": "All departments",
+    "allRoles": "All roles",
+    "allTypes": "All types",
+    "allStatuses": "All statuses"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signInWelcome": "Welcome back. Use the method your manager set up for you.",
+    "continueWithGoogle": "Continue with Google",
+    "continueWithPhone": "Continue with a texted code",
+    "or": "or",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "rememberMe": "Remember me on this device",
+    "noAccount": "Don't have an account? Ask your manager for an invite.",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "signingIn": "Signing in…",
+    "errors": {
+      "invalidCredentials": "That email or password isn't right.",
+      "networkError": "Couldn't reach the server. Check your connection and try again.",
+      "tooManyAttempts": "Too many attempts. Wait a moment and try again.",
+      "generic": "Something went wrong signing you in."
+    }
+  },
+  "empty": {
+    "noShifts": "No shifts scheduled yet",
+    "noShiftsBody": "Your schedule for this week hasn't been published.",
+    "noTasks": "You're all caught up",
+    "noTasksBody": "No tasks are due right now. Nice work.",
+    "noTrades": "No pending trades",
+    "noTradesBody": "When someone offers a shift, it will show up here.",
+    "noResults": "No results for that search",
+    "noResultsBody": "Try a different name, date or role."
+  },
+  "a11y": {
+    "avatarOf": "{{name}}'s photo",
+    "rowMenu": "Row actions",
+    "closeDialog": "Close dialog",
+    "notificationCount": "{{count}} unread notifications"
+  },
+  "dev": {
+    "componentsTitle": "Component gallery",
+    "componentsSubtitle": "Every UI-kit primitive, for visual review against the design system."
+  }
+}

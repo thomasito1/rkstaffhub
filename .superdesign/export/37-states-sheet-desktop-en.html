@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rosalia's Kitchen Staff Hub — States</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="view-transition" content="same-origin">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      background-color: #FFFFFF;
+    }
+    .tabular {
+      font-variant-numeric: tabular-nums;
+    }
+    @view-transition {
+      navigation: auto;
+    }
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    .shimmer-anim {
+      position: relative;
+      overflow: hidden;
+    }
+    .shimmer-anim::after {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      animation: shimmer 1.5s infinite;
+    }
+    ::view-transition-old(main-content) {
+      animation: 0.25s ease-out both fade-out;
+    }
+    ::view-transition-new(main-content) {
+      animation: 0.25s ease-in 0.1s both fade-in;
+    }
+    @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  </style>
+</head>
+<body>
+  <div class="min-h-screen bg-white" style="view-transition-name: main-content">
+    <div class="max-w-[1440px] mx-auto px-12 py-16">
+      <!-- PAGE HEADER -->
+      <header class="flex items-center gap-4 mb-12">
+        <div class="w-8 h-8 bg-[#B4232A] rounded flex items-center justify-center shrink-0">
+          <span class="text-white font-bold text-xl">R</span>
+        </div>
+        <div>
+          <h1 class="text-[28px] font-semibold text-[#1F2937] leading-tight">Rosalia's Kitchen Staff Hub — States</h1>
+          <p class="text-[13px] text-[#6B7280] mt-0.5">Loading, empty, error, offline and notification states &middot; v1 &middot; Aug 2026</p>
+        </div>
+      </header>
+
+      <!-- SECTION 1: LOADING SKELETONS -->
+      <section class="pt-12 border-t border-[#E5E7EB]">
+        <div class="mb-8">
+          <h2 class="text-[18px] font-semibold text-[#1F2937]">LOADING SKELETONS</h2>
+          <p class="text-[13px] text-[#6B7280]">Pulse at 1.5s. Never spin — skeletons preserve layout.</p>
+        </div>
+        <div class="grid grid-cols-3 gap-8">
+          <!-- Table Skeleton -->
+          <div class="flex flex-col gap-3">
+            <div class="border border-[#E5E7EB] rounded-xl p-4 min-h-[240px] bg-white">
+              <div class="h-8 w-full bg-[#F3F4F6] rounded-md mb-4 shimmer-anim"></div>
+              <div class="space-y-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full bg-[#F3F4F6] shrink-0 shimmer-anim"></div>
+                  <div class="h-4 w-3/4 bg-[#F3F4F6] rounded shimmer-anim"></div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full bg-[#F3F4F6] shrink-0 shimmer-anim"></div>
+                  <div class="h-4 w-1/2 bg-[#F3F4F6] rounded shimmer-anim"></div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full bg-[#F3F4F6] shrink-0 shimmer-anim"></div>
+                  <div class="h-4 w-2/3 bg-[#F3F4F6] rounded shimmer-anim"></div>
+                </div>
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full bg-[#F3F4F6] shrink-0 shimmer-anim"></div>
+                  <div class="h-4 w-5/6 bg-[#F3F4F6] rounded shimmer-anim"></div>
+                </div>
+              </div>
+            </div>
+            <span class="text-[12px] text-[#6B7280] uppercase font-medium">Table Skeleton</span>
+          </div>
+
+          <!-- Card Skeleton -->
+          <div class="flex flex-col gap-3">
+            <div class="border border-[#E5E7EB] rounded-xl p-6 min-h-[240px] bg-white">
+              <div class="h-3 w-16 bg-[#F3F4F6] rounded shimmer-anim mb-2"></div>
+              <div class="h-8 w-32 bg-[#F3F4F6] rounded-md shimmer-anim mb-8"></div>
+              <div class="h-24 w-full bg-[#F3F4F6] rounded-lg shimmer-anim"></div>
+            </div>
+            <span class="text-[12px] text-[#6B7280] uppercase font-medium">Card Skeleton</span>
+          </div>
+
+          <!-- Mobile List Skeleton -->
+          <div class="flex flex-col gap-3">
+            <div class="w-[240px] border border-[#E5E7EB] rounded-xl p-4 min-h-[240px] bg-white">
+              <div class="space-y-4">
+                <div class="h-12 w-full bg-[#F3F4F6] rounded-lg shimmer-anim"></div>
+                <div class="h-12 w-full bg-[#F3F4F6] rounded-lg shimmer-anim"></div>
+                <div class="h-12 w-full bg-[#F3F4F6] rounded-lg shimmer-anim"></div>
+              </div>
+            </div>
+            <span class="text-[12px] text-[#6B7280] uppercase font-medium">Mobile List Skeleton</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 2: EMPTY STATES -->
+      <section class="pt-12 mt-12 border-t border-[#E5E7EB]">
+        <div class="mb-8">
+          <h2 class="text-[18px] font-semibold text-[#1F2937]">EMPTY STATES</h2>
+          <p class="text-[13px] text-[#6B7280]">Clear, actionable messaging when a view contains no data.</p>
+        </div>
+        <div class="grid grid-cols-4 gap-6">
+          <!-- No shifts -->
+          <div class="border border-[#E5E7EB] rounded-xl p-8 flex flex-col items-center text-center">
+            <iconify-icon icon="lucide:calendar-x" class="text-3xl text-[#6B7280] mb-4 opacity-50"></iconify-icon>
+            <h3 class="text-[15px] font-semibold text-[#1F2937] mb-1">No shifts scheduled yet</h3>
+            <p class="text-[13px] text-[#6B7280] leading-relaxed">Your schedule for this week hasn't been published.</p>
+          </div>
+          <!-- All caught up -->
+          <div class="border border-[#E5E7EB] rounded-xl p-8 flex flex-col items-center text-center">
+            <iconify-icon icon="lucide:clipboard-check" class="text-3xl text-[#6B7280] mb-4 opacity-50"></iconify-icon>
+            <h3 class="text-[15px] font-semibold text-[#1F2937] mb-1">You're all caught up</h3>
+            <p class="text-[13px] text-[#6B7280] leading-relaxed">No tasks are due right now. Nice work.</p>
+          </div>
+          <!-- No pending trades -->
+          <div class="border border-[#E5E7EB] rounded-xl p-8 flex flex-col items-center text-center">
+            <iconify-icon icon="lucide:arrow-left-right" class="text-3xl text-[#6B7280] mb-4 opacity-50"></iconify-icon>
+            <h3 class="text-[15px] font-semibold text-[#1F2937] mb-1">No pending trades</h3>
+            <p class="text-[13px] text-[#6B7280] mb-4 leading-relaxed">When someone offers a shift, it will show up here.</p>
+            <a href="#pool" class="h-8 px-4 inline-flex items-center text-[13px] font-semibold border border-[#E5E7EB] rounded-lg hover:bg-[#F8F8F7] text-[#1F2937] transition-colors">Browse shift pool</a>
+          </div>
+          <!-- No search results -->
+          <div class="border border-[#E5E7EB] rounded-xl p-8 flex flex-col items-center text-center">
+            <iconify-icon icon="lucide:search" class="text-3xl text-[#6B7280] mb-4 opacity-50"></iconify-icon>
+            <h3 class="text-[15px] font-semibold text-[#1F2937] mb-1">No results for that search</h3>
+            <p class="text-[13px] text-[#6B7280] mb-4 leading-relaxed">Try a different name, date or role.</p>
+            <button class="h-8 px-4 text-[13px] font-semibold text-[#2563EB] hover:text-[#1D4ED8] transition-colors">Clear filters</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 3: ERROR & FEEDBACK TOASTS -->
+      <section class="pt-12 mt-12 border-t border-[#E5E7EB]">
+        <div class="mb-8">
+          <h2 class="text-[18px] font-semibold text-[#1F2937]">ERROR & FEEDBACK TOASTS</h2>
+          <p class="text-[13px] text-[#6B7280]">Temporary status alerts for critical actions and feedback loops.</p>
+        </div>
+        <div class="space-y-6">
+          <!-- Success Toast -->
+          <div class="flex flex-col gap-2">
+            <div class="w-[400px] bg-[#1F2937] rounded-xl p-4 shadow-xl flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <iconify-icon icon="lucide:check-circle-2" class="text-[#14B8A6] text-xl"></iconify-icon>
+                <span class="text-white text-sm font-medium">Schedule published</span>
+              </div>
+              <button class="text-[#14B8A6] text-xs font-bold uppercase tracking-wider">Undo</button>
+            </div>
+            <span class="text-[12px] text-[#6B7280]">Success toast: Appears after successful write operations.</span>
+          </div>
+
+          <!-- Warning Toast -->
+          <div class="flex flex-col gap-2">
+            <div class="w-[400px] bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-xl flex items-center">
+              <div class="flex items-center gap-3">
+                <iconify-icon icon="lucide:alert-triangle" class="text-[#F59E0B] text-xl"></iconify-icon>
+                <span class="text-[#1F2937] text-sm font-medium">Punch flagged for review</span>
+              </div>
+            </div>
+            <span class="text-[12px] text-[#6B7280]">Warning toast: Highlight edge cases that need attention but aren't fatal.</span>
+          </div>
+
+          <!-- Error Toast -->
+          <div class="flex flex-col gap-2">
+            <div class="w-[400px] bg-white border border-[#EF4444]/20 rounded-xl p-4 shadow-xl flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <iconify-icon icon="lucide:alert-circle" class="text-[#EF4444] text-xl"></iconify-icon>
+                <span class="text-[#1F2937] text-sm font-medium">Couldn't save your availability</span>
+              </div>
+              <button class="text-[#2563EB] text-xs font-bold uppercase tracking-wider">Retry</button>
+            </div>
+            <span class="text-[12px] text-[#6B7280]">Error toast: API failure or validation blockers.</span>
+          </div>
+
+          <!-- Info Toast -->
+          <div class="flex flex-col gap-2">
+            <div class="w-[400px] bg-white border border-[#E5E7EB] rounded-xl p-4 shadow-xl flex items-center">
+              <div class="flex items-center gap-3">
+                <iconify-icon icon="lucide:info" class="text-[#2563EB] text-xl"></iconify-icon>
+                <span class="text-[#1F2937] text-sm font-medium">Trade request sent to Emily Roman</span>
+              </div>
+            </div>
+            <span class="text-[12px] text-[#6B7280]">Info toast: Simple confirmation for non-destructive background actions.</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 4: OFFLINE & QUEUED -->
+      <section class="pt-12 mt-12 border-t border-[#E5E7EB]">
+        <div class="mb-8">
+          <h2 class="text-[18px] font-semibold text-[#1F2937]">OFFLINE & QUEUED</h2>
+          <p class="text-[13px] text-[#6B7280]">Punches never fail silently. They queue locally and sync with a visible pending count.</p>
+        </div>
+        <div class="flex flex-col gap-8">
+          <!-- Offline Banner -->
+          <div class="w-full bg-[#FEF3D9] border-y border-[#F59E0B]/20 py-3 px-6 flex items-center gap-4">
+            <iconify-icon icon="lucide:cloud-off" class="text-[#F59E0B] text-xl"></iconify-icon>
+            <div class="flex items-baseline gap-2">
+              <span class="text-sm font-semibold text-[#1F2937]">You're offline</span>
+              <span class="text-[13px] text-[#6B7280]">Your punch was saved and will sync when you reconnect.</span>
+            </div>
+          </div>
+
+          <!-- Queued Punch Card -->
+          <div class="w-[240px] border border-[#E5E7EB] rounded-xl p-4 bg-white">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-1.5 px-2 py-1 bg-[#FEF3D9] text-[#F59E0B] rounded-md">
+                <iconify-icon icon="lucide:clock-arrow-up" class="text-sm"></iconify-icon>
+                <span class="text-[10px] font-bold uppercase tracking-wider">Queued</span>
+              </div>
+            </div>
+            <h4 class="text-sm font-semibold text-[#1F2937] mb-0.5">Punch queued</h4>
+            <p class="text-[13px] text-[#6B7280] tabular">3:28 PM &middot; Clock in</p>
+            <div class="mt-3 pt-3 border-t border-[#E5E7EB] flex items-center justify-between">
+               <span class="text-[12px] text-[#F59E0B] font-medium">Waiting to sync</span>
+               <span class="text-[12px] text-[#6B7280] font-medium">1 pending</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 5: PUSH NOTIFICATIONS -->
+      <section class="pt-12 mt-12 border-t border-[#E5E7EB] mb-20">
+        <div class="mb-8">
+          <h2 class="text-[18px] font-semibold text-[#1F2937]">PUSH NOTIFICATIONS</h2>
+          <p class="text-[13px] text-[#6B7280]">Titles stay under 24 characters. Bodies always name the date and the person.</p>
+        </div>
+        <div class="space-y-4 max-w-[375px]">
+          <!-- Notification 1 -->
+          <div class="bg-[#F9FAFB]/90 backdrop-blur-md rounded-2xl p-4 border border-white shadow-sm">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <div class="w-5 h-5 bg-[#B4232A] rounded flex items-center justify-center shrink-0">
+                  <span class="text-white font-bold text-[10px]">R</span>
+                </div>
+                <span class="text-[10px] font-bold text-[#6B7280] uppercase tracking-widest">RK STAFF HUB</span>
+              </div>
+              <span class="text-[11px] text-[#6B7280]">now</span>
+            </div>
+            <h4 class="text-sm font-semibold text-[#1F2937]">Schedule published</h4>
+            <p class="text-[13px] text-[#4B5563] mt-0.5">Your shifts for Aug 10 – Aug 16 are ready. You work 5 shifts this week.</p>
+          </div>
+
+          <!-- Notification 2 -->
+          <div class="bg-[#F9FAFB]/90 backdrop-blur-md rounded-2xl p-4 border border-white shadow-sm">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <div class="w-5 h-5 bg-[#B4232A] rounded flex items-center justify-center shrink-0">
+                  <span class="text-white font-bold text-[10px]">R</span>
+                </div>
+                <span class="text-[10px] font-bold text-[#6B7280] uppercase tracking-widest">RK STAFF HUB</span>
+              </div>
+              <span class="text-[11px] text-[#6B7280]">4m ago</span>
+            </div>
+            <h4 class="text-sm font-semibold text-[#1F2937]">Shift up for grabs</h4>
+            <p class="text-[13px] text-[#4B5563] mt-0.5">Isaac Boynton dropped a Sat Aug 15 bartender shift (3:30 PM – 11:00 PM).</p>
+          </div>
+
+          <!-- Notification 3 -->
+          <div class="bg-[#F9FAFB]/90 backdrop-blur-md rounded-2xl p-4 border border-white shadow-sm">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <div class="w-5 h-5 bg-[#B4232A] rounded flex items-center justify-center shrink-0">
+                  <span class="text-white font-bold text-[10px]">R</span>
+                </div>
+                <span class="text-[10px] font-bold text-[#6B7280] uppercase tracking-widest">RK STAFF HUB</span>
+              </div>
+              <span class="text-[11px] text-[#6B7280]">1h ago</span>
+            </div>
+            <h4 class="text-sm font-semibold text-[#1F2937]">Trade approved</h4>
+            <p class="text-[13px] text-[#4B5563] mt-0.5">Daphne Jalil approved your trade with Emily Roman for Sat Aug 15.</p>
+          </div>
+
+          <!-- Notification 4 -->
+          <div class="bg-[#F9FAFB]/90 backdrop-blur-md rounded-2xl p-4 border border-white shadow-sm">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <div class="w-5 h-5 bg-[#B4232A] rounded flex items-center justify-center shrink-0">
+                  <span class="text-white font-bold text-[10px]">R</span>
+                </div>
+                <span class="text-[10px] font-bold text-[#6B7280] uppercase tracking-widest">RK STAFF HUB</span>
+              </div>
+              <span class="text-[11px] text-[#6B7280]">2h ago</span>
+            </div>
+            <h4 class="text-sm font-semibold text-[#1F2937]">Availability reminder</h4>
+            <p class="text-[13px] text-[#4B5563] mt-0.5">Submit your availability for Aug 17 – Aug 23 by Thursday at 11:59 PM.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</body>
+</html>

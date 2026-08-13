@@ -1,0 +1,110 @@
+{
+  "app": {
+    "name": "Rosalia's Kitchen",
+    "productName": "Staff Hub",
+    "loading": "Cargando…"
+  },
+  "nav": {
+    "home": "Inicio",
+    "schedule": "Horario",
+    "clock": "Reloj",
+    "tasks": "Tareas",
+    "more": "Más",
+    "shiftPool": "Turnos disponibles",
+    "people": "Personal",
+    "hr": "Recursos Humanos",
+    "reports": "Reportes",
+    "settings": "Configuración",
+    "search": "Buscar empleados, turnos…",
+    "notifications": "Notificaciones",
+    "openMenu": "Abrir menú",
+    "signOut": "Cerrar sesión"
+  },
+  "common": {
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "saveChanges": "Guardar cambios",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "continue": "Continuar",
+    "done": "Listo",
+    "approve": "Aprobar",
+    "decline": "Rechazar",
+    "retry": "Reintentar",
+    "undo": "Deshacer",
+    "search": "Buscar",
+    "clearFilters": "Borrar filtros",
+    "viewAll": "Ver todo",
+    "required": "Obligatorio",
+    "optional": "Opcional",
+    "comingSoon": "Próximamente",
+    "language": "Idioma",
+    "yes": "Sí",
+    "no": "No"
+  },
+  "status": {
+    "pending": "Pendiente",
+    "approved": "Aprobado",
+    "declined": "Rechazado",
+    "draft": "Borrador",
+    "published": "Publicado",
+    "active": "Activo",
+    "archived": "Archivado",
+    "inactive": "Inactivo"
+  },
+  "filters": {
+    "location": "Ubicación",
+    "department": "Departamento",
+    "role": "Puesto",
+    "type": "Tipo",
+    "status": "Estado",
+    "allDepartments": "Todos los departamentos",
+    "allRoles": "Todos los puestos",
+    "allTypes": "Todos los tipos",
+    "allStatuses": "Todos los estados"
+  },
+  "auth": {
+    "signIn": "Iniciar sesión",
+    "signInWelcome": "Bienvenido de nuevo. Usa el método que tu gerente configuró para ti.",
+    "continueWithGoogle": "Continuar con Google",
+    "continueWithPhone": "Continuar con un código por mensaje",
+    "or": "o",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "rememberMe": "Recordarme en este dispositivo",
+    "noAccount": "¿No tienes cuenta? Pídele una invitación a tu gerente.",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
+    "signingIn": "Iniciando sesión…",
+    "errors": {
+      "invalidCredentials": "El correo o la contraseña no son correctos.",
+      "networkError": "No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.",
+      "tooManyAttempts": "Demasiados intentos. Espera un momento e inténtalo de nuevo.",
+      "generic": "Algo salió mal al iniciar sesión."
+    }
+  },
+  "empty": {
+    "noShifts": "Aún no hay turnos programados",
+    "noShiftsBody": "Tu horario de esta semana todavía no se ha publicado.",
+    "noTasks": "Estás al día",
+    "noTasksBody": "No hay tareas pendientes en este momento. Buen trabajo.",
+    "noTrades": "No hay cambios pendientes",
+    "noTradesBody": "Cuando alguien ofrezca un turno, aparecerá aquí.",
+    "noResults": "Sin resultados para esa búsqueda",
+    "noResultsBody": "Prueba con otro nombre, fecha o puesto."
+  },
+  "a11y": {
+    "avatarOf": "Foto de {{name}}",
+    "rowMenu": "Acciones de la fila",
+    "closeDialog": "Cerrar diálogo",
+    "notificationCount": "{{count}} notificaciones sin leer"
+  },
+  "dev": {
+    "componentsTitle": "Galería de componentes",
+    "componentsSubtitle": "Todos los componentes base, para revisión visual contra el sistema de diseño."
+  }
+}

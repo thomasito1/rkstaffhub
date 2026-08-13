@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="view-transition" content="same-origin">
+  <title>01-login-mobile-en</title>
+  <!-- Prefetch links for instant navigation -->
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/6f494236-40fa-4963-8e54-5b0acac1b9bb" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/867c9821-067a-492f-967f-290786d241f6" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/404feb0f-52dc-44aa-ac54-5b246c3f2066" as="document">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    @view-transition {
+      navigation: auto;
+    }
+    ::view-transition-old(main-content) {
+      animation: 0.25s ease-out both fade-out;
+    }
+    ::view-transition-new(main-content) {
+      animation: 0.25s ease-in 0.1s both fade-in;
+    }
+    @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  </style>
+</head>
+<body>
+  <div class="w-[390px] h-[844px] mx-auto bg-white overflow-hidden relative shadow-2xl flex flex-col">
+    
+    <!-- iOS Top Safe Area (44px) -->
+    <div class="h-[44px] bg-white w-full flex items-center justify-between px-8 shrink-0 z-50">
+      <span class="text-[15px] font-semibold text-[#1F2937]">9:41</span>
+      <div class="flex items-center gap-1.5">
+        <iconify-icon icon="material-symbols:signal-cellular-4-bar-rounded" class="text-lg"></iconify-icon>
+        <iconify-icon icon="material-symbols:wifi" class="text-lg"></iconify-icon>
+        <iconify-icon icon="material-symbols:battery-full-rounded" class="text-xl rotate-180"></iconify-icon>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col px-6 overflow-y-auto" style="view-transition-name: main-content;">
+      
+      <!-- Brand Lockup -->
+      <div class="mt-12 mb-10 flex flex-col items-center">
+        <div class="w-14 h-14 bg-[#B4232A] rounded-xl flex items-center justify-center shadow-sm mb-4">
+          <iconify-icon icon="mdi:chef-hat" class="text-white text-3xl"></iconify-icon>
+        </div>
+        <h2 class="text-[22px] font-semibold text-[#1F2937]">Rosalia's Kitchen</h2>
+        <p class="text-[15px] text-[#6B7280]">Staff Hub</p>
+      </div>
+
+      <!-- Heading -->
+      <div class="text-center mb-8">
+        <h1 class="text-[24px] font-semibold text-[#1F2937] mb-2">Sign in</h1>
+        <p class="text-[14px] text-[#6B7280] leading-tight max-w-[280px] mx-auto">
+          Welcome back. Use the method your manager set up for you.
+        </p>
+      </div>
+
+      <!-- Login Stack -->
+      <div class="space-y-4">
+        
+        <!-- Google Auth -->
+        <a href="https://p.superdesign.dev/draft/6f494236-40fa-4963-8e54-5b0acac1b9bb" id="google-login-btn" class="w-full h-[52px] bg-white border border-[#E5E7EB] rounded-[12px] flex items-center justify-center relative active:bg-gray-50 transition-colors">
+          <div class="absolute left-4">
+            <iconify-icon icon="logos:google-icon" class="text-xl"></iconify-icon>
+          </div>
+          <span class="text-[15px] font-medium text-[#1F2937]">Continue with Google</span>
+        </a>
+
+        <!-- Divider -->
+        <div class="flex items-center gap-4 py-2">
+          <div class="flex-1 h-px bg-[#E5E7EB]"></div>
+          <span class="text-[12px] text-[#6B7280] font-medium uppercase tracking-wider">or</span>
+          <div class="flex-1 h-px bg-[#E5E7EB]"></div>
+        </div>
+
+        <!-- Email Field -->
+        <div class="space-y-1.5">
+          <label class="text-[13px] font-medium text-[#6B7280] ml-1">Email address</label>
+          <input type="email" value="allison.rodriguez@example.com" class="w-full h-[52px] px-4 rounded-[12px] border border-[#E5E7EB] text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#2563EB33] focus:border-[#2563EB] transition-all">
+        </div>
+
+        <!-- Password Field -->
+        <div class="space-y-1.5">
+          <label class="text-[13px] font-medium text-[#6B7280] ml-1">Password</label>
+          <div class="relative">
+            <input type="password" value="••••••••••••" class="w-full h-[52px] px-4 rounded-[12px] border border-[#E5E7EB] text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#2563EB33] focus:border-[#2563EB] transition-all">
+            <button class="absolute right-4 top-1/2 -translate-y-1/2 text-[#6B7280]">
+              <iconify-icon icon="lucide:eye" class="text-xl"></iconify-icon>
+            </button>
+          </div>
+          <div class="flex justify-end">
+            <a href="#forgot-password" id="forgot-password-link" class="text-[13px] text-[#2563EB] font-medium">Forgot password?</a>
+          </div>
+        </div>
+
+        <!-- Primary Sign In -->
+        <a href="https://p.superdesign.dev/draft/6f494236-40fa-4963-8e54-5b0acac1b9bb" id="signin-primary-btn" class="w-full h-[56px] bg-[#2563EB] text-white font-semibold rounded-[12px] flex items-center justify-center active:scale-[0.98] transition-all">
+          Sign in
+        </a>
+
+        <!-- Disabled SMS Method -->
+        <div class="w-full h-[52px] border border-[#E5E7EB] rounded-[12px] flex items-center px-4 opacity-40 bg-gray-50/50 cursor-not-allowed">
+          <iconify-icon icon="lucide:phone" class="text-[#6B7280] text-xl shrink-0 mr-3"></iconify-icon>
+          <span class="text-[15px] font-medium text-[#6B7280] flex-1">Continue with a texted code</span>
+          <span class="px-2 py-0.5 bg-gray-200 text-[#6B7280] text-[10px] font-bold rounded uppercase tracking-tight shrink-0">Coming soon</span>
+        </div>
+
+        <!-- Support Text -->
+        <p class="text-center text-[13px] text-[#6B7280] pt-2">
+          Don't have an account? <span class="text-[#1F2937] font-medium">Ask your manager for an invite.</span>
+        </p>
+
+      </div>
+    </main>
+
+    <!-- Bottom UI Elements (Pinned above safe area) -->
+    <div class="mt-auto px-6 pb-2">
+      <!-- Language Toggle -->
+      <div class="flex justify-center mb-6">
+        <div class="inline-flex bg-gray-100 p-1 rounded-lg border border-[#E5E7EB]">
+          <button class="px-6 py-1.5 bg-white text-[13px] font-semibold text-[#1F2937] rounded-md shadow-sm">EN</button>
+          <button class="px-6 py-1.5 text-[13px] font-medium text-[#6B7280]">ES</button>
+        </div>
+      </div>
+
+      <!-- Legal -->
+      <div class="flex justify-center gap-6 mb-2">
+        <a href="#privacy" id="privacy-link" class="text-[12px] text-[#6B7280] underline decoration-[#E5E7EB] underline-offset-2">Privacy</a>
+        <a href="#terms" id="terms-link" class="text-[12px] text-[#6B7280] underline decoration-[#E5E7EB] underline-offset-2">Terms</a>
+      </div>
+    </div>
+
+    <!-- iOS Home Indicator Safe Area (34px) -->
+    <div class="h-[34px] w-full flex items-center justify-center shrink-0">
+      <div class="w-[134px] h-[5px] bg-black rounded-full opacity-20"></div>
+    </div>
+
+  </div>
+</body>
+</html>

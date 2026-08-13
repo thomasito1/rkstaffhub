@@ -1,0 +1,289 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="view-transition" content="same-origin">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/6f494236-40fa-4963-8e54-5b0acac1b9bb" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/2f246d82-b262-4fc3-8640-ce0cb36076ac" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/5cdc6e4f-6839-43c7-a1a9-183bbad0be97" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/680e2d3d-38d9-4d78-9eb1-dfa3c4e1b9b0" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/b8b99020-ac24-4e0b-89e1-65c4ba931dfe" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/1f8ccbac-26ae-4023-b406-571c907fe6ac" as="document">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    @view-transition { navigation: auto; }
+    ::view-transition-old(main-nav), ::view-transition-new(main-nav) {
+      animation: none;
+      mix-blend-mode: normal;
+    }
+    ::view-transition-old(main-content) {
+      animation: 0.25s ease-out both fade-out;
+    }
+    ::view-transition-new(main-content) {
+      animation: 0.25s ease-in 0.1s both fade-in;
+    }
+    @keyframes fade-out {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="w-[390px] h-[844px] mx-auto bg-white overflow-hidden relative shadow-2xl flex flex-col">
+    
+    <!-- iOS Top Safe Area (44px) -->
+    <div class="h-[44px] bg-white w-full flex items-center justify-between px-8 shrink-0 z-50">
+      <span class="text-[15px] font-semibold text-[#1F2937]">10:24</span>
+      <div class="flex items-center gap-1.5">
+        <iconify-icon icon="material-symbols:signal-cellular-4-bar-rounded" class="text-lg"></iconify-icon>
+        <iconify-icon icon="material-symbols:wifi" class="text-lg"></iconify-icon>
+        <iconify-icon icon="material-symbols:battery-full-rounded" class="text-xl rotate-180"></iconify-icon>
+      </div>
+    </div>
+
+    <!-- Sticky Header -->
+    <header class="sticky top-0 bg-white z-30 px-4 pt-4 pb-2 border-b border-[#E5E7EB] shrink-0">
+      <div class="flex justify-between items-center">
+        <h1 class="text-[24px] font-semibold text-[#1F2937]">My schedule</h1>
+        <div class="flex items-center gap-2">
+          <button class="p-2 text-[#6B7280] hover:bg-gray-50 rounded-full">
+            <iconify-icon icon="lucide:calendar-range" class="text-xl"></iconify-icon>
+          </button>
+          <button class="p-2 text-[#6B7280] hover:bg-gray-50 rounded-full">
+            <iconify-icon icon="lucide:share" class="text-xl"></iconify-icon>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto no-scrollbar bg-white" style="view-transition-name: main-content;">
+      
+      <!-- Week Stepper -->
+      <div class="px-4 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <button class="text-[#6B7280]"><iconify-icon icon="lucide:chevron-left" class="text-lg"></iconify-icon></button>
+          <span class="text-[15px] font-semibold text-[#1F2937]">Aug 10 – Aug 16, 2026</span>
+          <button class="text-[#6B7280]"><iconify-icon icon="lucide:chevron-right" class="text-lg"></iconify-icon></button>
+        </div>
+        <button class="text-[13px] font-semibold text-[#6B7280] bg-gray-50 px-2 py-1 rounded-md">This week</button>
+      </div>
+
+      <!-- Mini Calendar Strip -->
+      <div class="px-4 mb-6">
+        <div class="flex justify-between">
+          <!-- Mon (Selected) -->
+          <button class="flex flex-col items-center gap-2">
+            <span class="text-[11px] font-semibold text-[#6B7280] uppercase">M</span>
+            <div class="w-10 h-10 flex items-center justify-center rounded-lg bg-[#2563EB] text-white text-[16px] font-semibold tabular-nums ring-1 ring-[#2563EB]">10</div>
+            <div class="w-1 h-1 bg-[#2563EB] rounded-full"></div>
+          </button>
+          <!-- Tue -->
+          <button class="flex flex-col items-center gap-2">
+            <span class="text-[11px] font-semibold text-[#6B7280] uppercase">T</span>
+            <div class="w-10 h-10 flex items-center justify-center rounded-lg bg-white text-[#1F2937] text-[16px] font-semibold tabular-nums">11</div>
+            <div class="w-1 h-1 bg-[#2563EB] rounded-full"></div>
+          </button>
+          <!-- Wed -->
+          <button class="flex flex-col items-center gap-2">
+            <span class="text-[11px] font-semibold text-[#6B7280] uppercase">W</span>
+            <div class="w-10 h-10 flex items-center justify-center rounded-lg bg-white text-[#1F2937] text-[16px] font-semibold tabular-nums">12</div>
+            <div class="w-1 h-1 opacity-0"></div>
+          </button>
+          <!-- Thu -->
+          <button class="flex flex-col items-center gap-2">
+            <span class="text-[11px] font-semibold text-[#6B7280] uppercase">T</span>
+            <div class="w-10 h-10 flex items-center justify-center rounded-lg bg-white text-[#1F2937] text-[16px] font-semibold tabular-nums">13</div>
+            <div class="w-1 h-1 bg-[#2563EB] rounded-full"></div>
+          </button>
+          <!-- Fri -->
+          <button class="flex flex-col items-center gap-2">
+            <span class="text-[11px] font-semibold text-[#6B7280] uppercase">F</span>
+            <div class="w-10 h-10 flex items-center justify-center rounded-lg bg-white text-[#1F2937] text-[16px] font-semibold tabular-nums">14</div>
+            <div class="w-1 h-1 bg-[#2563EB] rounded-full"></div>
+          </button>
+          <!-- Sat -->
+          <button class="flex flex-col items-center gap-2">
+            <span class="text-[11px] font-semibold text-[#6B7280] uppercase">S</span>
+            <div class="w-10 h-10 flex items-center justify-center rounded-lg bg-white text-[#1F2937] text-[16px] font-semibold tabular-nums">15</div>
+            <div class="w-1 h-1 bg-[#2563EB] rounded-full"></div>
+          </button>
+          <!-- Sun -->
+          <button class="flex flex-col items-center gap-2">
+            <span class="text-[11px] font-semibold text-[#6B7280] uppercase">S</span>
+            <div class="w-10 h-10 flex items-center justify-center rounded-lg bg-white text-[#1F2937] text-[16px] font-semibold tabular-nums">16</div>
+            <div class="w-1 h-1 opacity-0"></div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Week Summary Strip -->
+      <div class="px-4 mb-6">
+        <div class="bg-white border border-[#E5E7EB] rounded-xl px-4 py-3 flex justify-between items-center">
+          <span class="text-[13px] font-semibold text-[#1F2937]">This week</span>
+          <span class="text-[14px] font-semibold text-[#1F2937] tabular-nums">28.5 hrs · 5 shifts</span>
+        </div>
+      </div>
+
+      <!-- Shift List -->
+      <div class="px-4 space-y-6 pb-12">
+        
+        <!-- MON AUG 10 -->
+        <div class="space-y-3">
+          <h3 class="text-[11px] font-bold text-[#6B7280] tracking-widest uppercase">MON AUG 10</h3>
+          <a href="https://p.superdesign.dev/draft/5cdc6e4f-6839-43c7-a1a9-183bbad0be97" class="block relative bg-white border border-[#E5E7EB] rounded-xl overflow-hidden active:bg-gray-50 transition-colors shadow-sm">
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#F5A623]"></div>
+            <div class="p-4">
+              <div class="flex justify-between items-start mb-2">
+                <span class="text-[17px] font-semibold text-[#1F2937] tabular-nums">10:30 AM – 4:00 PM</span>
+                <span class="bg-[#14B8A61A] text-[#14B8A6] text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tight">Today</span>
+              </div>
+              <div class="flex gap-2 mb-2">
+                <span class="bg-[#F5A6231A] text-[#F5A623] text-[11px] font-bold px-2 py-0.5 rounded-full uppercase">Server · L2</span>
+                <span class="border border-[#E5E7EB] text-[#6B7280] text-[11px] font-bold px-2 py-0.5 rounded-full uppercase">Floor</span>
+              </div>
+              <p class="text-[12px] text-[#6B7280]">With Rebekah Rosales, Kevin Andricain</p>
+            </div>
+          </a>
+        </div>
+
+        <!-- TUE AUG 11 -->
+        <div class="space-y-3">
+          <h3 class="text-[11px] font-bold text-[#6B7280] tracking-widest uppercase">TUE AUG 11</h3>
+          <a href="#" class="block relative bg-white border border-[#E5E7EB] rounded-xl overflow-hidden active:bg-gray-50 transition-colors shadow-sm">
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#F5A623]"></div>
+            <div class="p-4">
+              <div class="flex justify-between items-start mb-2">
+                <span class="text-[17px] font-semibold text-[#1F2937] tabular-nums">3:30 PM – 10:00 PM</span>
+              </div>
+              <div class="flex gap-2 mb-2">
+                <span class="bg-[#F5A6231A] text-[#F5A623] text-[11px] font-bold px-2 py-0.5 rounded-full uppercase">Server · L2</span>
+                <span class="border border-[#E5E7EB] text-[#6B7280] text-[11px] font-bold px-2 py-0.5 rounded-full uppercase">Floor</span>
+              </div>
+              <p class="text-[12px] text-[#6B7280]">With Emily Roman, Isaac Boynton</p>
+            </div>
+          </a>
+        </div>
+
+        <!-- WED Day Off -->
+        <div class="py-1">
+          <div class="border-2 border-dashed border-[#E5E7EB] rounded-xl p-3 flex items-center justify-center">
+            <span class="text-[12px] font-semibold text-[#6B7280] uppercase tracking-wide">WED AUG 12 · Day off</span>
+          </div>
+        </div>
+
+        <!-- THU AUG 13 -->
+        <div class="space-y-3">
+          <h3 class="text-[11px] font-bold text-[#6B7280] tracking-widest uppercase">THU AUG 13</h3>
+          <a href="#" class="block relative bg-white border border-[#E5E7EB] rounded-xl overflow-hidden active:bg-gray-50 transition-colors shadow-sm">
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#F5A623]"></div>
+            <div class="p-4">
+              <div class="flex justify-between items-start mb-2">
+                <span class="text-[17px] font-semibold text-[#1F2937] tabular-nums">10:30 AM – 4:00 PM</span>
+              </div>
+              <div class="flex gap-2 mb-2">
+                <span class="bg-[#F5A6231A] text-[#F5A623] text-[11px] font-bold px-2 py-0.5 rounded-full uppercase">Server · L2</span>
+                <span class="border border-[#E5E7EB] text-[#6B7280] text-[11px] font-bold px-2 py-0.5 rounded-full uppercase">Patio</span>
+              </div>
+              <p class="text-[12px] text-[#6B7280]">With Karla Ceballos</p>
+            </div>
+          </a>
+        </div>
+
+        <!-- FRI AUG 14 -->
+        <div class="space-y-3">
+          <h3 class="text-[11px] font-bold text-[#6B7280] tracking-widest uppercase">FRI AUG 14</h3>
+          <a href="#" class="block relative bg-white border border-[#E5E7EB] rounded-xl overflow-hidden active:bg-gray-50 transition-colors shadow-sm">
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#F5A623]"></div>
+            <div class="p-4">
+              <div class="flex justify-between items-start mb-2">
+                <span class="text-[17px] font-semibold text-[#1F2937] tabular-nums">3:30 PM – 10:00 PM</span>
+              </div>
+              <div class="flex gap-2 mb-2">
+                <span class="bg-[#F5A6231A] text-[#F5A623] text-[11px] font-bold px-2 py-0.5 rounded-full uppercase">Server · L2</span>
+                <span class="border border-[#E5E7EB] text-[#6B7280] text-[11px] font-bold px-2 py-0.5 rounded-full uppercase">Floor</span>
+              </div>
+              <p class="text-[12px] text-[#6B7280]">With Micah Lozon, Miley Estremera</p>
+            </div>
+          </a>
+        </div>
+
+        <!-- SAT AUG 15 -->
+        <div class="space-y-3">
+          <h3 class="text-[11px] font-bold text-[#6B7280] tracking-widest uppercase">SAT AUG 15</h3>
+          <a href="#" class="block relative bg-white border border-[#E5E7EB] rounded-xl overflow-hidden active:bg-gray-50 transition-colors shadow-sm">
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#F5A623]"></div>
+            <div class="p-4">
+              <div class="flex justify-between items-start mb-2">
+                <span class="text-[17px] font-semibold text-[#1F2937] tabular-nums">3:30 PM – 10:00 PM</span>
+                <span class="bg-[#F59E0B1A] text-[#F59E0B] text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tight">Trade pending</span>
+              </div>
+              <div class="flex gap-2 mb-2">
+                <span class="bg-[#F5A6231A] text-[#F5A623] text-[11px] font-bold px-2 py-0.5 rounded-full uppercase">Server · L2</span>
+                <span class="border border-[#E5E7EB] text-[#6B7280] text-[11px] font-bold px-2 py-0.5 rounded-full uppercase">Patio</span>
+              </div>
+              <p class="text-[12px] text-[#6B7280]">With Emily Roman</p>
+            </div>
+          </a>
+        </div>
+
+        <!-- Published Note -->
+        <p class="text-center text-[12px] text-[#6B7280] pt-4">
+          Schedule published Fri Aug 7 at 4:12 PM by Daphne Jalil
+        </p>
+      </div>
+    </main>
+
+    <!-- Bottom Tab Bar (56px) + Safe Area (34px) -->
+    <nav class="fixed bottom-0 w-[390px] bg-white border-t border-[#E5E7EB] z-50" style="view-transition-name: main-nav;">
+      <div class="h-[56px] flex items-center justify-between px-2">
+        <a href="https://p.superdesign.dev/draft/6f494236-40fa-4963-8e54-5b0acac1b9bb" id="nav-home" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280]">
+          <iconify-icon icon="lucide:home" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">Home</span>
+        </a>
+        <a href="https://p.superdesign.dev/draft/05f3d0ff-7305-4d9e-8f0b-51a57fec31db" id="nav-schedule" class="flex-1 flex flex-col items-center justify-center gap-0.5">
+          <iconify-icon icon="lucide:calendar" class="text-[22px] text-[#2563EB]"></iconify-icon>
+          <span class="text-[11px] font-medium text-[#2563EB]">Schedule</span>
+        </a>
+        <a href="#clock" id="nav-clock" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280]">
+          <iconify-icon icon="lucide:clock" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">Clock</span>
+        </a>
+        <a href="#tasks" id="nav-tasks" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280] relative">
+          <iconify-icon icon="lucide:clipboard-list" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">Tasks</span>
+          <span class="absolute top-1.5 right-6 w-1.5 h-1.5 bg-[#EF4444] rounded-full"></span>
+        </a>
+        <a href="#more" id="nav-more" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280]">
+          <iconify-icon icon="lucide:more-horizontal" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">More</span>
+        </a>
+      </div>
+      <!-- iOS Home Indicator Area (34px) -->
+      <div class="h-[34px] w-full flex items-center justify-center">
+        <div class="w-[134px] h-[5px] bg-black rounded-full opacity-20"></div>
+      </div>
+    </nav>
+
+  </div>
+</body></html>

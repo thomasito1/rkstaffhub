@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="view-transition" content="same-origin">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/6f494236-40fa-4963-8e54-5b0acac1b9bb" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/334a74f9-3028-4c0c-872d-a7ce915ee2ce" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/a3b67654-5375-4c02-81dc-69c58542e6b8" as="document">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    @view-transition {
+      navigation: auto;
+    }
+    ::view-transition-old(main-content) {
+      animation: 0.25s ease-out both fade-out;
+    }
+    ::view-transition-new(main-content) {
+      animation: 0.25s ease-in 0.1s both fade-in;
+    }
+    @keyframes fade-out {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    /* Keep status bar static during transitions if possible */
+    .status-bar { view-transition-name: status-bar; }
+    ::view-transition-old(status-bar),
+    ::view-transition-new(status-bar) {
+      animation: none;
+      mix-blend-mode: normal;
+    }
+  </style>
+</head>
+<body>
+  <div class="w-[390px] h-[844px] mx-auto bg-white overflow-hidden relative shadow-2xl flex flex-col">
+    
+    <!-- iOS Top Safe Area (44px) -->
+    <div class="h-[44px] bg-white w-full flex items-center justify-between px-8 shrink-0 z-50 status-bar">
+      <span class="text-[15px] font-semibold text-[#1F2937] tabular-nums">5:42</span>
+      <div class="flex items-center gap-1.5">
+        <iconify-icon icon="material-symbols:signal-cellular-4-bar-rounded" class="text-lg"></iconify-icon>
+        <iconify-icon icon="material-symbols:wifi" class="text-lg"></iconify-icon>
+        <iconify-icon icon="material-symbols:battery-full-rounded" class="text-xl rotate-180"></iconify-icon>
+      </div>
+    </div>
+
+    <!-- Sticky Header -->
+    <header class="h-[52px] bg-white border-b border-[#E5E7EB] flex items-center px-4 relative shrink-0 z-40">
+      <a href="https://p.superdesign.dev/draft/334a74f9-3028-4c0c-872d-a7ce915ee2ce" id="back-to-clock-home" class="absolute left-4 p-2 -ml-2 text-[#6B7280]">
+        <iconify-icon icon="lucide:chevron-left" class="text-2xl"></iconify-icon>
+      </a>
+      <div class="flex-1 text-center">
+        <h1 class="text-[17px] font-semibold text-[#1F2937]">Clock In</h1>
+      </div>
+      <div class="absolute right-4">
+        <span class="text-[12px] text-[#6B7280] font-medium">Step 2 of 2</span>
+      </div>
+    </header>
+
+    <!-- Progress Bar -->
+    <div class="h-[3px] w-full flex bg-[#E5E7EB] shrink-0">
+      <div class="flex-1 bg-[#2563EB]"></div>
+      <div class="flex-1 bg-[#2563EB]"></div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col overflow-hidden" style="view-transition-name: main-content">
+      
+      <!-- Viewfinder Section -->
+      <div class="flex-1 p-4 flex flex-col">
+        <div class="relative flex-1 bg-[#1F2937] rounded-2xl overflow-hidden shadow-inner flex flex-col items-center justify-center">
+          <!-- Viewfinder Vignette Overlay -->
+          <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_40%,_rgba(0,0,0,0.3)_100%)] pointer-events-none"></div>
+          
+          <!-- Top Guide Text -->
+          <p class="absolute top-12 text-white text-[15px] font-semibold z-10">Center your face in the oval</p>
+          
+          <!-- Camera Flip Pill -->
+          <button class="absolute top-4 right-4 bg-black/30 backdrop-blur-md rounded-full px-3 py-1.5 flex items-center gap-1.5 text-white z-20 active:bg-black/50">
+            <iconify-icon icon="lucide:refresh-cw" class="text-sm"></iconify-icon>
+            <span class="text-[12px] font-medium">Front</span>
+          </button>
+
+          <!-- Face Guide Oval -->
+          <div class="relative w-[220px] h-[290px] border-[3px] border-dashed border-white/80 rounded-[100px] flex items-center justify-center">
+            <!-- Registration Ticks -->
+            <div class="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-white/40"></div>
+            <div class="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-white/40"></div>
+            <div class="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-white/40"></div>
+            <div class="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-white/40"></div>
+            
+            <!-- Silhouette Placeholder -->
+            <iconify-icon icon="mdi:account-outline" class="text-[180px] text-white/20"></iconify-icon>
+          </div>
+        </div>
+
+        <!-- Notice Section -->
+        <div class="mt-4 px-1 flex items-start gap-3">
+          <div class="mt-0.5">
+            <iconify-icon icon="lucide:alert-circle" class="text-[#F59E0B] text-lg"></iconify-icon>
+          </div>
+          <div>
+            <p class="text-[13px] font-semibold text-[#1F2937] leading-tight">Photo required to punch</p>
+            <p class="text-[12px] text-[#6B7280] mt-0.5 leading-normal">
+              Your photo is attached to this punch and visible to managers only.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Capture Controls -->
+      <div class="px-6 pb-2 pt-4 flex items-center justify-between shrink-0">
+        <a href="https://p.superdesign.dev/draft/334a74f9-3028-4c0c-872d-a7ce915ee2ce" id="cancel-clock-in" class="text-[14px] font-medium text-[#6B7280] w-[80px] text-left active:opacity-60">
+          Cancel
+        </a>
+
+        <!-- Capture Button -->
+        <a href="https://p.superdesign.dev/draft/a3b67654-5375-4c02-81dc-69c58542e6b8" id="capture-action-btn" class="relative flex items-center justify-center group">
+           <!-- Outer Ring -->
+           <div class="w-[76px] h-[76px] rounded-full border-4 border-[#2563EB] flex items-center justify-center bg-white transition-transform active:scale-95">
+             <!-- Inner Circle -->
+             <div class="w-[56px] h-[56px] rounded-full bg-[#2563EB]"></div>
+           </div>
+        </a>
+
+        <div class="flex items-center justify-end gap-1 text-[14px] font-medium text-[#2563EB] opacity-40 w-[80px] pointer-events-none">
+          <iconify-icon icon="lucide:rotate-ccw" class="text-sm"></iconify-icon>
+          <span>Retake</span>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- iOS Home Indicator Safe Area (34px) -->
+    <footer class="h-[34px] w-full flex items-center justify-center shrink-0">
+      <div class="w-[134px] h-[5px] bg-black rounded-full opacity-20"></div>
+    </footer>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trade Approval - Passing Checklist</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="view-transition" content="same-origin">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/e41c1dbf-ab6e-4198-9a9c-bac8186686fa" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/fa23da00-7409-4a70-aee2-15b5e5af9013" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/05766be2-6692-4d0d-987d-b3af4dbc18a1" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/fec67817-fd8a-4764-b24e-4290004a83a7" as="document">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .tabular {
+      font-variant-numeric: tabular-nums;
+    }
+    @view-transition {
+      navigation: auto;
+    }
+    html {
+      background-color: #F8F8F7;
+    }
+    aside { view-transition-name: side-rail; }
+    header { view-transition-name: top-bar; }
+    ::view-transition-old(side-rail), ::view-transition-new(side-rail),
+    ::view-transition-old(top-bar), ::view-transition-new(top-bar) {
+      animation: none;
+      mix-blend-mode: normal;
+    }
+    ::view-transition-old(main-content) {
+      animation: 0.2s ease-out both fade-out;
+    }
+    ::view-transition-new(main-content) {
+      animation: 0.3s ease-in both fade-in;
+    }
+    @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  </style>
+</head>
+<body>
+  <div class="flex h-screen min-w-[1440px] bg-[#F8F8F7] relative">
+    
+    <!-- BACKGROUND UI (Shift Pool/Overview Dimmed) -->
+    <div class="absolute inset-0 flex flex-col pointer-events-none">
+       <!-- Copied Header for visual consistency -->
+       <header class="h-[60px] bg-white border-b border-[#E5E7EB] flex items-center justify-between px-8 shrink-0">
+        <div class="flex items-center gap-8">
+          <div class="flex items-center gap-3">
+            <div class="w-7 h-7 bg-[#B4232A] rounded flex items-center justify-center">
+              <span class="text-white font-bold text-lg">R</span>
+            </div>
+            <span class="text-[#1F2937] text-[16px] font-semibold tracking-tight">Rosalia's Kitchen</span>
+          </div>
+          <div class="relative">
+            <iconify-icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280] text-lg"></iconify-icon>
+            <input type="text" placeholder="Search employees, shifts..." class="w-[320px] h-[36px] bg-[#F8F8F7] border border-[#E5E7EB] rounded-lg pl-10 pr-4 text-sm">
+          </div>
+        </div>
+      </header>
+      <div class="flex-1 flex">
+        <aside class="w-[60px] h-full bg-[#F5F4F2] border-r border-[#E5E7EB] flex flex-col items-center py-6 shrink-0"></aside>
+        <main class="flex-1 p-8">
+          <div class="max-w-7xl mx-auto opacity-50">
+            <header class="mb-8">
+              <h1 class="text-[28px] font-semibold text-[#1F2937] tracking-tight">Good Evening, Rafa 👋</h1>
+              <p class="text-[#6B7280] text-[13px] mt-1">Monday, August 10, 2026</p>
+            </header>
+            <div class="h-96 border-2 border-dashed border-gray-200 rounded-xl"></div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- SCRIM -->
+    <div class="absolute inset-0 bg-black/40 z-30"></div>
+
+    <!-- MODAL CONTAINER -->
+    <div class="absolute inset-0 flex items-center justify-center z-40">
+      <div id="trade-approval-modal" class="w-[560px] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden" style="view-transition-name: main-content;">
+        
+        <!-- HEADER -->
+        <div class="px-6 py-5 flex items-start justify-between border-b border-[#E5E7EB]">
+          <div>
+            <h2 class="text-[18px] font-semibold text-[#1F2937]">Approve shift trade</h2>
+            <p class="text-[13px] text-[#6B7280] mt-0.5">Requested Aug 9 at 6:12 PM</p>
+          </div>
+          <a href="https://p.superdesign.dev/draft/e41c1dbf-ab6e-4198-9a9c-bac8186686fa" id="modal-close-link" class="text-[#6B7280] hover:text-[#1F2937] transition-colors p-1">
+            <iconify-icon icon="lucide:x" class="text-xl"></iconify-icon>
+          </a>
+        </div>
+
+        <!-- CONTENT SCROLLABLE -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+          
+          <!-- FROM-TO BLOCK -->
+          <div class="relative flex items-center border border-[#E5E7EB] rounded-xl overflow-hidden">
+            <!-- FROM -->
+            <div class="flex-1 p-4 bg-white">
+              <span class="text-[11px] font-semibold text-[#6B7280] tracking-wider uppercase mb-3 block">From</span>
+              <div class="flex items-center gap-3">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Isaac" alt="Isaac" class="w-10 h-10 rounded-full bg-[#F5F4F2]">
+                <div>
+                  <p class="text-[15px] font-semibold text-[#1F2937]">Isaac Boynton</p>
+                  <p class="text-[12px] text-[#6B7280]">Bartender · Level 3</p>
+                </div>
+              </div>
+              <div class="mt-3">
+                <span class="inline-flex items-center px-2 py-0.5 bg-[#F3F4F6] text-[#6B7280] text-[11px] font-semibold rounded-md">Giving up</span>
+              </div>
+            </div>
+
+            <!-- DIVIDER / ARROW -->
+            <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+              <div class="w-9 h-9 rounded-full bg-white border border-[#E5E7EB] flex items-center justify-center shadow-sm">
+                <iconify-icon icon="lucide:arrow-right" class="text-[#2563EB] text-lg"></iconify-icon>
+              </div>
+            </div>
+            <div class="w-px h-16 bg-[#E5E7EB]"></div>
+
+            <!-- TO -->
+            <div class="flex-1 p-4 bg-white">
+              <span class="text-[11px] font-semibold text-[#6B7280] tracking-wider uppercase mb-3 block text-right">To</span>
+              <div class="flex flex-row-reverse items-center gap-3 text-right">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Kevin" alt="Kevin" class="w-10 h-10 rounded-full bg-[#F5F4F2]">
+                <div>
+                  <p class="text-[15px] font-semibold text-[#1F2937]">Kevin Andricain</p>
+                  <p class="text-[12px] text-[#6B7280]">Bartender · Level 2</p>
+                </div>
+              </div>
+              <div class="mt-3 flex justify-end">
+                <span class="inline-flex items-center px-2 py-0.5 bg-[#E6F7F5] text-[#14B8A6] text-[11px] font-semibold rounded-md">Taking</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- SHIFT BLOCK -->
+          <div class="border border-[#E5E7EB] rounded-xl overflow-hidden divide-y divide-[#E5E7EB]">
+            <div class="flex items-center justify-between p-4">
+              <span class="text-[13px] font-medium text-[#6B7280]">Shift</span>
+              <span class="text-[14px] font-semibold text-[#1F2937] tabular">Saturday, Aug 15 · 3:30 PM – 11:00 PM</span>
+            </div>
+            <div class="flex items-center justify-between p-4">
+              <span class="text-[13px] font-medium text-[#6B7280]">Role</span>
+              <span class="px-2 py-0.5 bg-[#F5F3FF] text-[#8B5CF6] text-[12px] font-semibold rounded-md border border-[#DDD6FE]">Bartender · L2 required</span>
+            </div>
+            <div class="flex items-center justify-between p-4">
+              <span class="text-[13px] font-medium text-[#6B7280]">Station</span>
+              <span class="text-[14px] font-semibold text-[#1F2937]">Bar</span>
+            </div>
+          </div>
+
+          <!-- ELIGIBILITY CHECKLIST (PASSING) -->
+          <div class="border border-[#E5E7EB] rounded-xl overflow-hidden bg-[#F9FAFB]">
+            <div class="bg-[#E6F7F5] px-4 py-2.5 border-b border-[#E5E7EB] flex items-center gap-2">
+              <iconify-icon icon="lucide:check-circle-2" class="text-[#14B8A6] text-lg"></iconify-icon>
+              <span class="text-[14px] font-semibold text-[#1F2937]">All eligibility checks passed</span>
+            </div>
+            <div class="divide-y divide-[#E5E7EB]">
+              <div class="flex items-center justify-between p-4">
+                <div class="flex items-center gap-3">
+                  <iconify-icon icon="lucide:check-circle-2" class="text-[#14B8A6] text-lg"></iconify-icon>
+                  <span class="text-[14px] text-[#1F2937]">Role covered</span>
+                </div>
+                <span class="text-[12px] text-[#6B7280]">Kevin is a Bartender</span>
+              </div>
+              <div class="flex items-center justify-between p-4">
+                <div class="flex items-center gap-3">
+                  <iconify-icon icon="lucide:check-circle-2" class="text-[#14B8A6] text-lg"></iconify-icon>
+                  <span class="text-[14px] text-[#1F2937]">Skill level</span>
+                </div>
+                <span class="text-[12px] text-[#6B7280]">L2 meets the L2 requirement</span>
+              </div>
+              <div class="flex items-center justify-between p-4">
+                <div class="flex items-center gap-3">
+                  <iconify-icon icon="lucide:check-circle-2" class="text-[#14B8A6] text-lg"></iconify-icon>
+                  <span class="text-[14px] text-[#1F2937]">No schedule conflict</span>
+                </div>
+                <span class="text-[12px] text-[#6B7280]">Kevin is off on Aug 15</span>
+              </div>
+              <div class="flex items-center justify-between p-4">
+                <div class="flex items-center gap-3">
+                  <iconify-icon icon="lucide:check-circle-2" class="text-[#14B8A6] text-lg"></iconify-icon>
+                  <span class="text-[14px] text-[#1F2937]">No overtime risk</span>
+                </div>
+                <span class="text-[12px] text-[#6B7280]">Projected 31.5 hrs this week</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- NOTE FIELD -->
+          <div class="space-y-2">
+            <label class="text-[13px] font-medium text-[#6B7280]">Add a note (optional)</label>
+            <textarea placeholder="Visible to both employees" class="w-full h-24 p-3 bg-white border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/10 resize-none placeholder:text-[#9CA3AF]"></textarea>
+          </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="px-6 py-5 border-t border-[#E5E7EB] bg-[#F9FAFB] flex items-center justify-between">
+          <a href="#" id="view-schedules-link" class="text-[13px] font-semibold text-[#6B7280] hover:text-[#1F2937] transition-colors">View both schedules</a>
+          <div class="flex items-center gap-3">
+            <a href="https://p.superdesign.dev/draft/e41c1dbf-ab6e-4198-9a9c-bac8186686fa" id="decline-btn" class="px-5 h-10 flex items-center bg-white border border-[#E5E7EB] text-[#1F2937] text-[14px] font-semibold rounded-lg hover:bg-gray-50 transition-colors">Decline</a>
+            <a href="https://p.superdesign.dev/draft/e41c1dbf-ab6e-4198-9a9c-bac8186686fa" id="approve-btn" class="px-6 h-10 flex items-center bg-[#2563EB] text-white text-[14px] font-semibold rounded-lg hover:bg-blue-700 transition-shadow shadow-md active:scale-95">Approve trade</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

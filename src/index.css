@@ -1,0 +1,44 @@
+/* Inter is self-hosted via @fontsource so the PWA renders correctly offline.
+   Do not swap this for a Google Fonts <link> — spec §15 requires an offline shell. */
+@import '@fontsource-variable/inter/index.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-page text-ink font-sans text-body antialiased;
+    /* Prevent iOS rubber-banding from revealing surfaces behind the app shell. */
+    overscroll-behavior-y: none;
+  }
+
+  /* Every number in this product uses tabular figures. design-system.md §3 */
+  input[type='number'],
+  input[type='tel'],
+  time,
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Focus ring — visible for keyboard users, never for mouse clicks. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-page;
+  }
+
+  /* Respect reduced-motion. Motion in this app is restrained by design. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirm zero tips</title>
+  <meta name="view-transition" content="same-origin">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/6f494236-40fa-4963-8e54-5b0acac1b9bb" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/334a74f9-3028-4c0c-872d-a7ce915ee2ce" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/f33f9e0a-a28a-4c64-b384-c2ed13f88a44" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/a3b67654-5375-4c02-81dc-69c58542e6b8" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/57ce6bd1-5649-4bac-be59-fb116c763401" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/ccebabaa-51aa-4e00-8e08-08706d9dea7b" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/f6e95208-9895-464c-b389-aaf02b9efe23" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/e6e8347f-22ef-4291-b502-2e065ebfca6a" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/3620ea22-33b4-4f86-a400-d84af3d744d6" as="document">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    @view-transition {
+      navigation: auto;
+    }
+    html {
+      background-color: #F3F4F6;
+    }
+    ::view-transition-old(main-content) {
+      animation: 0.25s ease-out both fade-out;
+    }
+    ::view-transition-new(main-content) {
+      animation: 0.25s ease-in 0.1s both fade-in;
+    }
+    @keyframes fade-out {
+      from { opacity: 1; } to { opacity: 0; }
+    }
+    @keyframes fade-in {
+      from { opacity: 0; } to { opacity: 1; }
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body>
+  <div class="w-[390px] h-[844px] mx-auto bg-white overflow-hidden relative shadow-2xl flex flex-col">
+    
+    <!-- iOS Top Safe Area (44px) -->
+    <div class="h-[44px] bg-white w-full flex items-center justify-between px-8 shrink-0 z-50">
+      <span class="text-[15px] font-semibold text-[#1F2937]">10:04</span>
+      <div class="flex items-center gap-1.5">
+        <iconify-icon icon="material-symbols:signal-cellular-4-bar-rounded" class="text-lg"></iconify-icon>
+        <iconify-icon icon="material-symbols:wifi" class="text-lg"></iconify-icon>
+        <iconify-icon icon="material-symbols:battery-full-rounded" class="text-xl rotate-180"></iconify-icon>
+      </div>
+    </div>
+
+    <!-- Sticky Header -->
+    <header class="sticky top-0 bg-white border-b border-[#E5E7EB] z-40 shrink-0">
+      <div class="h-[56px] flex items-center justify-between px-4">
+        <div class="flex items-center gap-3">
+          <a href="https://p.superdesign.dev/draft/57ce6bd1-5649-4bac-be59-fb116c763401" id="nav-back-link" class="w-10 h-10 flex items-center justify-center -ml-2 text-[#1F2937]">
+            <iconify-icon icon="lucide:chevron-left" class="text-2xl"></iconify-icon>
+          </a>
+          <h1 class="text-[17px] font-semibold text-[#1F2937]">Clock Out</h1>
+        </div>
+        <span class="text-[13px] font-medium text-[#6B7280]">Step 3 of 3</span>
+      </div>
+      <!-- Progress Bar -->
+      <div class="flex w-full h-1">
+        <div class="flex-1 bg-[#2563EB]"></div>
+        <div class="flex-1 bg-[#2563EB]"></div>
+        <div class="flex-1 bg-[#2563EB]"></div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto no-scrollbar" style="view-transition-name: main-content">
+      <div class="p-4 space-y-6">
+        
+        <!-- Prompt Section -->
+        <div class="text-center pt-2">
+          <h2 class="text-[20px] font-semibold text-[#1F2937]">Confirm zero tips</h2>
+          <p class="text-[13px] text-[#6B7280] mt-1 px-8">You're reporting that you received no tips for this shift.</p>
+        </div>
+
+        <!-- Amount Card -->
+        <div class="bg-white border border-[#E5E7EB] rounded-[16px] p-7 text-center shadow-sm">
+          <span class="text-[11px] font-bold text-[#6B7280] tracking-[0.05em] uppercase block mb-1">TOTAL TIPS</span>
+          <span class="text-[44px] font-semibold text-[#1F2937] tabular-nums block">$0.00</span>
+          <a href="https://p.superdesign.dev/draft/57ce6bd1-5649-4bac-be59-fb116c763401" id="change-amount-link" class="mt-4 inline-flex items-center gap-1.5 text-[13px] text-[#2563EB] font-medium">
+            <iconify-icon icon="lucide:pencil" class="text-[14px]"></iconify-icon>
+            Enter an amount instead
+          </a>
+        </div>
+
+        <!-- Amber Guard Notice -->
+        <div class="bg-[#FEF3D9] border border-[#F59E0B] rounded-xl p-4 flex gap-3">
+          <iconify-icon icon="lucide:alert-triangle" class="text-[#F59E0B] text-xl shrink-0 mt-0.5"></iconify-icon>
+          <div class="space-y-1">
+            <p class="text-[14px] font-semibold text-[#1F2937]">Are you sure you received no tips?</p>
+            <p class="text-[13px] text-[#6B7280] leading-relaxed">
+              Zero-tip shifts are flagged for manager review. If you did receive tips, go back and enter the amount.
+            </p>
+          </div>
+        </div>
+
+        <!-- Explicit Acknowledgement -->
+        <div class="flex gap-3 items-start p-1">
+          <div class="w-[22px] h-[22px] border-2 border-[#D1D5DB] rounded mt-0.5 shrink-0 bg-white flex items-center justify-center cursor-pointer" id="checkbox-toggle">
+            <!-- Placeholder for interactive checkbox behavior -->
+          </div>
+          <label class="text-[14px] text-[#1F2937] leading-tight select-none">
+            I confirm I received $0.00 in tips for this shift.
+          </label>
+        </div>
+
+        <!-- Shift Summary Card -->
+        <div class="bg-white border border-[#E5E7EB] rounded-[12px] overflow-hidden shadow-sm">
+          <div class="flex items-center justify-between px-4 py-3.5 border-b border-[#E5E7EB]">
+            <span class="text-[13px] text-[#6B7280]">Clocked in</span>
+            <span class="text-[13px] font-medium text-[#1F2937] tabular-nums">3:28 PM</span>
+          </div>
+          <div class="flex items-center justify-between px-4 py-3.5 border-b border-[#E5E7EB]">
+            <span class="text-[13px] text-[#6B7280]">Clocked out</span>
+            <span class="text-[13px] font-medium text-[#1F2937] tabular-nums">10:04 PM</span>
+          </div>
+          <div class="flex items-center justify-between px-4 py-3.5">
+            <span class="text-[13px] text-[#6B7280]">Total hours</span>
+            <span class="text-[13px] font-medium text-[#1F2937] tabular-nums">7.5 hrs</span>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Fixed Action Bottom Area -->
+    <div class="px-4 pt-4 pb-[34px] border-t border-[#E5E7EB] shrink-0">
+      <div class="flex flex-col gap-3">
+        <button disabled class="w-full h-[56px] bg-[#2563EB] text-white font-semibold rounded-[12px] opacity-40 transition-all">
+          Confirm and clock out
+        </button>
+        <a href="https://p.superdesign.dev/draft/57ce6bd1-5649-4bac-be59-fb116c763401" id="go-back-btn" class="w-full h-[56px] border border-[#E5E7EB] text-[#1F2937] font-semibold rounded-[12px] flex items-center justify-center">
+          Go back and enter tips
+        </a>
+      </div>
+      <!-- iOS Home Indicator -->
+      <div class="h-[34px] w-full flex items-center justify-center -mb-[34px]">
+        <div class="w-[134px] h-[5px] bg-black rounded-full opacity-20"></div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

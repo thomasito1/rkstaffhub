@@ -1,0 +1,51 @@
+{
+  "name": "rk-staffhub",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Staff operations hub for Rosalia's Kitchen — scheduling, availability, trades, time clock, tips, tasks, payroll, HR.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --noEmit",
+    "lint": "eslint . --ext ts,tsx --max-warnings 0",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:rules": "vitest run --config vitest.rules.config.ts",
+    "emulators": "PATH=\"$(brew --prefix openjdk)/bin:$PATH\" firebase emulators:start --project demo-rk-staffhub",
+    "emulators:exec": "PATH=\"$(brew --prefix openjdk)/bin:$PATH\" firebase emulators:exec --project demo-rk-staffhub",
+    "seed": "tsx scripts/seed.ts",
+    "i18n:check": "tsx scripts/check-locales.ts"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.1.1",
+    "firebase": "^11.1.0",
+    "i18next": "^24.2.0",
+    "i18next-browser-languagedetector": "^8.0.2",
+    "papaparse": "^5.4.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-i18next": "^15.4.0",
+    "react-router-dom": "^6.28.1"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.1",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@types/papaparse": "^5.3.15",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "firebase-tools": "^13.29.1",
+    "jsdom": "^25.0.1",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7",
+    "vite-plugin-pwa": "^0.21.1",
+    "vitest": "^2.1.8"
+  }
+}

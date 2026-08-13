@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="view-transition" content="same-origin">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/6f494236-40fa-4963-8e54-5b0acac1b9bb" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/2f246d82-b262-4fc3-8640-ce0cb36076ac" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/05f3d0ff-7305-4d9e-8f0b-51a57fec31db" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/5cdc6e4f-6839-43c7-a1a9-183bbad0be97" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/680e2d3d-38d9-4d78-9eb1-dfa3c4e1b9b0" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/b8b99020-ac24-4e0b-89e1-65c4ba931dfe" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/1f8ccbac-26ae-4023-b406-571c907fe6ac" as="document">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    @view-transition {
+      navigation: auto;
+    }
+    ::view-transition-old(main-content) {
+      animation: 0.25s ease-out both fade-out;
+    }
+    ::view-transition-new(main-content) {
+      animation: 0.25s ease-in 0.1s both fade-in;
+    }
+    @keyframes fade-out {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="w-[390px] h-[844px] mx-auto bg-white overflow-hidden relative shadow-2xl flex flex-col">
+    
+    <!-- iOS Top Safe Area (44px) -->
+    <div class="h-[44px] bg-white w-full flex items-center justify-between px-8 shrink-0 z-50">
+      <span class="text-[15px] font-semibold text-[#1F2937]">10:24</span>
+      <div class="flex items-center gap-1.5">
+        <iconify-icon icon="material-symbols:signal-cellular-4-bar-rounded" class="text-lg"></iconify-icon>
+        <iconify-icon icon="material-symbols:wifi" class="text-lg"></iconify-icon>
+        <iconify-icon icon="material-symbols:battery-full-rounded" class="text-xl rotate-180"></iconify-icon>
+      </div>
+    </div>
+
+    <!-- Sticky Header -->
+    <header class="sticky top-0 z-40 bg-white border-b border-gray-100 shrink-0">
+      <div class="h-14 flex items-center px-4 relative">
+        <a href="https://p.superdesign.dev/draft/05f3d0ff-7305-4d9e-8f0b-51a57fec31db" id="nav-back-link" class="w-10 h-10 flex items-center justify-center -ml-2 text-[#1F2937]">
+          <iconify-icon icon="lucide:chevron-left" class="text-2xl"></iconify-icon>
+        </a>
+        <h1 class="absolute left-1/2 -translate-x-1/2 text-[17px] font-semibold text-[#1F2937]">Offer a trade</h1>
+        <span class="ml-auto text-[12px] font-medium text-[#6B7280]">Step 1 of 3</span>
+      </div>
+      <div class="h-1 w-full bg-[#E5E7EB] flex">
+        <div class="w-1/3 h-full bg-[#2563EB]"></div>
+        <div class="w-2/3 h-full"></div>
+      </div>
+    </header>
+
+    <!-- Scrollable Content Area -->
+    <main class="flex-1 overflow-y-auto no-scrollbar" style="view-transition-name: main-content;">
+      <div class="px-4 py-6">
+        <!-- Prompt -->
+        <div class="mb-6">
+          <h2 class="text-[20px] font-semibold text-[#1F2937] leading-tight">Which shift do you want to give up?</h2>
+          <p class="text-[13px] text-[#6B7280] mt-1">Choose one of your upcoming shifts. A manager approves every trade.</p>
+        </div>
+
+        <!-- Shift List -->
+        <div class="space-y-3">
+          
+          <!-- Card 1: INELIGIBLE -->
+          <div class="relative bg-white border border-[#E5E7EB] rounded-xl p-4 opacity-45 flex items-start cursor-not-allowed">
+            <div class="absolute left-0 top-4 bottom-4 w-1 bg-[#F5A623] rounded-r-full"></div>
+            <div class="flex-1 pl-2">
+              <p class="text-[13px] text-[#6B7280]">Tue, Aug 11</p>
+              <p class="text-[17px] font-semibold text-[#1F2937] tabular-nums my-1">3:30 PM – 10:00 PM</p>
+              <div class="flex gap-2 mb-2">
+                <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#F5A6231F] text-[#F5A623]">SERVER · L2</span>
+                <span class="px-2 py-0.5 rounded-full text-[11px] font-bold border border-[#E5E7EB] text-[#6B7280]">FLOOR</span>
+              </div>
+              <p class="text-[12px] text-[#EF4444] font-medium">Within 24 hours of the shift — ask a manager</p>
+            </div>
+            <div class="ml-4 mt-1">
+              <iconify-icon icon="lucide:lock" class="text-[#6B7280] text-lg"></iconify-icon>
+            </div>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="relative bg-white border border-[#E5E7EB] rounded-xl p-4 flex items-start">
+            <div class="absolute left-0 top-4 bottom-4 w-1 bg-[#F5A623] rounded-r-full"></div>
+            <div class="flex-1 pl-2">
+              <p class="text-[13px] text-[#6B7280]">Thu, Aug 13</p>
+              <p class="text-[17px] font-semibold text-[#1F2937] tabular-nums my-1">10:30 AM – 4:00 PM</p>
+              <div class="flex gap-2">
+                <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#F5A6231F] text-[#F5A623]">SERVER · L2</span>
+                <span class="px-2 py-0.5 rounded-full text-[11px] font-bold border border-[#E5E7EB] text-[#6B7280]">PATIO</span>
+              </div>
+            </div>
+            <div class="ml-4 mt-1">
+              <div class="w-6 h-6 rounded-full border-2 border-[#E5E7EB]"></div>
+            </div>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="relative bg-white border border-[#E5E7EB] rounded-xl p-4 flex items-start">
+            <div class="absolute left-0 top-4 bottom-4 w-1 bg-[#F5A623] rounded-r-full"></div>
+            <div class="flex-1 pl-2">
+              <p class="text-[13px] text-[#6B7280]">Fri, Aug 14</p>
+              <p class="text-[17px] font-semibold text-[#1F2937] tabular-nums my-1">3:30 PM – 10:00 PM</p>
+              <div class="flex gap-2">
+                <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#F5A6231F] text-[#F5A623]">SERVER · L2</span>
+                <span class="px-2 py-0.5 rounded-full text-[11px] font-bold border border-[#E5E7EB] text-[#6B7280]">FLOOR</span>
+              </div>
+            </div>
+            <div class="ml-4 mt-1">
+              <div class="w-6 h-6 rounded-full border-2 border-[#E5E7EB]"></div>
+            </div>
+          </div>
+
+          <!-- Card 4: SELECTED -->
+          <div class="relative bg-[#2563EB08] border-2 border-[#2563EB] rounded-xl p-4 flex items-start">
+            <div class="absolute left-0 top-4 bottom-4 w-1 bg-[#F5A623] rounded-r-full"></div>
+            <div class="flex-1 pl-2">
+              <p class="text-[13px] text-[#6B7280]">Sat, Aug 15</p>
+              <p class="text-[17px] font-semibold text-[#1F2937] tabular-nums my-1">3:30 PM – 10:00 PM</p>
+              <div class="flex gap-2">
+                <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#F5A6231F] text-[#F5A623]">SERVER · L2</span>
+                <span class="px-2 py-0.5 rounded-full text-[11px] font-bold border border-[#E5E7EB] text-[#6B7280]">PATIO</span>
+              </div>
+            </div>
+            <div class="ml-4 mt-1">
+              <div class="w-6 h-6 rounded-full bg-[#2563EB] flex items-center justify-center">
+                <iconify-icon icon="lucide:check" class="text-white text-sm"></iconify-icon>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 5 -->
+          <div class="relative bg-white border border-[#E5E7EB] rounded-xl p-4 flex items-start">
+            <div class="absolute left-0 top-4 bottom-4 w-1 bg-[#F5A623] rounded-r-full"></div>
+            <div class="flex-1 pl-2">
+              <p class="text-[13px] text-[#6B7280]">Sun, Aug 16</p>
+              <p class="text-[17px] font-semibold text-[#1F2937] tabular-nums my-1">10:30 AM – 4:00 PM</p>
+              <div class="flex gap-2">
+                <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#F5A6231F] text-[#F5A623]">SERVER · L2</span>
+                <span class="px-2 py-0.5 rounded-full text-[11px] font-bold border border-[#E5E7EB] text-[#6B7280]">FLOOR</span>
+              </div>
+            </div>
+            <div class="ml-4 mt-1">
+              <div class="w-6 h-6 rounded-full border-2 border-[#E5E7EB]"></div>
+            </div>
+          </div>
+
+          <p class="text-[12px] text-[#6B7280] text-center pt-2 pb-6">Shifts within 24 hours can't be traded in the app.</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Actions Pinned Above Safe Area -->
+    <div class="px-4 pt-4 pb-2 bg-white border-t border-gray-100 z-50">
+      <a href="https://p.superdesign.dev/draft/b8b99020-ac24-4e0b-89e1-65c4ba931dfe" id="cta-continue-btn" class="w-full h-[56px] bg-[#2563EB] text-white font-semibold rounded-xl flex items-center justify-center active:scale-[0.98] transition-all">
+        Continue
+      </a>
+      <a href="https://p.superdesign.dev/draft/05f3d0ff-7305-4d9e-8f0b-51a57fec31db" id="cta-cancel-btn" class="w-full h-[48px] text-[#6B7280] font-medium flex items-center justify-center">
+        Cancel
+      </a>
+    </div>
+
+    <!-- iOS Home Indicator Area (34px) -->
+    <div class="h-[34px] w-full flex items-center justify-center shrink-0 bg-white z-50">
+      <div class="w-[134px] h-[5px] bg-black rounded-full opacity-20"></div>
+    </div>
+
+  </div>
+</body>
+</html>

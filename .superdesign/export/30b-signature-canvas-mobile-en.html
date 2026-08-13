@@ -1,0 +1,165 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="view-transition" content="same-origin">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/6f494236-40fa-4963-8e54-5b0acac1b9bb" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/13e7e78d-6808-4de8-9975-0ff2c121542d" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/867c9821-067a-492f-967f-290786d241f6" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/404feb0f-52dc-44aa-ac54-5b246c3f2066" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/ec1ad225-b3ec-4306-a73f-b5cd4dc98068" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/f930d899-b091-44ec-ace5-354c1aec79ec" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/2bf72ec2-ff83-4101-badb-ed2d6da84934" as="document">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    @view-transition { navigation: auto; }
+    ::view-transition-old(main-content) {
+      animation: 0.25s ease-out both fade-out;
+    }
+    ::view-transition-new(main-content) {
+      animation: 0.25s ease-in 0.1s both fade-in;
+    }
+    @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+    .signature-font {
+      font-family: 'Dancing Script', cursive;
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="w-[390px] h-[844px] mx-auto bg-white overflow-hidden relative shadow-2xl flex flex-col">
+    
+    <!-- iOS Top Safe Area (44px) -->
+    <div class="h-[44px] bg-white w-full flex items-center justify-between px-8 shrink-0 z-50">
+      <span class="text-[15px] font-semibold text-[#1F2937]">6:42</span>
+      <div class="flex items-center gap-1.5">
+        <iconify-icon icon="material-symbols:signal-cellular-4-bar-rounded" class="text-lg"></iconify-icon>
+        <iconify-icon icon="material-symbols:wifi" class="text-lg"></iconify-icon>
+        <iconify-icon icon="material-symbols:battery-full-rounded" class="text-xl rotate-180"></iconify-icon>
+      </div>
+    </div>
+
+    <!-- Sticky Header with Progress -->
+    <header class="bg-white border-b border-[#E5E7EB] shrink-0 z-40">
+      <div class="px-4 h-[56px] flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <a href="https://p.superdesign.dev/draft/ec1ad225-b3ec-4306-a73f-b5cd4dc98068" id="back-to-policy-btn" class="p-1 -ml-1">
+            <iconify-icon icon="lucide:chevron-left" class="text-2xl text-[#1F2937]"></iconify-icon>
+          </a>
+          <h1 class="text-[17px] font-semibold text-[#1F2937]">Sign document</h1>
+        </div>
+        <span class="text-[13px] text-[#6B7280]">Step 2 of 3</span>
+      </div>
+      <div class="flex h-1 w-full gap-1 px-4 mb-2">
+        <div class="flex-1 bg-[#2563EB] rounded-full"></div>
+        <div class="flex-1 bg-[#2563EB] rounded-full"></div>
+        <div class="flex-1 bg-[#E5E7EB] rounded-full"></div>
+      </div>
+    </header>
+
+    <!-- Scrollable Main Content -->
+    <main class="flex-1 overflow-y-auto px-4 py-6" style="view-transition-name: main-content;">
+      <!-- Acknowledgement Block -->
+      <div class="mb-6">
+        <h2 class="text-[20px] font-semibold text-[#1F2937] mb-2">Sign to acknowledge</h2>
+        <p class="text-[13px] text-[#6B7280] leading-relaxed">
+          By signing, you confirm that you have read and understood the Updated Tip Reporting Policy (v2.0, effective Aug 15, 2026).
+        </p>
+      </div>
+
+      <!-- Staff Identity Card -->
+      <div class="mb-8 p-3 border border-[#E5E7EB] rounded-xl flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-[#06B6D4] flex items-center justify-center text-white font-semibold text-sm">
+          ML
+        </div>
+        <div>
+          <p class="text-[14px] font-semibold text-[#1F2937]">Micah Lozon</p>
+          <p class="text-[12px] text-[#6B7280]">Server · L2 · Employee #1045</p>
+        </div>
+      </div>
+
+      <!-- Signature Canvas Area -->
+      <div class="relative mb-3">
+        <div class="w-full h-[200px] bg-[#F8F8F7] border border-[#E5E7EB] rounded-xl relative overflow-hidden">
+          <span class="absolute top-3 right-3 text-[11px] text-[#6B7280] uppercase tracking-wider font-medium">Draw your signature</span>
+          
+          <!-- Baseline and Signature -->
+          <div class="absolute bottom-[66px] left-8 right-8">
+            <div class="relative">
+              <span class="absolute -left-5 -top-1 text-[18px] text-[#E5E7EB] font-light">×</span>
+              <div class="h-[1px] w-full bg-[#E5E7EB]"></div>
+              
+              <!-- Realistic Handwritten Stroke Mockup -->
+              <div class="absolute -top-10 left-4 pointer-events-none">
+                 <svg width="240" height="80" viewBox="0 0 240 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 50C15 40 25 10 30 30C35 50 45 60 55 45C65 30 60 40 70 45C80 50 90 40 100 35C110 30 115 50 125 55C135 60 145 40 155 42C165 44 175 60 185 55C195 50 205 35 215 30C225 25 230 45 235 50" stroke="#1F2937" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.9; stroke-dasharray: 0 0;" />
+                    <text x="15" y="45" class="signature-font" fill="#1F2937" style="font-size: 38px;">M. Lozon</text>
+                 </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Canvas Controls -->
+      <div class="flex items-center justify-between mb-8 px-1">
+        <div class="flex gap-6">
+          <button class="flex items-center gap-1.5 text-[14px] font-semibold text-[#2563EB]">
+            <iconify-icon icon="lucide:x" class="text-lg"></iconify-icon>
+            Clear
+          </button>
+          <button class="flex items-center gap-1.5 text-[14px] font-semibold text-[#2563EB]">
+            <iconify-icon icon="lucide:undo-2" class="text-lg"></iconify-icon>
+            Undo
+          </button>
+        </div>
+        <span class="text-[12px] text-[#6B7280]">Use your finger</span>
+      </div>
+
+      <!-- Consent Checkbox -->
+      <div class="flex gap-3 mb-6 px-1">
+        <div class="w-[22px] h-[22px] bg-[#2563EB] rounded-md flex items-center justify-center shrink-0">
+          <iconify-icon icon="lucide:check" class="text-white text-sm"></iconify-icon>
+        </div>
+        <p class="text-[14px] text-[#1F2937] leading-tight">
+          I agree that this drawn signature is the legal equivalent of my handwritten signature.
+        </p>
+      </div>
+
+      <!-- Timestamp Strip -->
+      <div class="p-3 border border-[#E5E7EB] rounded-xl flex gap-2.5 items-start">
+        <iconify-icon icon="lucide:clock" class="text-[#6B7280] text-sm mt-0.5"></iconify-icon>
+        <p class="text-[12px] text-[#6B7280] leading-snug tabular-nums">
+          Will be signed Aug 13, 2026 at 6:42 PM · recorded with your device and IP address.
+        </p>
+      </div>
+    </main>
+
+    <!-- Pinned Footer -->
+    <footer class="bg-white px-4 pb-2 shrink-0">
+      <div class="flex flex-col gap-2 py-2">
+        <a href="https://p.superdesign.dev/draft/2bf72ec2-ff83-4101-badb-ed2d6da84934" id="submit-signature-btn" class="w-full h-[56px] bg-[#2563EB] text-white font-semibold rounded-[12px] flex items-center justify-center active:scale-[0.98] transition-all">
+          Sign and submit
+        </a>
+        <a href="https://p.superdesign.dev/draft/404feb0f-52dc-44aa-ac54-5b246c3f2066" id="cancel-flow-btn" class="w-full h-[48px] flex items-center justify-center text-[14px] font-medium text-[#6B7280]">
+          Cancel
+        </a>
+      </div>
+      
+      <!-- iOS Home Indicator Safe Area (34px) -->
+      <div class="h-[34px] w-full flex items-center justify-center">
+        <div class="w-[134px] h-[5px] bg-black rounded-full opacity-20"></div>
+      </div>
+    </footer>
+  </div>
+</body></html>

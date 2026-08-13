@@ -1,0 +1,523 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rosalia's Kitchen Design System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-page: #FFFFFF;
+            --bg-app: #F8F8F7;
+            --bg-rail: #F5F4F2;
+            --border: #E5E7EB;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --primary: #2563EB;
+            --success: #14B8A6;
+            --success-tint: #E6F7F5;
+            --danger: #EF4444;
+            --danger-tint: #FDE8E8;
+            --warning: #F59E0B;
+            --warning-tint: #FEF3D9;
+            --brand: #B4232A;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .tabular {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .shadow-modal {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen bg-white py-12 px-8 max-w-[1440px] mx-auto" data-sd-id="1">
+        <!-- 1. HEADER -->
+        <header class="mb-12 flex items-center gap-4" data-sd-id="2">
+            <div class="w-8 h-8 bg-[#B4232A] rounded-sm flex items-center justify-center text-white font-bold text-lg shrink-0" data-sd-id="3">
+                R
+            </div>
+            <div data-sd-id="4">
+                <h1 class="text-[28px] font-semibold tracking-tight text-[#1F2937]" data-sd-id="5">Rosalia's Kitchen Staff Hub — Design System</h1>
+                <p class="text-[13px] text-[#6B7280]" data-sd-id="6">Visual source of truth · v1 · Aug 2026</p>
+            </div>
+        </header>
+
+        <hr class="border-[#E5E7EB] my-12">
+
+        <!-- 2. COLOR TOKENS -->
+        <section id="color-tokens" class="mb-12" data-sd-id="7">
+            <h2 class="text-xs font-semibold uppercase tracking-widest text-[#6B7280] mb-8" data-sd-id="8">2. Color Tokens</h2>
+            <div class="grid grid-cols-7 gap-y-8 gap-x-4" data-sd-id="9">
+                <!-- Token Item -->
+                <div class="space-y-2" data-sd-id="10">
+                    <div class="w-[64px] h-[64px] bg-white border border-[#E5E7EB] rounded-lg" data-sd-id="11"></div>
+                    <div class="text-[13px] font-semibold" data-sd-id="12">Page</div>
+                    <div class="text-[12px] text-[#6B7280] tabular uppercase" data-sd-id="13">#FFFFFF</div>
+                </div>
+                <div class="space-y-2" data-sd-id="14">
+                    <div class="w-[64px] h-[64px] bg-[#F8F8F7] border border-[#E5E7EB] rounded-lg" data-sd-id="15"></div>
+                    <div class="text-[13px] font-semibold" data-sd-id="16">App Frame</div>
+                    <div class="text-[12px] text-[#6B7280] tabular uppercase" data-sd-id="17">#F8F8F7</div>
+                </div>
+                <div class="space-y-2" data-sd-id="18">
+                    <div class="w-[64px] h-[64px] bg-[#F5F4F2] border border-[#E5E7EB] rounded-lg" data-sd-id="19"></div>
+                    <div class="text-[13px] font-semibold" data-sd-id="20">Rail</div>
+                    <div class="text-[12px] text-[#6B7280] tabular uppercase" data-sd-id="21">#F5F4F2</div>
+                </div>
+                <div class="space-y-2" data-sd-id="22">
+                    <div class="w-[64px] h-[64px] bg-[#E5E7EB] rounded-lg" data-sd-id="23"></div>
+                    <div class="text-[13px] font-semibold" data-sd-id="24">Border</div>
+                    <div class="text-[12px] text-[#6B7280] tabular uppercase" data-sd-id="25">#E5E7EB</div>
+                </div>
+                <div class="space-y-2" data-sd-id="26">
+                    <div class="w-[64px] h-[64px] bg-[#1F2937] rounded-lg" data-sd-id="27"></div>
+                    <div class="text-[13px] font-semibold" data-sd-id="28">Text Primary</div>
+                    <div class="text-[12px] text-[#6B7280] tabular uppercase" data-sd-id="29">#1F2937</div>
+                </div>
+                <div class="space-y-2" data-sd-id="30">
+                    <div class="w-[64px] h-[64px] bg-[#6B7280] rounded-lg" data-sd-id="31"></div>
+                    <div class="text-[13px] font-semibold" data-sd-id="32">Text Sec</div>
+                    <div class="text-[12px] text-[#6B7280] tabular uppercase" data-sd-id="33">#6B7280</div>
+                </div>
+                <div class="space-y-2" data-sd-id="34">
+                    <div class="w-[64px] h-[64px] bg-[#2563EB] rounded-lg" data-sd-id="35"></div>
+                    <div class="text-[13px] font-semibold" data-sd-id="36">Primary</div>
+                    <div class="text-[12px] text-[#6B7280] tabular uppercase" data-sd-id="37">#2563EB</div>
+                </div>
+                <!-- Row 2 -->
+                <div class="space-y-2" data-sd-id="38">
+                    <div class="w-[64px] h-[64px] bg-[#14B8A6] rounded-lg" data-sd-id="39"></div>
+                    <div class="text-[13px] font-semibold" data-sd-id="40">Success</div>
+                    <div class="text-[12px] text-[#6B7280] tabular uppercase" data-sd-id="41">#14B8A6</div>
+                </div>
+                <div class="space-y-2" data-sd-id="42">
+                    <div class="w-[64px] h-[64px] bg-[#E6F7F5] rounded-lg" data-sd-id="43"></div>
+                    <div class="text-[13px] font-semibold" data-sd-id="44">Success Tint</div>
+                    <div class="text-[12px] text-[#6B7280] tabular uppercase" data-sd-id="45">#E6F7F5</div>
+                </div>
+                <div class="space-y-2" data-sd-id="46">
+                    <div class="w-[64px] h-[64px] bg-[#EF4444] rounded-lg" data-sd-id="47"></div>
+                    <div class="text-[13px] font-semibold" data-sd-id="48">Danger</div>
+                    <div class="text-[12px] text-[#6B7280] tabular uppercase" data-sd-id="49">#EF4444</div>
+                </div>
+                <div class="space-y-2" data-sd-id="50">
+                    <div class="w-[64px] h-[64px] bg-[#FDE8E8] rounded-lg" data-sd-id="51"></div>
+                    <div class="text-[13px] font-semibold" data-sd-id="52">Danger Tint</div>
+                    <div class="text-[12px] text-[#6B7280] tabular uppercase" data-sd-id="53">#FDE8E8</div>
+                </div>
+                <div class="space-y-2" data-sd-id="54">
+                    <div class="w-[64px] h-[64px] bg-[#F59E0B] rounded-lg" data-sd-id="55"></div>
+                    <div class="text-[13px] font-semibold" data-sd-id="56">Warning</div>
+                    <div class="text-[12px] text-[#6B7280] tabular uppercase" data-sd-id="57">#F59E0B</div>
+                </div>
+                <div class="space-y-2" data-sd-id="58">
+                    <div class="w-[64px] h-[64px] bg-[#FEF3D9] rounded-lg" data-sd-id="59"></div>
+                    <div class="text-[13px] font-semibold" data-sd-id="60">Warning Tint</div>
+                    <div class="text-[12px] text-[#6B7280] tabular uppercase" data-sd-id="61">#FEF3D9</div>
+                </div>
+                <div class="space-y-2" data-sd-id="62">
+                    <div class="w-[64px] h-[64px] bg-[#B4232A] rounded-lg" data-sd-id="63"></div>
+                    <div class="text-[13px] font-semibold" data-sd-id="64">Brand Red</div>
+                    <div class="text-[12px] text-[#6B7280] tabular uppercase" data-sd-id="65">#B4232A</div>
+                </div>
+            </div>
+            <p class="mt-6 text-[11px] text-[#6B7280] uppercase tracking-wider" data-sd-id="66">Logo and small accents only — never a button color.</p>
+        </section>
+
+        <hr class="border-[#E5E7EB] my-12">
+
+        <!-- 3. SHIFT-ROLE BAND COLORS -->
+        <section id="role-bands" class="mb-12" data-sd-id="67">
+            <h2 class="text-xs font-semibold uppercase tracking-widest text-[#6B7280] mb-8" data-sd-id="68">3. Shift-Role Band Colors</h2>
+            <div class="grid grid-cols-2 gap-x-12" data-sd-id="69">
+                <div class="space-y-1" data-sd-id="70">
+                    <!-- Bands -->
+                    <div class="flex items-center justify-between px-3 py-2 bg-[#F5A623]/[0.12] rounded-md" data-sd-id="71">
+                        <span class="text-[11px] font-semibold text-[#F5A623] tracking-wider uppercase" data-sd-id="72">SERVER</span>
+                        <span class="text-[11px] tabular text-[#6B7280]" data-sd-id="73">#F5A623</span>
+                    </div>
+                    <div class="flex items-center justify-between px-3 py-2 bg-[#64748B]/[0.12] rounded-md" data-sd-id="74">
+                        <span class="text-[11px] font-semibold text-[#64748B] tracking-wider uppercase" data-sd-id="75">ON CALL SERVER</span>
+                        <span class="text-[11px] tabular text-[#6B7280]" data-sd-id="76">#64748B</span>
+                    </div>
+                    <div class="flex items-center justify-between px-3 py-2 bg-[#8B5CF6]/[0.12] rounded-md" data-sd-id="77">
+                        <span class="text-[11px] font-semibold text-[#8B5CF6] tracking-wider uppercase" data-sd-id="78">BARTENDER</span>
+                        <span class="text-[11px] tabular text-[#6B7280]" data-sd-id="79">#8B5CF6</span>
+                    </div>
+                    <div class="flex items-center justify-between px-3 py-2 bg-[#F97316]/[0.12] rounded-md" data-sd-id="80">
+                        <span class="text-[11px] font-semibold text-[#F97316] tracking-wider uppercase" data-sd-id="81">HOST</span>
+                        <span class="text-[11px] tabular text-[#6B7280]" data-sd-id="82">#F97316</span>
+                    </div>
+                    <div class="flex items-center justify-between px-3 py-2 bg-[#06B6D4]/[0.12] rounded-md" data-sd-id="83">
+                        <span class="text-[11px] font-semibold text-[#06B6D4] tracking-wider uppercase" data-sd-id="84">RUNNER / ASSISTANT</span>
+                        <span class="text-[11px] tabular text-[#6B7280]" data-sd-id="85">#06B6D4</span>
+                    </div>
+                    <div class="flex items-center justify-between px-3 py-2 bg-[#22C55E]/[0.12] rounded-md" data-sd-id="86">
+                        <span class="text-[11px] font-semibold text-[#22C55E] tracking-wider uppercase" data-sd-id="87">SHIFT LEAD / SUPERVISOR</span>
+                        <span class="text-[11px] tabular text-[#6B7280]" data-sd-id="88">#22C55E</span>
+                    </div>
+                    <div class="flex items-center justify-between px-3 py-2 bg-[#EC4899]/[0.12] rounded-md" data-sd-id="89">
+                        <span class="text-[11px] font-semibold text-[#EC4899] tracking-wider uppercase" data-sd-id="90">MANAGER / MOD</span>
+                        <span class="text-[11px] tabular text-[#6B7280]" data-sd-id="91">#EC4899</span>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-2 content-start" data-sd-id="92">
+                    <!-- Chip Treatment Examples -->
+                    <span class="px-2 py-0.5 rounded-full bg-[#14B8A6]/[0.12] text-[#14B8A6] text-[11px] font-semibold uppercase tracking-wider" data-sd-id="93">Expo</span>
+                    <span class="px-2 py-0.5 rounded-full bg-[#A16207]/[0.12] text-[#A16207] text-[11px] font-semibold uppercase tracking-wider" data-sd-id="94">Barista</span>
+                    <span class="px-2 py-0.5 rounded-full bg-[#B45309]/[0.12] text-[#B45309] text-[11px] font-semibold uppercase tracking-wider" data-sd-id="95">Hot Line</span>
+                    <span class="px-2 py-0.5 rounded-full bg-[#92400E]/[0.12] text-[#92400E] text-[11px] font-semibold uppercase tracking-wider" data-sd-id="96">Cold Line</span>
+                    <span class="px-2 py-0.5 rounded-full bg-[#78716C]/[0.12] text-[#78716C] text-[11px] font-semibold uppercase tracking-wider" data-sd-id="97">Prep Cook</span>
+                    <span class="px-2 py-0.5 rounded-full bg-[#57534E]/[0.12] text-[#57534E] text-[11px] font-semibold uppercase tracking-wider" data-sd-id="98">Dishwasher</span>
+                </div>
+            </div>
+        </section>
+
+        <hr class="border-[#E5E7EB] my-12">
+
+        <!-- 4. TYPOGRAPHY -->
+        <section id="typography" class="mb-12" data-sd-id="99">
+            <h2 class="text-xs font-semibold uppercase tracking-widest text-[#6B7280] mb-8" data-sd-id="100">4. Typography</h2>
+            <div class="grid grid-cols-2 gap-12" data-sd-id="101">
+                <div class="space-y-6" data-sd-id="102">
+                    <div class="flex items-baseline justify-between" data-sd-id="103">
+                        <span class="text-[28px] font-semibold tracking-tight" data-sd-id="104">Page title 28/600</span>
+                        <span class="text-[12px] text-[#6B7280] font-medium" data-sd-id="105">28px / 600</span>
+                    </div>
+                    <div class="flex items-baseline justify-between border-t border-[#E5E7EB] pt-4" data-sd-id="106">
+                        <span class="text-[18px] font-semibold" data-sd-id="107">Section heading 18/600</span>
+                        <span class="text-[12px] text-[#6B7280] font-medium" data-sd-id="108">18px / 600</span>
+                    </div>
+                    <div class="flex items-baseline justify-between border-t border-[#E5E7EB] pt-4" data-sd-id="109">
+                        <span class="text-[16px] font-normal" data-sd-id="110">Body 16/400</span>
+                        <span class="text-[12px] text-[#6B7280] font-medium" data-sd-id="111">16px / 400</span>
+                    </div>
+                    <div class="flex items-baseline justify-between border-t border-[#E5E7EB] pt-4" data-sd-id="112">
+                        <span class="text-[13px] font-medium" data-sd-id="113">Meta 13/500</span>
+                        <span class="text-[12px] text-[#6B7280] font-medium" data-sd-id="114">13px / 500</span>
+                    </div>
+                    <div class="flex items-baseline justify-between border-t border-[#E5E7EB] pt-4" data-sd-id="115">
+                        <span class="text-[12px] font-semibold uppercase tracking-wider" data-sd-id="116">Micro 12/600</span>
+                        <span class="text-[12px] text-[#6B7280] font-medium" data-sd-id="117">12px / 600</span>
+                    </div>
+                </div>
+                <div class="flex flex-col items-end" data-sd-id="118">
+                    <div class="tabular space-y-1 text-right" data-sd-id="119">
+                        <div class="text-lg" data-sd-id="120">42.0%</div>
+                        <div class="text-lg" data-sd-id="121">$6,117.00</div>
+                        <div class="text-lg" data-sd-id="122">$2,544.00</div>
+                        <div class="text-lg" data-sd-id="123">7.5 hrs</div>
+                        <div class="text-lg" data-sd-id="124">.00</div>
+                    </div>
+                    <p class="mt-4 text-[13px] text-[#6B7280]" data-sd-id="125">All numbers use tabular figures.</p>
+                </div>
+            </div>
+        </section>
+
+        <hr class="border-[#E5E7EB] my-12">
+
+        <!-- 5. BUTTONS -->
+        <section id="buttons" class="mb-12" data-sd-id="126">
+            <h2 class="text-xs font-semibold uppercase tracking-widest text-[#6B7280] mb-8" data-sd-id="127">5. Buttons</h2>
+            <div class="flex flex-col gap-8" data-sd-id="128">
+                <div class="flex items-center gap-6" data-sd-id="129">
+                    <button id="btn-primary" class="h-[40px] px-4 bg-[#2563EB] text-white text-[13px] font-semibold rounded-lg hover:bg-blue-700 transition-colors" data-sd-id="130">Publish schedule</button>
+                    <button id="btn-primary-disabled" class="h-[40px] px-4 bg-[#2563EB]/40 text-white text-[13px] font-semibold rounded-lg cursor-not-allowed" data-sd-id="131">Publish schedule</button>
+                    <span class="text-[11px] text-[#6B7280] font-semibold uppercase tracking-wider" data-sd-id="132">Primary</span>
+                </div>
+                <div class="flex items-center gap-6" data-sd-id="133">
+                    <button id="btn-secondary" class="h-[40px] px-4 bg-white border border-[#E5E7EB] text-[#1F2937] text-[13px] font-semibold rounded-lg hover:bg-gray-50 transition-colors" data-sd-id="134">Cancel</button>
+                    <button id="btn-secondary-disabled" class="h-[40px] px-4 bg-white border border-[#E5E7EB]/40 text-[#1F2937]/40 text-[13px] font-semibold rounded-lg cursor-not-allowed" data-sd-id="135">Cancel</button>
+                    <span class="text-[11px] text-[#6B7280] font-semibold uppercase tracking-wider" data-sd-id="136">Secondary</span>
+                </div>
+                <div class="flex items-center gap-6" data-sd-id="137">
+                    <button id="btn-ghost" class="h-[40px] px-4 bg-transparent text-[#6B7280] text-[13px] font-semibold rounded-lg hover:bg-gray-100 transition-colors" data-sd-id="138">View details</button>
+                    <button id="btn-ghost-disabled" class="h-[40px] px-4 bg-transparent text-[#6B7280]/40 text-[13px] font-semibold rounded-lg cursor-not-allowed" data-sd-id="139">View details</button>
+                    <span class="text-[11px] text-[#6B7280] font-semibold uppercase tracking-wider" data-sd-id="140">Ghost</span>
+                </div>
+                <div class="flex items-center gap-6" data-sd-id="141">
+                    <button id="btn-danger" class="h-[40px] px-4 bg-[#EF4444] text-white text-[13px] font-semibold rounded-lg hover:bg-red-700 transition-colors" data-sd-id="142">Decline</button>
+                    <span class="text-[11px] text-[#6B7280] font-semibold uppercase tracking-wider" data-sd-id="143">Danger</span>
+                </div>
+                <div class="flex items-center gap-6" data-sd-id="144">
+                    <button id="btn-mobile" class="h-[48px] px-8 bg-[#2563EB] text-white text-[16px] font-semibold rounded-lg shadow-sm" data-sd-id="145">Clock In</button>
+                    <span class="text-[11px] text-[#6B7280] font-semibold uppercase tracking-wider" data-sd-id="146">Mobile/Kiosk Primary (48px)</span>
+                </div>
+            </div>
+        </section>
+
+        <hr class="border-[#E5E7EB] my-12">
+
+        <!-- 6. STATUS PILLS -->
+        <section id="status-pills" class="mb-12" data-sd-id="147">
+            <h2 class="text-xs font-semibold uppercase tracking-widest text-[#6B7280] mb-8" data-sd-id="148">6. Status Pills</h2>
+            <div class="flex gap-4" data-sd-id="149">
+                <span class="px-3 py-1 rounded-full bg-[#FEF3D9] text-[#F59E0B] text-[12px] font-semibold" data-sd-id="150">Pending</span>
+                <span class="px-3 py-1 rounded-full bg-[#E6F7F5] text-[#14B8A6] text-[12px] font-semibold" data-sd-id="151">Approved</span>
+                <span class="px-3 py-1 rounded-full bg-[#FDE8E8] text-[#EF4444] text-[12px] font-semibold" data-sd-id="152">Declined</span>
+                <span class="px-3 py-1 rounded-full bg-[#F3F4F6] text-[#6B7280] text-[12px] font-semibold" data-sd-id="153">Draft</span>
+                <span class="px-3 py-1 rounded-full bg-blue-50 text-[#2563EB] text-[12px] font-semibold" data-sd-id="154">Published</span>
+            </div>
+        </section>
+
+        <hr class="border-[#E5E7EB] my-12">
+
+        <!-- 7. AVATARS -->
+        <section id="avatars" class="mb-12" data-sd-id="155">
+            <h2 class="text-xs font-semibold uppercase tracking-widest text-[#6B7280] mb-8" data-sd-id="156">7. Avatars</h2>
+            <div class="flex items-end gap-12" data-sd-id="157">
+                <div class="flex flex-col items-center gap-2" data-sd-id="158">
+                    <div class="w-10 h-10 rounded-full bg-gray-200 overflow-hidden border border-[#E5E7EB]" data-sd-id="159">
+                        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&amp;h=100&amp;fit=crop" alt="User" class="w-full h-full object-cover" data-sd-id="160">
+                    </div>
+                    <span class="text-[11px] text-[#6B7280] font-semibold" data-sd-id="161">40px</span>
+                </div>
+                <div class="flex flex-col items-center gap-2" data-sd-id="162">
+                    <div class="w-8 h-8 rounded-full bg-[#2563EB] flex items-center justify-center text-white text-[12px] font-semibold" data-sd-id="163">
+                        DL
+                    </div>
+                    <span class="text-[11px] text-[#6B7280] font-semibold" data-sd-id="164">32px</span>
+                </div>
+                <div class="flex flex-col items-center gap-2" data-sd-id="165">
+                    <div class="w-6 h-6 rounded-full bg-[#14B8A6] flex items-center justify-center text-white text-[10px] font-semibold" data-sd-id="166">
+                        AH
+                    </div>
+                    <span class="text-[11px] text-[#6B7280] font-semibold" data-sd-id="167">24px</span>
+                </div>
+                <div class="flex gap-4 mb-4" data-sd-id="168">
+                    <div class="w-8 h-8 rounded-full bg-[#F59E0B] flex items-center justify-center text-white text-[12px] font-semibold" data-sd-id="169">MG</div>
+                    <div class="w-8 h-8 rounded-full bg-[#8B5CF6] flex items-center justify-center text-white text-[12px] font-semibold" data-sd-id="170">RL</div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="border-[#E5E7EB] my-12">
+
+        <!-- 8. FILTER DROPDOWN ROW -->
+        <section id="filter-row" class="mb-12" data-sd-id="171">
+            <h2 class="text-xs font-semibold uppercase tracking-widest text-[#6B7280] mb-8" data-sd-id="172">8. Filter Dropdown Row</h2>
+            <div class="flex items-center gap-2 p-3 bg-[#F8F8F7] rounded-xl border border-[#E5E7EB]" data-sd-id="173">
+                <div class="flex-1 flex gap-2" data-sd-id="174">
+                    <button class="px-3 py-1.5 bg-white border border-[#E5E7EB] rounded-md text-[13px] flex items-center gap-2 text-[#1F2937]" data-sd-id="175">
+                        Location <iconify-icon icon="lucide:chevron-down"></iconify-icon>
+                    </button>
+                    <button class="px-3 py-1.5 bg-white border border-[#E5E7EB] rounded-md text-[13px] flex items-center gap-2 text-[#1F2937]" data-sd-id="176">
+                        Department <iconify-icon icon="lucide:chevron-down"></iconify-icon>
+                    </button>
+                    <button class="px-3 py-1.5 bg-white border border-[#E5E7EB] rounded-md text-[13px] flex items-center gap-2 text-[#1F2937]" data-sd-id="177">
+                        Role <iconify-icon icon="lucide:chevron-down"></iconify-icon>
+                    </button>
+                    <button class="px-3 py-1.5 bg-white border border-[#E5E7EB] rounded-md text-[13px] flex items-center gap-2 text-[#1F2937]" data-sd-id="178">
+                        Type <iconify-icon icon="lucide:chevron-down"></iconify-icon>
+                    </button>
+                    <button class="px-3 py-1.5 bg-white border border-[#E5E7EB] rounded-md text-[13px] flex items-center gap-2 text-[#1F2937]" data-sd-id="179">
+                        Status <iconify-icon icon="lucide:chevron-down"></iconify-icon>
+                    </button>
+                </div>
+                <div class="relative" data-sd-id="180">
+                    <iconify-icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280]"></iconify-icon>
+                    <input type="text" placeholder="Search..." class="pl-9 pr-3 py-1.5 bg-white border border-[#E5E7EB] rounded-md text-[13px] focus:outline-none focus:ring-1 focus:ring-[#2563EB]" data-sd-id="181">
+                </div>
+                <button class="px-4 py-1.5 bg-white border border-[#E5E7EB] rounded-md text-[13px] font-semibold text-[#1F2937] hover:bg-gray-50" data-sd-id="182">Export</button>
+            </div>
+        </section>
+
+        <hr class="border-[#E5E7EB] my-12">
+
+        <!-- 9. TAB BAR -->
+        <section id="tab-bar" class="mb-12" data-sd-id="183">
+            <h2 class="text-xs font-semibold uppercase tracking-widest text-[#6B7280] mb-8" data-sd-id="184">9. Tab Bar</h2>
+            <div class="flex gap-8 border-b border-[#E5E7EB]" data-sd-id="185">
+                <a id="tab-overview" href="#" class="pb-3 text-[14px] font-semibold text-[#1F2937] border-b-2 border-[#2563EB]" data-sd-id="186">Overview</a>
+                <a id="tab-working" href="#" class="pb-3 text-[14px] font-medium text-[#6B7280] hover:text-[#1F2937]" data-sd-id="187">Who's Working</a>
+                <a id="tab-labor" href="#" class="pb-3 text-[14px] font-medium text-[#6B7280] hover:text-[#1F2937]" data-sd-id="188">Labor</a>
+            </div>
+        </section>
+
+        <hr class="border-[#E5E7EB] my-12">
+
+        <!-- 10. TABLE ROW -->
+        <section id="table-rows" class="mb-12" data-sd-id="189">
+            <h2 class="text-xs font-semibold uppercase tracking-widest text-[#6B7280] mb-8" data-sd-id="190">10. Table Row</h2>
+            <div class="border border-[#E5E7EB] rounded-xl overflow-hidden" data-sd-id="191">
+                <!-- Row 1 -->
+                <div class="h-14 flex items-center px-4 border-b border-[#E5E7EB]" data-sd-id="192">
+                    <div class="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center text-white text-[12px] font-semibold mr-3" data-sd-id="193">AR</div>
+                    <div class="flex-1 flex items-center gap-4" data-sd-id="194">
+                        <span class="text-[14px] font-semibold text-[#1F2937]" data-sd-id="195">Allison Rodriguez</span>
+                        <span class="px-2 py-0.5 rounded-full bg-[#F5A623]/[0.12] text-[#F5A623] text-[11px] font-semibold uppercase tracking-wider" data-sd-id="196">Server</span>
+                        <span class="ml-auto px-3 py-1 rounded-full bg-blue-50 text-[#2563EB] text-[12px] font-semibold" data-sd-id="197">Published</span>
+                    </div>
+                    <button class="ml-6 text-[#6B7280]" data-sd-id="198"><iconify-icon icon="lucide:more-vertical"></iconify-icon></button>
+                </div>
+                <!-- Row 2 (Hover) -->
+                <div class="h-14 flex items-center px-4 border-b border-[#E5E7EB] bg-[#FAFAFA]" data-sd-id="199">
+                    <div class="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center text-white text-[12px] font-semibold mr-3" data-sd-id="200">IB</div>
+                    <div class="flex-1 flex items-center gap-4" data-sd-id="201">
+                        <span class="text-[14px] font-semibold text-[#1F2937]" data-sd-id="202">Isaac Boynton</span>
+                        <span class="px-2 py-0.5 rounded-full bg-[#8B5CF6]/[0.12] text-[#8B5CF6] text-[11px] font-semibold uppercase tracking-wider" data-sd-id="203">Bartender</span>
+                        <span class="ml-auto px-3 py-1 rounded-full bg-[#E6F7F5] text-[#14B8A6] text-[12px] font-semibold" data-sd-id="204">Approved</span>
+                    </div>
+                    <button class="ml-6 text-[#6B7280]" data-sd-id="205"><iconify-icon icon="lucide:more-vertical"></iconify-icon></button>
+                </div>
+                <!-- Row 3 -->
+                <div class="h-14 flex items-center px-4" data-sd-id="206">
+                    <div class="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center text-white text-[12px] font-semibold mr-3" data-sd-id="207">ER</div>
+                    <div class="flex-1 flex items-center gap-4" data-sd-id="208">
+                        <span class="text-[14px] font-semibold text-[#1F2937]" data-sd-id="209">Emily Roman</span>
+                        <span class="px-2 py-0.5 rounded-full bg-[#F97316]/[0.12] text-[#F97316] text-[11px] font-semibold uppercase tracking-wider" data-sd-id="210">Host</span>
+                        <span class="ml-auto px-3 py-1 rounded-full bg-[#FEF3D9] text-[#F59E0B] text-[12px] font-semibold" data-sd-id="211">Pending</span>
+                    </div>
+                    <button class="ml-6 text-[#6B7280]" data-sd-id="212"><iconify-icon icon="lucide:more-vertical"></iconify-icon></button>
+                </div>
+            </div>
+        </section>
+
+        <hr class="border-[#E5E7EB] my-12">
+
+        <!-- 11. APPROVE/DECLINE PAIR -->
+        <section id="action-pair" class="mb-12" data-sd-id="213">
+            <h2 class="text-xs font-semibold uppercase tracking-widest text-[#6B7280] mb-8" data-sd-id="214">11. Approve / Decline Pair</h2>
+            <div class="flex items-center justify-between p-4 bg-white border border-[#E5E7EB] rounded-xl" data-sd-id="215">
+                <div class="text-[14px]" data-sd-id="216">Time off request: Sep 12</div>
+                <div class="flex gap-2" data-sd-id="217">
+                    <button class="px-3 py-1.5 border border-[#E5E7EB] text-[#1F2937] text-[13px] font-semibold rounded-md hover:bg-gray-50" data-sd-id="218">Decline</button>
+                    <button class="px-3 py-1.5 bg-[#14B8A6] text-white text-[13px] font-semibold rounded-md hover:bg-teal-700" data-sd-id="219">Approve</button>
+                </div>
+            </div>
+        </section>
+
+        <hr class="border-[#E5E7EB] my-12">
+
+        <!-- 12. BADGE DOTS -->
+        <section id="badge-dots" class="mb-12" data-sd-id="220">
+            <h2 class="text-xs font-semibold uppercase tracking-widest text-[#6B7280] mb-8" data-sd-id="221">12. Badge Dots</h2>
+            <div class="flex gap-8" data-sd-id="222">
+                <div class="relative w-12 h-12 bg-[#F5F4F2] rounded-lg flex items-center justify-center" data-sd-id="223">
+                    <iconify-icon icon="lucide:bell" class="text-xl text-[#1F2937]"></iconify-icon>
+                    <span class="absolute top-0 right-0 w-[8px] h-[8px] bg-[#EF4444] rounded-full translate-x-1/2 -translate-y-1/2" data-sd-id="224"></span>
+                </div>
+                <div class="relative w-12 h-12 bg-[#F5F4F2] rounded-lg flex items-center justify-center" data-sd-id="225">
+                    <iconify-icon icon="lucide:mail" class="text-xl text-[#1F2937]"></iconify-icon>
+                    <span class="absolute top-0 right-0 h-4 min-w-[16px] px-1 bg-[#EF4444] rounded-full translate-x-1/2 -translate-y-1/2 flex items-center justify-center text-[10px] text-white font-bold" data-sd-id="226">3</span>
+                </div>
+            </div>
+        </section>
+
+        <hr class="border-[#E5E7EB] my-12">
+
+        <!-- 13. MODAL -->
+        <section id="modal-spec" class="mb-12" data-sd-id="227">
+            <h2 class="text-xs font-semibold uppercase tracking-widest text-[#6B7280] mb-8" data-sd-id="228">13. Modal</h2>
+            <div class="max-w-[480px] bg-white rounded-2xl border border-[#E5E7EB] shadow-modal" data-sd-id="229">
+                <div class="flex items-center justify-between p-4 border-b border-[#E5E7EB]" data-sd-id="230">
+                    <h3 class="text-[18px] font-semibold" data-sd-id="231">Confirm</h3>
+                    <button class="text-[#6B7280]" data-sd-id="232"><iconify-icon icon="lucide:x" class="text-xl"></iconify-icon></button>
+                </div>
+                <div class="p-6 text-[16px] text-[#1F2937]" data-sd-id="233">
+                    Are you sure you want to publish the schedule for next week?
+                </div>
+                <div class="flex justify-end gap-3 p-4 border-t border-[#E5E7EB]" data-sd-id="234">
+                    <button class="h-[40px] px-4 text-[#6B7280] font-semibold rounded-md" data-sd-id="235">Cancel</button>
+                    <button class="h-[40px] px-4 bg-[#2563EB] text-white font-semibold rounded-md" data-sd-id="236">Confirm</button>
+                </div>
+            </div>
+        </section>
+
+        <hr class="border-[#E5E7EB] my-12">
+
+        <!-- 14. TOAST -->
+        <section id="toast-spec" class="mb-12" data-sd-id="237">
+            <h2 class="text-xs font-semibold uppercase tracking-widest text-[#6B7280] mb-8" data-sd-id="238">14. Toast</h2>
+            <div class="inline-flex items-center gap-3 bg-[#1F2937] text-white px-4 py-3 rounded-xl shadow-lg" data-sd-id="239">
+                <iconify-icon icon="lucide:check-circle" class="text-[#14B8A6]"></iconify-icon>
+                <span class="text-[14px]" data-sd-id="240">Schedule published</span>
+                <button class="ml-4 text-[13px] font-semibold text-blue-400 hover:text-blue-300" data-sd-id="241">Undo</button>
+            </div>
+        </section>
+
+        <hr class="border-[#E5E7EB] my-12">
+
+        <!-- 15. EMPTY STATES -->
+        <section id="empty-states" class="mb-12" data-sd-id="242">
+            <h2 class="text-xs font-semibold uppercase tracking-widest text-[#6B7280] mb-8" data-sd-id="243">15. Empty States</h2>
+            <div class="grid grid-cols-3 gap-6" data-sd-id="244">
+                <div class="p-8 bg-white border border-[#E5E7EB] rounded-2xl flex flex-col items-center text-center" data-sd-id="245">
+                    <iconify-icon icon="lucide:calendar" class="text-4xl text-[#6B7280] mb-4" stroke-width="1.5"></iconify-icon>
+                    <p class="text-[14px] text-[#1F2937] mb-6" data-sd-id="246">No shifts scheduled yet</p>
+                    <button class="px-4 py-2 bg-[#2563EB] text-white text-[13px] font-semibold rounded-lg" data-sd-id="247">Create Shift</button>
+                </div>
+                <div class="p-8 bg-white border border-[#E5E7EB] rounded-2xl flex flex-col items-center text-center" data-sd-id="248">
+                    <iconify-icon icon="lucide:check-square" class="text-4xl text-[#6B7280] mb-4" stroke-width="1.5"></iconify-icon>
+                    <p class="text-[14px] text-[#1F2937] mb-6" data-sd-id="249">You're all caught up on tasks</p>
+                </div>
+                <div class="p-8 bg-white border border-[#E5E7EB] rounded-2xl flex flex-col items-center text-center" data-sd-id="250">
+                    <iconify-icon icon="lucide:refresh-cw" class="text-4xl text-[#6B7280] mb-4" stroke-width="1.5"></iconify-icon>
+                    <p class="text-[14px] text-[#1F2937] mb-6" data-sd-id="251">No pending trade requests</p>
+                </div>
+            </div>
+        </section>
+
+        <hr class="border-[#E5E7EB] my-12">
+
+        <!-- 16. BILINGUAL TOGGLE -->
+        <section id="bilingual" class="mb-12" data-sd-id="252">
+            <h2 class="text-xs font-semibold uppercase tracking-widest text-[#6B7280] mb-8" data-sd-id="253">16. Bilingual Toggle</h2>
+            <div class="inline-flex p-1 bg-[#F5F4F2] rounded-lg" data-sd-id="254">
+                <button class="px-4 py-1.5 bg-white shadow-sm rounded-md text-[13px] font-semibold text-[#1F2937]" data-sd-id="255">EN</button>
+                <button class="px-4 py-1.5 text-[13px] font-semibold text-[#6B7280]" data-sd-id="256">ES</button>
+            </div>
+        </section>
+
+        <hr class="border-[#E5E7EB] my-12">
+
+        <!-- 17. SPACING & RADIUS -->
+        <section id="spacing-radius" class="pb-24" data-sd-id="257">
+            <h2 class="text-xs font-semibold uppercase tracking-widest text-[#6B7280] mb-8" data-sd-id="258">17. Spacing &amp; Radius</h2>
+            <div class="grid grid-cols-2 gap-12" data-sd-id="259">
+                <div class="space-y-4" data-sd-id="260">
+                    <p class="text-[13px] font-semibold" data-sd-id="261">Spacing Scale</p>
+                    <div class="flex items-end gap-2" data-sd-id="262">
+                        <div class="w-1 h-1 bg-[#2563EB]" data-sd-id="263"></div>
+                        <div class="w-2 h-2 bg-[#2563EB]" data-sd-id="264"></div>
+                        <div class="w-3 h-3 bg-[#2563EB]" data-sd-id="265"></div>
+                        <div class="w-4 h-4 bg-[#2563EB]" data-sd-id="266"></div>
+                        <div class="w-6 h-6 bg-[#2563EB]" data-sd-id="267"></div>
+                        <div class="w-8 h-8 bg-[#2563EB]" data-sd-id="268"></div>
+                        <div class="w-12 h-12 bg-[#2563EB]" data-sd-id="269"></div>
+                    </div>
+                    <div class="flex gap-[2px] text-[10px] text-[#6B7280] font-bold" data-sd-id="270">
+                        <span class="w-1" data-sd-id="271">4</span>
+                        <span class="w-2" data-sd-id="272">8</span>
+                        <span class="w-3" data-sd-id="273">12</span>
+                        <span class="w-4" data-sd-id="274">16</span>
+                        <span class="w-6 text-center" data-sd-id="275">24</span>
+                        <span class="w-8 text-center" data-sd-id="276">32</span>
+                        <span class="w-12 text-center" data-sd-id="277">48</span>
+                    </div>
+                </div>
+                <div class="space-y-4" data-sd-id="278">
+                    <p class="text-[13px] font-semibold" data-sd-id="279">Radius Scale</p>
+                    <div class="flex gap-4" data-sd-id="280">
+                        <div class="w-16 h-16 bg-[#F8F8F7] border border-[#E5E7EB] rounded-lg flex items-center justify-center text-[11px] font-bold" data-sd-id="281">8px</div>
+                        <div class="w-16 h-16 bg-[#F8F8F7] border border-[#E5E7EB] rounded-xl flex items-center justify-center text-[11px] font-bold" data-sd-id="282">12px</div>
+                        <div class="w-16 h-16 bg-[#F8F8F7] border border-[#E5E7EB] rounded-2xl flex items-center justify-center text-[11px] font-bold" data-sd-id="283">16px</div>
+                        <div class="w-16 h-16 bg-[#F8F8F7] border border-[#E5E7EB] rounded-full flex items-center justify-center text-[11px] font-bold" data-sd-id="284">Full</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+</body></html>

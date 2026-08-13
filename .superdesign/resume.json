@@ -1,0 +1,1110 @@
+{
+  "schemaVersion": 1,
+  "targets": {
+    "design-system-sheet": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "a0fe8fa1-7d32-40bc-8382-5937554dc300",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "a0fe8fa1-7d32-40bc-8382-5937554dc300": {
+          "title": "01-design-system-desktop-en",
+          "visualDirection": "7shifts-inspired light operational specimen sheet",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T05:50:00Z"
+    },
+    "dashboard-overview": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "e41c1dbf-ab6e-4198-9a9c-bac8186686fa": {
+          "title": "05-dashboard-overview-desktop-en",
+          "visualDirection": "DESKTOP SHELL ANCHOR: 60px icon rail + top bar, 1440w. Source draft for all desktop flow pages.",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T05:50:00Z"
+    },
+    "staff-home": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "6f494236-40fa-4963-8e54-5b0acac1b9bb": {
+          "title": "07-staff-home-mobile-en",
+          "visualDirection": "MOBILE SHELL ANCHOR: 5-tab bottom bar + drawn safe areas, 390x844. Source draft for all mobile flow pages.",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T05:50:00Z"
+    },
+    "schedule-builder": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "73518504-0082-4378-82ba-91f66801e173",
+      "sourceTarget": "dashboard-overview",
+      "sourceDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "73518504-0082-4378-82ba-91f66801e173": {
+          "title": "11-schedule-builder-desktop-en",
+          "visualDirection": "role-band grouped week grid, conflict + OT flags, labor footer",
+          "parentDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T05:50:00Z"
+    },
+    "shift-modal": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "42a6f9d7-0c51-4adc-94a9-a0a222936749",
+      "sourceTarget": "dashboard-overview",
+      "sourceDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "42a6f9d7-0c51-4adc-94a9-a0a222936749": {
+          "title": "12-shift-modal-desktop-en",
+          "parentDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T05:50:00Z"
+    },
+    "schedule-ai-draft": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "bc8a5a6a-c94b-449f-ae27-06dc2bcb6919",
+      "sourceTarget": "dashboard-overview",
+      "sourceDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "bc8a5a6a-c94b-449f-ae27-06dc2bcb6919": {
+          "title": "13-schedule-ai-draft-desktop-en",
+          "parentDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T05:50:00Z"
+    },
+    "publish-confirmation": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "c5863524-43ad-4278-9718-cff501724d2b",
+      "sourceTarget": "dashboard-overview",
+      "sourceDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "c5863524-43ad-4278-9718-cff501724d2b": {
+          "title": "15-publish-confirmation-desktop-en",
+          "parentDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T05:50:00Z"
+    },
+    "whos-working": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "fa23da00-7409-4a70-aee2-15b5e5af9013",
+      "sourceTarget": "dashboard-overview",
+      "sourceDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "fa23da00-7409-4a70-aee2-15b5e5af9013": {
+          "title": "06-whos-working-desktop-en",
+          "parentDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T05:50:00Z"
+    },
+    "availability-requests": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "e56e280a-1259-427e-b4c0-444c8dffaea4",
+      "sourceTarget": "dashboard-overview",
+      "sourceDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "e56e280a-1259-427e-b4c0-444c8dffaea4": {
+          "title": "09-availability-requests-desktop-en",
+          "parentDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T05:50:00Z"
+    },
+    "availability-glance-view": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "72cda96a-1a87-4031-a928-f5120fa0738a",
+      "sourceTarget": "dashboard-overview",
+      "sourceDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "72cda96a-1a87-4031-a928-f5120fa0738a": {
+          "title": "10-availability-glance-view-desktop-en",
+          "visualDirection": "signature teal/red/amber availability grid",
+          "parentDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T05:50:00Z"
+    },
+    "shift-pool": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "05766be2-6692-4d0d-987d-b3af4dbc18a1",
+      "sourceTarget": "dashboard-overview",
+      "sourceDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "05766be2-6692-4d0d-987d-b3af4dbc18a1": {
+          "title": "16-shift-pool-desktop-en",
+          "parentDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T05:50:00Z"
+    },
+    "trade-approval-pass": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "c1edad40-4e39-4b07-ae05-751852789766",
+      "sourceTarget": "dashboard-overview",
+      "sourceDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "c1edad40-4e39-4b07-ae05-751852789766": {
+          "title": "17a-trade-approval-pass-desktop-en",
+          "parentDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T05:50:00Z"
+    },
+    "trade-approval-fail": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "fec67817-fd8a-4764-b24e-4290004a83a7",
+      "sourceTarget": "dashboard-overview",
+      "sourceDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "fec67817-fd8a-4764-b24e-4290004a83a7": {
+          "title": "17b-trade-approval-fail-desktop-en",
+          "visualDirection": "blocked-eligibility variant with override path",
+          "parentDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T05:50:00Z"
+    },
+    "manager-manual-punch": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "1c4f7b28-9865-4246-b8ad-8bdb7358be48",
+      "sourceTarget": "dashboard-overview",
+      "sourceDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "1c4f7b28-9865-4246-b8ad-8bdb7358be48": {
+          "title": "24-manager-manual-punch-desktop-en",
+          "parentDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T05:50:00Z"
+    },
+    "clock-home": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "334a74f9-3028-4c0c-872d-a7ce915ee2ce",
+      "sourceTarget": "staff-home",
+      "sourceDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "334a74f9-3028-4c0c-872d-a7ce915ee2ce": {
+          "title": "19-clock-home-mobile-en",
+          "parentDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T05:50:00Z"
+    },
+    "clock-selfie": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "f33f9e0a-a28a-4c64-b384-c2ed13f88a44",
+      "sourceTarget": "staff-home",
+      "sourceDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "f33f9e0a-a28a-4c64-b384-c2ed13f88a44": {
+          "title": "20-clock-selfie-mobile-en",
+          "parentDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T05:50:00Z"
+    },
+    "clock-in-success": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "a3b67654-5375-4c02-81dc-69c58542e6b8",
+      "sourceTarget": "staff-home",
+      "sourceDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "a3b67654-5375-4c02-81dc-69c58542e6b8": {
+          "title": "21-clock-in-success-mobile-en",
+          "parentDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T05:50:00Z"
+    },
+    "clock-out-tips-numpad": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "57ce6bd1-5649-4bac-be59-fb116c763401",
+      "sourceTarget": "staff-home",
+      "sourceDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "57ce6bd1-5649-4bac-be59-fb116c763401": {
+          "title": "22a-clock-out-tips-numpad-mobile-en",
+          "parentDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T05:50:00Z"
+    },
+    "clock-out-tips-confirm": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "ccebabaa-51aa-4e00-8e08-08706d9dea7b",
+      "sourceTarget": "staff-home",
+      "sourceDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "ccebabaa-51aa-4e00-8e08-08706d9dea7b": {
+          "title": "22b-clock-out-tips-confirm-mobile-en",
+          "parentDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T05:50:00Z"
+    },
+    "clock-out-success": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "f6e95208-9895-464c-b389-aaf02b9efe23",
+      "sourceTarget": "staff-home",
+      "sourceDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "f6e95208-9895-464c-b389-aaf02b9efe23": {
+          "title": "22c-clock-out-success-mobile-en",
+          "parentDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T05:50:00Z"
+    },
+    "clock-out-zero-tips": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "e6e8347f-22ef-4291-b502-2e065ebfca6a",
+      "sourceTarget": "staff-home",
+      "sourceDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "e6e8347f-22ef-4291-b502-2e065ebfca6a": {
+          "title": "22d-clock-out-zero-tips-mobile-en",
+          "parentDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T05:50:00Z"
+    },
+    "clock-geofence-blocked": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "3620ea22-33b4-4f86-a400-d84af3d744d6",
+      "sourceTarget": "staff-home",
+      "sourceDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "3620ea22-33b4-4f86-a400-d84af3d744d6": {
+          "title": "23-clock-geofence-blocked-mobile-en",
+          "parentDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T05:50:00Z"
+    },
+    "my-availability": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "2f246d82-b262-4fc3-8640-ce0cb36076ac",
+      "sourceTarget": "staff-home",
+      "sourceDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "2f246d82-b262-4fc3-8640-ce0cb36076ac": {
+          "title": "08-my-availability-mobile-en",
+          "visualDirection": "recurring week editor, 3-state day rows",
+          "parentDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T06:20:00Z"
+    },
+    "my-schedule": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "05f3d0ff-7305-4d9e-8f0b-51a57fec31db",
+      "sourceTarget": "staff-home",
+      "sourceDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "05f3d0ff-7305-4d9e-8f0b-51a57fec31db": {
+          "title": "14-my-schedule-mobile-en",
+          "visualDirection": "staff week list + mini calendar strip",
+          "parentDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T06:20:00Z"
+    },
+    "shift-detail-sheet": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "5cdc6e4f-6839-43c7-a1a9-183bbad0be97",
+      "sourceTarget": "staff-home",
+      "sourceDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "5cdc6e4f-6839-43c7-a1a9-183bbad0be97": {
+          "title": "14b-shift-detail-sheet-mobile-en",
+          "visualDirection": "bottom sheet with Offer trade / Drop to pool",
+          "parentDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T06:20:00Z"
+    },
+    "trade-pick-shift": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "680e2d3d-38d9-4d78-9eb1-dfa3c4e1b9b0",
+      "sourceTarget": "staff-home",
+      "sourceDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "680e2d3d-38d9-4d78-9eb1-dfa3c4e1b9b0": {
+          "title": "18a-trade-pick-shift-mobile-en",
+          "visualDirection": "trade flow step 1 of 3",
+          "parentDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T06:20:00Z"
+    },
+    "trade-choose-recipient": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "b8b99020-ac24-4e0b-89e1-65c4ba931dfe",
+      "sourceTarget": "staff-home",
+      "sourceDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "b8b99020-ac24-4e0b-89e1-65c4ba931dfe": {
+          "title": "18b-trade-choose-recipient-mobile-en",
+          "visualDirection": "trade flow step 2 of 3, eligible-only picker",
+          "parentDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T06:20:00Z"
+    },
+    "trade-confirmation": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "1f8ccbac-26ae-4023-b406-571c907fe6ac",
+      "sourceTarget": "staff-home",
+      "sourceDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "1f8ccbac-26ae-4023-b406-571c907fe6ac": {
+          "title": "18c-trade-confirmation-mobile-en",
+          "visualDirection": "trade flow step 3 of 3 + push notification preview",
+          "parentDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T06:20:00Z"
+    },
+    "punches-and-tips": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "388617c0-4e41-4fe9-83f9-308e70dcc994",
+      "sourceTarget": "dashboard-overview",
+      "sourceDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "388617c0-4e41-4fe9-83f9-308e70dcc994": {
+          "title": "25-punches-and-tips-desktop-en",
+          "visualDirection": "punch table w/ selfie thumbs + flag chips",
+          "parentDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T07:10:00Z"
+    },
+    "punch-edit-modal": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "ae5f4f89-1913-44bf-9f60-6145373e6f82",
+      "sourceTarget": "dashboard-overview",
+      "sourceDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "ae5f4f89-1913-44bf-9f60-6145373e6f82": {
+          "title": "25b-punch-edit-modal-desktop-en",
+          "visualDirection": "old->new comparison + required reason + edit history",
+          "parentDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T07:10:00Z"
+    },
+    "payroll-workshop": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "64bb5527-ff0c-4443-8532-c9313dcb750a",
+      "sourceTarget": "dashboard-overview",
+      "sourceDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "64bb5527-ff0c-4443-8532-c9313dcb750a": {
+          "title": "26-payroll-workshop-desktop-en",
+          "visualDirection": "densest table; salaried rows greyed 'accountability only'",
+          "parentDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T07:10:00Z"
+    },
+    "task-manager": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "952a2430-7566-4385-963f-a8afada52f42",
+      "sourceTarget": "dashboard-overview",
+      "sourceDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "952a2430-7566-4385-963f-a8afada52f42": {
+          "title": "28-task-manager-desktop-en",
+          "visualDirection": "bilingual EN/ES title columns + cadence chips",
+          "parentDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T07:10:00Z"
+    },
+    "policy-library": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "52d3e8e6-56ac-40ce-8478-47137f9137ab",
+      "sourceTarget": "dashboard-overview",
+      "sourceDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "52d3e8e6-56ac-40ce-8478-47137f9137ab": {
+          "title": "29-policy-library-desktop-en",
+          "visualDirection": "list + bilingual editor tabs",
+          "parentDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T07:10:00Z"
+    },
+    "disciplinary": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "61b2c3cb-e131-4710-bc55-c92aa2dd682d",
+      "sourceTarget": "dashboard-overview",
+      "sourceDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "61b2c3cb-e131-4710-bc55-c92aa2dd682d": {
+          "title": "31-disciplinary-desktop-en",
+          "visualDirection": "new-action form + YOU ARE HERE ladder stepper",
+          "parentDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T07:10:00Z"
+    },
+    "states-sheet": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "54b82baa-99f1-45de-9062-4df4b38adc97",
+      "sourceTarget": "dashboard-overview",
+      "sourceDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "54b82baa-99f1-45de-9062-4df4b38adc97": {
+          "title": "37-states-sheet-desktop-en",
+          "visualDirection": "REFERENCE SHEET, no app shell: skeletons/empty/toasts/offline/push",
+          "parentDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T07:10:00Z"
+    },
+    "profile-admin": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "aa723630-76e2-458d-92e7-1e72bc3e456d",
+      "sourceTarget": "dashboard-overview",
+      "sourceDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "aa723630-76e2-458d-92e7-1e72bc3e456d": {
+          "title": "04-profile-admin-desktop-en",
+          "visualDirection": "admin employee record: rate, toggles, role levels, overrides",
+          "parentDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T07:10:00Z"
+    },
+    "roles-and-hierarchy": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "ef81796c-bad6-4e56-91f4-b0078d999d58",
+      "sourceTarget": "dashboard-overview",
+      "sourceDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "ef81796c-bad6-4e56-91f4-b0078d999d58": {
+          "title": "32-roles-and-hierarchy-desktop-en",
+          "visualDirection": "role list + expanded Bartender 'can cover' editor",
+          "parentDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T07:10:00Z"
+    },
+    "permissions-matrix": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "5fbe9ef9-dadd-441a-b30f-e5afd5f18667",
+      "sourceTarget": "dashboard-overview",
+      "sourceDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "5fbe9ef9-dadd-441a-b30f-e5afd5f18667": {
+          "title": "33-permissions-matrix-desktop-en",
+          "visualDirection": "5-role toggle grid + per-person override drawer",
+          "parentDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T07:10:00Z"
+    },
+    "ai-providers": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "f4d8f871-09a7-4234-b220-92125c9e9a71",
+      "sourceTarget": "dashboard-overview",
+      "sourceDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "f4d8f871-09a7-4234-b220-92125c9e9a71": {
+          "title": "34-ai-providers-desktop-en",
+          "visualDirection": "4 provider cards; Anthropic active",
+          "parentDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T07:10:00Z"
+    },
+    "general-settings": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "d235f6e8-d241-458c-96f5-85c674e9bfba",
+      "sourceTarget": "dashboard-overview",
+      "sourceDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "d235f6e8-d241-458c-96f5-85c674e9bfba": {
+          "title": "35-general-settings-desktop-en",
+          "visualDirection": "geofence map+radius slider, deadlines, pay period, flags",
+          "parentDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T07:10:00Z"
+    },
+    "time-off": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "0a9a892d-3639-4ca7-9f60-26df608250d3",
+      "sourceTarget": "dashboard-overview",
+      "sourceDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "0a9a892d-3639-4ca7-9f60-26df608250d3": {
+          "title": "36-time-off-desktop-en",
+          "visualDirection": "requests table + month calendar with employee bars",
+          "parentDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T07:10:00Z"
+    },
+    "login-desktop": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "7a343ba2-29d0-45b7-a789-dfb85192567d",
+      "sourceTarget": "dashboard-overview",
+      "sourceDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "7a343ba2-29d0-45b7-a789-dfb85192567d": {
+          "title": "01-login-desktop-en",
+          "visualDirection": "UNAUTHENTICATED, no app shell: two-panel login",
+          "parentDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T07:10:00Z"
+    },
+    "invite-acceptance": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "680857db-cf61-48fc-a18c-1350155e6c38",
+      "sourceTarget": "dashboard-overview",
+      "sourceDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "680857db-cf61-48fc-a18c-1350155e6c38": {
+          "title": "02-invite-acceptance-desktop-en",
+          "visualDirection": "UNAUTHENTICATED, no app shell: 3-step sequence on one frame",
+          "parentDraftId": "e41c1dbf-ab6e-4198-9a9c-bac8186686fa",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T07:10:00Z"
+    },
+    "login-mobile": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "13e7e78d-6808-4de8-9975-0ff2c121542d",
+      "sourceTarget": "staff-home",
+      "sourceDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "13e7e78d-6808-4de8-9975-0ff2c121542d": {
+          "title": "01-login-mobile-en",
+          "visualDirection": "UNAUTHENTICATED, no tab bar",
+          "parentDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T07:10:00Z"
+    },
+    "profile-staff": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "867c9821-067a-492f-967f-290786d241f6",
+      "sourceTarget": "staff-home",
+      "sourceDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "867c9821-067a-492f-967f-290786d241f6": {
+          "title": "03-profile-staff-mobile-en",
+          "visualDirection": "staff view; incl. my-standing ladder widget",
+          "parentDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T07:10:00Z"
+    },
+    "my-tasks": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "404feb0f-52dc-44aa-ac54-5b246c3f2066",
+      "sourceTarget": "staff-home",
+      "sourceDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "404feb0f-52dc-44aa-ac54-5b246c3f2066": {
+          "title": "27-my-tasks-mobile-en",
+          "visualDirection": "grouped today/week/month + photo-proof affordance",
+          "parentDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T07:10:00Z"
+    },
+    "policy-read": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "ec1ad225-b3ec-4306-a73f-b5cd4dc98068",
+      "sourceTarget": "staff-home",
+      "sourceDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "ec1ad225-b3ec-4306-a73f-b5cd4dc98068": {
+          "title": "30a-policy-read-mobile-en",
+          "visualDirection": "signature flow 1/3: document reader",
+          "parentDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T07:10:00Z"
+    },
+    "signature-canvas": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "f930d899-b091-44ec-ace5-354c1aec79ec",
+      "sourceTarget": "staff-home",
+      "sourceDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "f930d899-b091-44ec-ace5-354c1aec79ec": {
+          "title": "30b-signature-canvas-mobile-en",
+          "visualDirection": "signature flow 2/3: draw canvas + consent",
+          "parentDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T07:10:00Z"
+    },
+    "signature-success": {
+      "targetKind": "new-ui",
+      "projectId": "15e535e4-f381-4e81-99a8-5406f286cb84",
+      "activeDraftId": "2bf72ec2-ff83-4101-badb-ed2d6da84934",
+      "sourceTarget": "staff-home",
+      "sourceDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+      "designSystemPath": ".superdesign/design-system.md",
+      "contextFiles": [
+        ".superdesign/design-system.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "d533833b813f03d451f287ab245a56ca0136fdd6a829421acc4c77111e45f2a3"
+      },
+      "drafts": {
+        "2bf72ec2-ff83-4101-badb-ed2d6da84934": {
+          "title": "30c-signature-success-mobile-en",
+          "visualDirection": "signature flow 3/3: receipt + next document",
+          "parentDraftId": "6f494236-40fa-4963-8e54-5b0acac1b9bb",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-13T07:10:00Z"
+    }
+  },
+  "pendingBatches": [],
+  "deferredScope": [],
+  "scopeStatus": "Complete \u2014 all 37 briefed screens designed (49 frames). Spanish duplicates dropped by user decision; layouts designed for ~30% text expansion."
+}

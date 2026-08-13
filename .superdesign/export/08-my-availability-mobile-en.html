@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="view-transition" content="same-origin">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/6f494236-40fa-4963-8e54-5b0acac1b9bb" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/05f3d0ff-7305-4d9e-8f0b-51a57fec31db" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/5cdc6e4f-6839-43c7-a1a9-183bbad0be97" as="document">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    @view-transition { navigation: auto; }
+    ::view-transition-old(main-nav), ::view-transition-new(main-nav) { animation: none; mix-blend-mode: normal; }
+    ::view-transition-old(main-content) { animation: 0.2s ease-out both fade-out; }
+    ::view-transition-new(main-content) { animation: 0.25s ease-in 0.05s both fade-in; }
+    @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  </style>
+</head>
+<body>
+  <div class="w-[390px] h-[844px] mx-auto bg-white overflow-hidden relative shadow-2xl flex flex-col">
+    
+    <!-- iOS Top Safe Area (44px) -->
+    <div class="h-[44px] bg-white w-full flex items-center justify-between px-8 shrink-0 z-50">
+      <span class="text-[15px] font-semibold text-[#1F2937]">5:42</span>
+      <div class="flex items-center gap-1.5">
+        <iconify-icon icon="material-symbols:signal-cellular-4-bar-rounded" class="text-lg"></iconify-icon>
+        <iconify-icon icon="material-symbols:wifi" class="text-lg"></iconify-icon>
+        <iconify-icon icon="material-symbols:battery-full-rounded" class="text-xl rotate-180"></iconify-icon>
+      </div>
+    </div>
+
+    <!-- Sticky Header -->
+    <header class="sticky top-0 bg-white z-40 border-b border-[#E5E7EB] px-4 h-[56px] flex items-center justify-between shrink-0">
+      <div class="flex items-center gap-3">
+        <a href="#back" id="back-chevron-link" class="text-[#1F2937]">
+          <iconify-icon icon="lucide:chevron-left" class="text-2xl"></iconify-icon>
+        </a>
+        <h1 class="text-[17px] font-semibold text-[#1F2937]">My availability</h1>
+      </div>
+      <button class="text-[15px] font-medium text-[#2563EB] opacity-50">Save</button>
+    </header>
+
+    <!-- Scrollable Content Area -->
+    <main class="flex-1 overflow-y-auto no-scrollbar bg-[#F9FAFB]" style="view-transition-name: main-content;">
+      <!-- Deadline Banner -->
+      <div class="p-4">
+        <div class="bg-[#FEF3D9] border border-[#F59E0B22] rounded-xl p-3 flex items-start gap-3 mb-4">
+          <iconify-icon icon="lucide:clock" class="text-[#F59E0B] text-lg mt-0.5"></iconify-icon>
+          <div>
+            <p class="text-[14px] font-semibold text-[#1F2937]">Submit by Thu 11:59 PM for next week</p>
+            <p class="text-[13px] text-[#6B7280]">Applies to Aug 17 – Aug 23, 2026</p>
+          </div>
+        </div>
+
+        <!-- Segmented Control -->
+        <div class="bg-[#F3F4F6] p-1 rounded-lg flex mb-3">
+          <button class="flex-1 py-1.5 text-[14px] font-semibold bg-white rounded-md shadow-sm text-[#1F2937]">Recurring</button>
+          <button class="flex-1 py-1.5 text-[14px] font-medium text-[#6B7280]">This week only</button>
+        </div>
+        <p class="text-[12px] text-[#6B7280] mb-6 px-1">Your recurring availability repeats every week until you change it.</p>
+
+        <!-- Availability Cards -->
+        <div class="space-y-3 mb-8">
+          <!-- Monday -->
+          <div class="bg-white border border-[#E5E7EB] rounded-xl p-4">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-[15px] font-semibold text-[#1F2937]">Monday</span>
+              <div class="flex bg-[#F3F4F6] p-0.5 rounded-lg">
+                <button class="w-8 h-8 flex items-center justify-center rounded-md bg-[#14B8A6] text-white">
+                  <iconify-icon icon="lucide:check" class="text-lg"></iconify-icon>
+                </button>
+                <button class="w-8 h-8 flex items-center justify-center text-[#6B7280]">
+                  <iconify-icon icon="lucide:clock" class="text-lg"></iconify-icon>
+                </button>
+                <button class="w-8 h-8 flex items-center justify-center text-[#6B7280]">
+                  <iconify-icon icon="lucide:x" class="text-lg"></iconify-icon>
+                </button>
+              </div>
+            </div>
+            <div class="bg-[#E6F7F5] rounded-lg py-2.5 px-3">
+              <p class="text-[13px] font-semibold text-[#14B8A6]">Available all day</p>
+            </div>
+          </div>
+
+          <!-- Tuesday -->
+          <div class="bg-white border border-[#E5E7EB] rounded-xl p-4">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-[15px] font-semibold text-[#1F2937]">Tuesday</span>
+              <div class="flex bg-[#F3F4F6] p-0.5 rounded-lg">
+                <button class="w-8 h-8 flex items-center justify-center text-[#6B7280]">
+                  <iconify-icon icon="lucide:check" class="text-lg"></iconify-icon>
+                </button>
+                <button class="w-8 h-8 flex items-center justify-center rounded-md bg-[#F59E0B] text-white">
+                  <iconify-icon icon="lucide:clock" class="text-lg"></iconify-icon>
+                </button>
+                <button class="w-8 h-8 flex items-center justify-center text-[#6B7280]">
+                  <iconify-icon icon="lucide:x" class="text-lg"></iconify-icon>
+                </button>
+              </div>
+            </div>
+            <div class="bg-[#FEF3D9] rounded-lg p-3">
+              <div class="flex items-center gap-2 mb-2">
+                <div class="flex-1 bg-white border border-[#F59E0B44] rounded-md px-3 py-2 flex items-center gap-2">
+                  <iconify-icon icon="lucide:clock" class="text-[#F59E0B] text-sm"></iconify-icon>
+                  <span class="text-[14px] tabular-nums font-medium text-[#1F2937]">9:00 AM</span>
+                </div>
+                <span class="text-[#F59E0B] font-medium">to</span>
+                <div class="flex-1 bg-white border border-[#F59E0B44] rounded-md px-3 py-2 flex items-center gap-2">
+                  <iconify-icon icon="lucide:clock" class="text-[#F59E0B] text-sm"></iconify-icon>
+                  <span class="text-[14px] tabular-nums font-medium text-[#1F2937]">4:00 PM</span>
+                </div>
+              </div>
+              <p class="text-[12px] text-[#6B7280]">Class until 8:30 AM</p>
+            </div>
+            <button class="mt-3 text-[13px] font-medium text-[#2563EB]">+ Add another time range</button>
+          </div>
+
+          <!-- Wednesday -->
+          <div class="bg-white border border-[#E5E7EB] rounded-xl p-4">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-[15px] font-semibold text-[#1F2937]">Wednesday</span>
+              <div class="flex bg-[#F3F4F6] p-0.5 rounded-lg">
+                <button class="w-8 h-8 flex items-center justify-center rounded-md bg-[#14B8A6] text-white">
+                  <iconify-icon icon="lucide:check" class="text-lg"></iconify-icon>
+                </button>
+                <button class="w-8 h-8 flex items-center justify-center text-[#6B7280]">
+                  <iconify-icon icon="lucide:clock" class="text-lg"></iconify-icon>
+                </button>
+                <button class="w-8 h-8 flex items-center justify-center text-[#6B7280]">
+                  <iconify-icon icon="lucide:x" class="text-lg"></iconify-icon>
+                </button>
+              </div>
+            </div>
+            <div class="bg-[#E6F7F5] rounded-lg py-2.5 px-3">
+              <p class="text-[13px] font-semibold text-[#14B8A6]">Available all day</p>
+            </div>
+          </div>
+
+          <!-- Thursday -->
+          <div class="bg-white border border-[#E5E7EB] rounded-xl p-4">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-[15px] font-semibold text-[#1F2937]">Thursday</span>
+              <div class="flex bg-[#F3F4F6] p-0.5 rounded-lg">
+                <button class="w-8 h-8 flex items-center justify-center text-[#6B7280]">
+                  <iconify-icon icon="lucide:check" class="text-lg"></iconify-icon>
+                </button>
+                <button class="w-8 h-8 flex items-center justify-center text-[#6B7280]">
+                  <iconify-icon icon="lucide:clock" class="text-lg"></iconify-icon>
+                </button>
+                <button class="w-8 h-8 flex items-center justify-center rounded-md bg-[#EF4444] text-white">
+                  <iconify-icon icon="lucide:x" class="text-lg"></iconify-icon>
+                </button>
+              </div>
+            </div>
+            <div class="bg-[#FDE8E8] rounded-lg py-2.5 px-3">
+              <p class="text-[13px] font-semibold text-[#EF4444]">Not available</p>
+            </div>
+          </div>
+
+          <!-- Friday -->
+          <div class="bg-white border border-[#E5E7EB] rounded-xl p-4">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-[15px] font-semibold text-[#1F2937]">Friday</span>
+              <div class="flex bg-[#F3F4F6] p-0.5 rounded-lg">
+                <button class="w-8 h-8 flex items-center justify-center rounded-md bg-[#14B8A6] text-white">
+                  <iconify-icon icon="lucide:check" class="text-lg"></iconify-icon>
+                </button>
+                <button class="w-8 h-8 flex items-center justify-center text-[#6B7280]">
+                  <iconify-icon icon="lucide:clock" class="text-lg"></iconify-icon>
+                </button>
+                <button class="w-8 h-8 flex items-center justify-center text-[#6B7280]">
+                  <iconify-icon icon="lucide:x" class="text-lg"></iconify-icon>
+                </button>
+              </div>
+            </div>
+            <div class="bg-[#E6F7F5] rounded-lg py-2.5 px-3">
+              <p class="text-[13px] font-semibold text-[#14B8A6]">Available all day</p>
+            </div>
+          </div>
+
+          <!-- Saturday -->
+          <div class="bg-white border border-[#E5E7EB] rounded-xl p-4">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-[15px] font-semibold text-[#1F2937]">Saturday</span>
+              <div class="flex bg-[#F3F4F6] p-0.5 rounded-lg">
+                <button class="w-8 h-8 flex items-center justify-center rounded-md bg-[#14B8A6] text-white">
+                  <iconify-icon icon="lucide:check" class="text-lg"></iconify-icon>
+                </button>
+                <button class="w-8 h-8 flex items-center justify-center text-[#6B7280]">
+                  <iconify-icon icon="lucide:clock" class="text-lg"></iconify-icon>
+                </button>
+                <button class="w-8 h-8 flex items-center justify-center text-[#6B7280]">
+                  <iconify-icon icon="lucide:x" class="text-lg"></iconify-icon>
+                </button>
+              </div>
+            </div>
+            <div class="bg-[#E6F7F5] rounded-lg py-2.5 px-3">
+              <p class="text-[13px] font-semibold text-[#14B8A6]">Available all day</p>
+            </div>
+          </div>
+
+          <!-- Sunday -->
+          <div class="bg-white border border-[#E5E7EB] rounded-xl p-4">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-[15px] font-semibold text-[#1F2937]">Sunday</span>
+              <div class="flex bg-[#F3F4F6] p-0.5 rounded-lg">
+                <button class="w-8 h-8 flex items-center justify-center text-[#6B7280]">
+                  <iconify-icon icon="lucide:check" class="text-lg"></iconify-icon>
+                </button>
+                <button class="w-8 h-8 flex items-center justify-center rounded-md bg-[#F59E0B] text-white">
+                  <iconify-icon icon="lucide:clock" class="text-lg"></iconify-icon>
+                </button>
+                <button class="w-8 h-8 flex items-center justify-center text-[#6B7280]">
+                  <iconify-icon icon="lucide:x" class="text-lg"></iconify-icon>
+                </button>
+              </div>
+            </div>
+            <div class="bg-[#FEF3D9] rounded-lg p-3">
+              <div class="flex items-center gap-2">
+                <div class="flex-1 bg-white border border-[#F59E0B44] rounded-md px-3 py-2 flex items-center gap-2">
+                  <iconify-icon icon="lucide:clock" class="text-[#F59E0B] text-sm"></iconify-icon>
+                  <span class="text-[14px] tabular-nums font-medium text-[#1F2937]">4:00 PM</span>
+                </div>
+                <span class="text-[#F59E0B] font-medium">to</span>
+                <div class="flex-1 bg-white border border-[#F59E0B44] rounded-md px-3 py-2 flex items-center gap-2">
+                  <iconify-icon icon="lucide:clock" class="text-[#F59E0B] text-sm"></iconify-icon>
+                  <span class="text-[14px] tabular-nums font-medium text-[#1F2937]">11:00 PM</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Temporary Change Entry -->
+        <a href="#temporary-change" id="temp-change-link" class="bg-white border border-[#E5E7EB] rounded-xl p-4 flex items-center gap-4 mb-6">
+          <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+            <iconify-icon icon="lucide:calendar" class="text-[#2563EB] text-xl"></iconify-icon>
+          </div>
+          <div class="flex-1">
+            <p class="text-[15px] font-semibold text-[#1F2937]">Temporary change for a specific week</p>
+            <p class="text-[12px] text-[#6B7280]">Request different hours for one week without changing your recurring availability</p>
+          </div>
+          <iconify-icon icon="lucide:chevron-right" class="text-[#6B7280] text-xl"></iconify-icon>
+        </a>
+
+        <p class="text-center text-[12px] text-[#6B7280] mb-8">Last updated Aug 5 · approved by Daphne Jalil</p>
+      </div>
+    </main>
+
+    <!-- Primary Action Pinned Above Safe Area -->
+    <div class="px-4 bg-white pt-2 z-50">
+      <button id="submit-availability-btn" class="w-full h-[56px] bg-[#2563EB] text-white font-semibold rounded-xl flex items-center justify-center gap-2 active:scale-[0.98] transition-all">
+        Submit availability
+      </button>
+    </div>
+
+    <!-- Bottom Tab Bar (56px) + Safe Area (34px) -->
+    <nav class="w-[390px] bg-white border-t border-[#E5E7EB] z-50" style="view-transition-name: main-nav;">
+      <div class="h-[56px] flex items-center justify-between px-2">
+        <a href="https://p.superdesign.dev/draft/6f494236-40fa-4963-8e54-5b0acac1b9bb" id="nav-home" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280]">
+          <iconify-icon icon="lucide:home" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">Home</span>
+        </a>
+        <a href="https://p.superdesign.dev/draft/05f3d0ff-7305-4d9e-8f0b-51a57fec31db" id="nav-schedule" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280]">
+          <iconify-icon icon="lucide:calendar" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">Schedule</span>
+        </a>
+        <a href="#clock" id="nav-clock" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280]">
+          <iconify-icon icon="lucide:clock" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">Clock</span>
+        </a>
+        <a href="#tasks" id="nav-tasks" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280]">
+          <iconify-icon icon="lucide:clipboard-list" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">Tasks</span>
+        </a>
+        <a href="#more" id="nav-more" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#2563EB]">
+          <iconify-icon icon="lucide:more-horizontal" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">More</span>
+        </a>
+      </div>
+      <!-- iOS Home Indicator Area (34px) -->
+      <div class="h-[34px] w-full flex items-center justify-center">
+        <div class="w-[134px] h-[5px] bg-black rounded-full opacity-20"></div>
+      </div>
+    </nav>
+
+  </div>
+</body>
+</html>

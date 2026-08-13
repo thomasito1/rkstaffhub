@@ -1,0 +1,208 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clock - Geofence Blocked</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <meta name="view-transition" content="same-origin">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/6f494236-40fa-4963-8e54-5b0acac1b9bb" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/334a74f9-3028-4c0c-872d-a7ce915ee2ce" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/f33f9e0a-a28a-4c64-b384-c2ed13f88a44" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/a3b67654-5375-4c02-81dc-69c58542e6b8" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/57ce6bd1-5649-4bac-be59-fb116c763401" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/ccebabaa-51aa-4e00-8e08-08706d9dea7b" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/f6e95208-9895-464c-b389-aaf02b9efe23" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/e6e8347f-22ef-4291-b502-2e065ebfca6a" as="document">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    @view-transition {
+      navigation: auto;
+    }
+    html {
+      background-color: #F3F4F6;
+    }
+    ::view-transition-old(main-content) {
+      animation: 0.25s ease-out both fade-out;
+    }
+    ::view-transition-new(main-content) {
+      animation: 0.25s ease-in 0.1s both fade-in;
+    }
+    @keyframes fade-out {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    ::view-transition-old(nav-bar),
+    ::view-transition-new(nav-bar) {
+      animation: none;
+      mix-blend-mode: normal;
+    }
+  </style>
+</head>
+<body>
+  <div class="w-[390px] h-[844px] mx-auto bg-white overflow-hidden relative shadow-2xl flex flex-col">
+    
+    <!-- iOS Top Safe Area (44px) -->
+    <div class="h-[44px] bg-white w-full flex items-center justify-between px-8 shrink-0 z-50">
+      <span class="text-[15px] font-semibold text-[#1F2937]">3:24</span>
+      <div class="flex items-center gap-1.5">
+        <iconify-icon icon="material-symbols:signal-cellular-4-bar-rounded" class="text-lg"></iconify-icon>
+        <iconify-icon icon="material-symbols:wifi" class="text-lg"></iconify-icon>
+        <iconify-icon icon="material-symbols:battery-full-rounded" class="text-xl rotate-180"></iconify-icon>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto no-scrollbar" style="view-transition-name: main-content">
+      <div class="px-4 py-4">
+        <!-- Header Section -->
+        <header class="mb-4">
+          <h1 class="text-[24px] font-semibold text-[#1F2937] leading-tight tracking-tight">Clock</h1>
+          <p class="text-[13px] text-[#6B7280]">Monday, Aug 10 · 3:24 PM</p>
+        </header>
+
+        <!-- Geofence Status Chip -->
+        <div class="w-full bg-[#FDE8E8] rounded-full p-3 flex items-center gap-3 mb-6 border border-[#FEE2E2]">
+          <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm shrink-0">
+            <iconify-icon icon="lucide:map-pin-off" class="text-[#EF4444] text-xl"></iconify-icon>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-[14px] font-semibold text-[#1F2937] leading-none">You're outside Rosalia's Kitchen</span>
+            <span class="text-[12px] text-[#6B7280] mt-1 tabular-nums">About 0.8 miles away · updated 4 seconds ago</span>
+          </div>
+        </div>
+
+        <!-- Map Card Section -->
+        <div class="bg-white border border-[#E5E7EB] rounded-xl overflow-hidden shadow-sm mb-6">
+          <div class="h-[180px] bg-[#F8F8F7] relative flex items-center justify-center overflow-hidden">
+            <!-- Abstract Map Design Elements -->
+            <div class="absolute inset-0">
+              <svg class="w-full h-full" viewBox="0 0 300 180">
+                <line x1="0" y1="60" x2="300" y2="100" stroke="#E5E7EB" stroke-width="1.5" />
+                <line x1="120" y1="0" x2="180" y2="180" stroke="#E5E7EB" stroke-width="1.5" />
+                <line x1="0" y1="140" x2="300" y2="120" stroke="#E5E7EB" stroke-width="1.5" />
+                <circle cx="140" cy="90" r="50" fill="#14B8A6" fill-opacity="0.1" stroke="#14B8A6" stroke-width="1" stroke-dasharray="4 2" />
+              </svg>
+            </div>
+            <!-- Restaurant Pin -->
+            <div class="absolute top-[82px] left-[132px] flex flex-col items-center">
+              <iconify-icon icon="material-symbols:location-on" class="text-[#14B8A6] text-2xl"></iconify-icon>
+              <div class="bg-white px-2 py-0.5 rounded shadow-sm border border-[#E5E7EB] mt-0.5">
+                <span class="text-[9px] font-bold text-[#14B8A6] whitespace-nowrap uppercase tracking-wider">Rosalia's Kitchen</span>
+              </div>
+            </div>
+            <!-- User Pin -->
+            <div class="absolute top-[40px] left-[240px] flex flex-col items-center">
+              <iconify-icon icon="material-symbols:person-pin-circle" class="text-[#EF4444] text-2xl"></iconify-icon>
+              <div class="bg-white px-2 py-0.5 rounded shadow-sm border border-[#E5E7EB] mt-0.5">
+                <span class="text-[9px] font-bold text-[#EF4444] whitespace-nowrap uppercase tracking-wider">You</span>
+              </div>
+            </div>
+          </div>
+          <div class="p-3 border-t border-[#E5E7EB] flex items-center gap-2">
+            <iconify-icon icon="lucide:info" class="text-[#6B7280] text-sm shrink-0"></iconify-icon>
+            <p class="text-[12px] text-[#6B7280]">You must be within 150 m of the restaurant to punch.</p>
+          </div>
+        </div>
+
+        <!-- Explanation Block -->
+        <div class="mb-8 px-1">
+          <h3 class="text-[15px] font-semibold text-[#1F2937] mb-2">Why can't I clock in?</h3>
+          <p class="text-[13px] text-[#6B7280] leading-relaxed">
+            Punches are location-verified so hours stay accurate. Move closer to the restaurant and try again, or ask a manager to punch you in.
+          </p>
+        </div>
+
+        <!-- Primary Action (Disabled) -->
+        <div class="flex flex-col items-center mb-8">
+          <button disabled class="w-full h-[56px] bg-[#2563EB] opacity-40 text-white font-semibold rounded-[12px] flex items-center justify-center gap-2 cursor-not-allowed">
+            <iconify-icon icon="lucide:lock" class="text-xl"></iconify-icon>
+            <span>Clock In</span>
+          </button>
+          <p class="text-[13px] text-[#6B7280] mt-3">Clock in unlocks when you're at the restaurant.</p>
+        </div>
+
+        <!-- Help Actions -->
+        <div class="space-y-3 mb-8">
+          <button class="w-full h-[50px] bg-white border border-[#E5E7EB] text-[#1F2937] font-semibold rounded-[12px] flex items-center justify-center gap-2 active:bg-gray-50">
+            <iconify-icon icon="lucide:user" class="text-lg"></iconify-icon>
+            <span>Ask a manager to punch me in</span>
+          </button>
+          <a href="https://p.superdesign.dev/draft/3620ea22-33b4-4f86-a400-d84af3d744d6" id="try-again-link" class="w-full flex items-center justify-center gap-2 py-2 text-[13px] font-semibold text-[#2563EB] hover:opacity-80">
+            <iconify-icon icon="lucide:refresh-cw" class="text-lg"></iconify-icon>
+            <span>Try again</span>
+          </a>
+        </div>
+
+        <!-- Manager List -->
+        <div class="bg-[#F8F8F7] border border-[#E5E7EB] rounded-xl p-3 space-y-3 mb-20">
+          <h4 class="text-[11px] font-bold text-[#6B7280] uppercase tracking-[0.05em] px-1">On shift now to help</h4>
+          <div class="flex items-center gap-3 px-1">
+            <div class="w-8 h-8 rounded-full bg-[#E5E7EB] flex items-center justify-center text-[11px] font-bold text-[#1F2937] border border-white">DJ</div>
+            <div class="flex flex-col">
+              <span class="text-[13px] font-semibold text-[#1F2937]">Daphne Jalil</span>
+              <span class="text-[11px] text-[#6B7280]">Manager</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 px-1">
+            <div class="w-8 h-8 rounded-full bg-[#E5E7EB] flex items-center justify-center text-[11px] font-bold text-[#1F2937] border border-white">SF</div>
+            <div class="flex flex-col">
+              <span class="text-[13px] font-semibold text-[#1F2937]">Steph Fages</span>
+              <span class="text-[11px] text-[#6B7280]">Shift Supervisor</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Tab Bar (Persistent) -->
+    <nav class="fixed bottom-0 w-[390px] bg-white border-t border-[#E5E7EB] z-50" style="view-transition-name: nav-bar">
+      <div class="h-[56px] flex items-center justify-between px-2">
+        <a href="https://p.superdesign.dev/draft/6f494236-40fa-4963-8e54-5b0acac1b9bb" id="nav-home" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280]">
+          <iconify-icon icon="lucide:home" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">Home</span>
+        </a>
+        <a href="#schedule" id="nav-schedule" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280]">
+          <iconify-icon icon="lucide:calendar" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">Schedule</span>
+        </a>
+        <a href="https://p.superdesign.dev/draft/334a74f9-3028-4c0c-872d-a7ce915ee2ce" id="nav-clock" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#2563EB]">
+          <iconify-icon icon="lucide:clock" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">Clock</span>
+        </a>
+        <a href="#tasks" id="nav-tasks" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280] relative">
+          <iconify-icon icon="lucide:clipboard-list" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">Tasks</span>
+          <span class="absolute top-1.5 right-6 w-1.5 h-1.5 bg-[#EF4444] rounded-full"></span>
+        </a>
+        <a href="#more" id="nav-more" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280]">
+          <iconify-icon icon="lucide:more-horizontal" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">More</span>
+        </a>
+      </div>
+      <!-- iOS Home Indicator Area (34px) -->
+      <div class="h-[34px] w-full flex items-center justify-center">
+        <div class="w-[134px] h-[5px] bg-black rounded-full opacity-20"></div>
+      </div>
+    </nav>
+
+  </div>
+</body></html>

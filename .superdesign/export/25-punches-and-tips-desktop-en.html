@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="view-transition" content="same-origin">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/e41c1dbf-ab6e-4198-9a9c-bac8186686fa" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/ae5f4f89-1913-44bf-9f60-6145373e6f82" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/64bb5527-ff0c-4443-8532-c9313dcb750a" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/952a2430-7566-4385-963f-a8afada52f42" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/52d3e8e6-56ac-40ce-8478-47137f9137ab" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/61b2c3cb-e131-4710-bc55-c92aa2dd682d" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/54b82baa-99f1-45de-9062-4df4b38adc97" as="document">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      background-color: #F8F8F7;
+    }
+    .tabular {
+      font-variant-numeric: tabular-nums;
+    }
+    @view-transition { navigation: auto; }
+    html { background-color: #F8F8F7; }
+    aside { view-transition-name: side-rail; }
+    header { view-transition-name: top-bar; }
+    main { view-transition-name: main-content; }
+    ::view-transition-old(side-rail), ::view-transition-new(side-rail),
+    ::view-transition-old(top-bar), ::view-transition-new(top-bar) {
+      animation: none;
+      mix-blend-mode: normal;
+    }
+    ::view-transition-old(main-content) {
+      animation: 0.2s ease-out both fade-out;
+    }
+    ::view-transition-new(main-content) {
+      animation: 0.3s ease-in both fade-in;
+    }
+    @keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+    .toggle-checkbox:checked + .toggle-label {
+      background-color: #2563EB;
+    }
+    .toggle-checkbox:checked + .toggle-label .toggle-dot {
+      transform: translateX(100%);
+    }
+  </style>
+</head>
+<body class="h-full overflow-hidden">
+  <div class="flex h-full min-w-[1440px]">
+    <!-- LEFT ICON RAIL (60px) - CLOCK ACTIVE -->
+    <aside class="w-[60px] h-full bg-[#F5F4F2] border-r border-[#E5E7EB] flex flex-col items-center py-6 shrink-0">
+      <div class="flex flex-col gap-2 items-center w-full">
+        <a href="https://p.superdesign.dev/draft/e41c1dbf-ab6e-4198-9a9c-bac8186686fa" id="rail-home" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/50 transition-colors group">
+          <iconify-icon icon="lucide:home" class="text-[20px] text-[#6B7280] group-hover:text-[#1F2937]"></iconify-icon>
+        </a>
+        <a href="#schedule" id="rail-schedule" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/50 transition-colors group">
+          <iconify-icon icon="lucide:calendar" class="text-[20px] text-[#6B7280] group-hover:text-[#1F2937]"></iconify-icon>
+        </a>
+        <a href="https://p.superdesign.dev/draft/388617c0-4e41-4fe9-83f9-308e70dcc994" id="rail-clock" class="w-10 h-10 flex items-center justify-center bg-white rounded-lg shadow-sm">
+          <iconify-icon icon="lucide:clock" class="text-[20px] text-[#2563EB]"></iconify-icon>
+        </a>
+        <a href="#people" id="rail-people" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/50 transition-colors group">
+          <iconify-icon icon="lucide:users-round" class="text-[20px] text-[#6B7280] group-hover:text-[#1F2937]"></iconify-icon>
+        </a>
+        <a href="https://p.superdesign.dev/draft/952a2430-7566-4385-963f-a8afada52f42" id="rail-tasks" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/50 transition-colors group relative">
+          <iconify-icon icon="lucide:check-square" class="text-[20px] text-[#6B7280] group-hover:text-[#1F2937]"></iconify-icon>
+        </a>
+        <a href="https://p.superdesign.dev/draft/26-payroll-workshop-desktop-en" id="rail-payroll" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/50 transition-colors group">
+          <iconify-icon icon="lucide:banknote" class="text-[20px] text-[#6B7280] group-hover:text-[#1F2937]"></iconify-icon>
+        </a>
+        <a href="https://p.superdesign.dev/draft/52d3e8e6-56ac-40ce-8478-47137f9137ab" id="rail-hr" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/50 transition-colors group">
+          <iconify-icon icon="lucide:file-text" class="text-[20px] text-[#6B7280] group-hover:text-[#1F2937]"></iconify-icon>
+        </a>
+      </div>
+      <div class="mt-auto">
+        <a href="#settings" id="rail-settings" class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/50 transition-colors group">
+          <iconify-icon icon="lucide:settings" class="text-[20px] text-[#6B7280] group-hover:text-[#1F2937]"></iconify-icon>
+        </a>
+      </div>
+    </aside>
+
+    <!-- MAIN WRAPPER -->
+    <div class="flex-1 flex flex-col bg-white min-w-0">
+      <!-- TOP BAR -->
+      <header class="h-[60px] bg-white border-b border-[#E5E7EB] flex items-center justify-between px-8 shrink-0">
+        <div class="flex items-center gap-8">
+          <div class="flex items-center gap-3">
+            <div class="w-7 h-7 bg-[#B4232A] rounded flex items-center justify-center">
+              <span class="text-white font-bold text-lg">R</span>
+            </div>
+            <span class="text-[#1F2937] text-[16px] font-semibold tracking-tight">Rosalia's Kitchen</span>
+          </div>
+          <div class="relative">
+            <iconify-icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280] text-lg"></iconify-icon>
+            <input type="text" placeholder="Search employees, shifts..." class="w-[320px] h-[36px] bg-[#F8F8F7] border border-[#E5E7EB] rounded-lg pl-10 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-[#2563EB]/20">
+          </div>
+        </div>
+        <div class="flex items-center gap-6">
+          <div class="flex items-center bg-[#F8F8F7] p-1 rounded-lg border border-[#E5E7EB]">
+            <button class="px-3 py-1 text-xs font-semibold bg-white text-[#1F2937] rounded shadow-sm border border-[#E5E7EB]">EN</button>
+            <button class="px-3 py-1 text-xs font-semibold text-[#6B7280] hover:text-[#1F2937]">ES</button>
+          </div>
+          <button class="relative flex items-center justify-center w-8 h-8">
+            <iconify-icon icon="lucide:bell" class="text-[20px] text-[#6B7280]"></iconify-icon>
+            <span class="absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 bg-[#EF4444] text-white text-[10px] font-bold rounded-full">4</span>
+          </button>
+          <div class="flex items-center gap-3 pl-2 border-l border-[#E5E7EB]">
+            <div class="flex flex-col items-end">
+              <span class="text-sm font-semibold text-[#1F2937]">Rafa</span>
+              <span class="text-[11px] text-[#6B7280]">Owner</span>
+            </div>
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Rafa&backgroundColor=b4232a" alt="Rafa" class="w-8 h-8 rounded-full border border-[#E5E7EB] bg-[#F5F4F2]">
+          </div>
+        </div>
+      </header>
+
+      <!-- CONTENT -->
+      <main class="flex-1 overflow-y-auto p-8">
+        <div class="max-w-[1280px] mx-auto">
+          <!-- HEADER ROW -->
+          <div class="flex items-end justify-between mb-8">
+            <div>
+              <h1 class="text-[28px] font-semibold text-[#1F2937] leading-tight">Punches & tips</h1>
+              <p class="text-[13px] text-[#6B7280] mt-1">Review, flag and correct time punches</p>
+            </div>
+            <div class="flex items-center gap-3">
+              <a href="#export" id="btn-export-csv" class="h-10 px-4 flex items-center gap-2 bg-white border border-[#E5E7EB] text-[#1F2937] text-sm font-medium rounded-lg hover:bg-[#F8F8F7] transition-colors">
+                <iconify-icon icon="lucide:download" class="text-lg"></iconify-icon>
+                Export CSV
+              </a>
+              <a href="#add-punch" id="btn-add-punch" class="h-10 px-4 flex items-center gap-2 bg-[#2563EB] text-white text-sm font-medium rounded-lg hover:bg-[#1D4ED8] transition-colors shadow-sm">
+                <iconify-icon icon="lucide:plus" class="text-lg"></iconify-icon>
+                Add manual punch
+              </a>
+            </div>
+          </div>
+
+          <!-- FILTER ROW -->
+          <div class="flex items-center justify-between mb-6 bg-white p-1 rounded-xl border border-[#E5E7EB] h-[64px] px-4">
+            <div class="flex items-center gap-4">
+              <div class="flex items-center gap-2">
+                <label class="text-[11px] font-bold text-[#6B7280] uppercase tracking-wider">Employee</label>
+                <button class="h-9 px-3 flex items-center gap-2 bg-[#F8F8F7] border border-[#E5E7EB] rounded-lg text-sm text-[#1F2937] font-medium">
+                  All employees
+                  <iconify-icon icon="lucide:chevron-down"></iconify-icon>
+                </button>
+              </div>
+              <div class="w-px h-6 bg-[#E5E7EB]"></div>
+              <div class="flex items-center gap-2">
+                <iconify-icon icon="lucide:calendar" class="text-[#6B7280]"></iconify-icon>
+                <button class="h-9 px-3 bg-[#F8F8F7] border border-[#E5E7EB] rounded-lg text-sm text-[#1F2937] font-medium">
+                  Aug 10 – Aug 16, 2026
+                </button>
+              </div>
+              <div class="w-px h-6 bg-[#E5E7EB]"></div>
+              <div class="flex items-center gap-2">
+                <label class="text-[11px] font-bold text-[#6B7280] uppercase tracking-wider">Dept</label>
+                <button class="h-9 px-3 flex items-center gap-2 bg-[#F8F8F7] border border-[#E5E7EB] rounded-lg text-sm text-[#1F2937] font-medium">
+                  All
+                  <iconify-icon icon="lucide:chevron-down"></iconify-icon>
+                </button>
+              </div>
+              <div class="relative ml-2">
+                <iconify-icon icon="lucide:search" class="absolute left-3 top-1/2 -translate-y-1/2 text-[#6B7280]"></iconify-icon>
+                <input type="text" placeholder="Search punches" class="w-[240px] h-9 pl-9 pr-4 bg-[#F8F8F7] border border-[#E5E7EB] rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#2563EB]/20">
+              </div>
+            </div>
+            <div class="flex items-center gap-4">
+              <span class="text-[13px] text-[#1F2937] font-medium flex items-center gap-2">
+                Flagged only
+                <span class="inline-flex items-center justify-center w-5 h-5 bg-[#FEF3D9] text-[#F59E0B] text-[11px] font-bold rounded-full">3</span>
+              </span>
+              <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                <input type="checkbox" name="toggle" id="toggle" class="toggle-checkbox hidden">
+                <label for="toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-[#E5E7EB] cursor-pointer relative">
+                   <span class="toggle-dot absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ease-in"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- SUMMARY STRIP -->
+          <div class="grid grid-cols-4 gap-4 mb-6">
+            <div class="bg-white p-4 rounded-xl border border-[#E5E7EB]">
+              <p class="text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-1">Punches</p>
+              <p class="text-2xl font-bold text-[#1F2937] tabular">84</p>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-[#E5E7EB]">
+              <p class="text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-1">Total hours</p>
+              <p class="text-2xl font-bold text-[#1F2937] tabular">141.5</p>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-[#E5E7EB]">
+              <p class="text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-1">Total tips</p>
+              <p class="text-2xl font-bold text-[#1F2937] tabular">$1,868.00</p>
+            </div>
+            <div class="bg-white p-4 rounded-xl border border-[#E5E7EB]">
+              <p class="text-[11px] font-bold text-[#6B7280] uppercase tracking-wider mb-1">Flagged</p>
+              <p class="text-2xl font-bold text-[#F59E0B] tabular">3</p>
+            </div>
+          </div>
+
+          <!-- TABLE -->
+          <div class="bg-white rounded-xl border border-[#E5E7EB] overflow-hidden">
+            <table class="w-full text-left border-collapse">
+              <thead class="bg-[#F8F8F7] border-b border-[#E5E7EB]">
+                <tr>
+                  <th class="px-6 py-3 text-[12px] font-semibold text-[#6B7280] uppercase tracking-wider">Date</th>
+                  <th class="px-6 py-3 text-[12px] font-semibold text-[#6B7280] uppercase tracking-wider">Employee</th>
+                  <th class="px-6 py-3 text-[12px] font-semibold text-[#6B7280] uppercase tracking-wider">Clock in</th>
+                  <th class="px-6 py-3 text-[12px] font-semibold text-[#6B7280] uppercase tracking-wider">Clock out</th>
+                  <th class="px-6 py-3 text-[12px] font-semibold text-[#6B7280] uppercase tracking-wider">Hours</th>
+                  <th class="px-6 py-3 text-[12px] font-semibold text-[#6B7280] uppercase tracking-wider">Tips</th>
+                  <th class="px-6 py-3 text-[12px] font-semibold text-[#6B7280] uppercase tracking-wider">Flags</th>
+                  <th class="w-12"></th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-[#E5E7EB]">
+                <!-- Row 1 -->
+                <tr class="h-[64px] hover:bg-[#FAFAFA] transition-colors">
+                  <td class="px-6 text-sm text-[#1F2937]">Mon Aug 10</td>
+                  <td class="px-6">
+                    <div class="flex items-center gap-3">
+                      <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Allison" class="w-8 h-8 rounded-full border border-[#E5E7EB] bg-[#F5F4F2]">
+                      <div>
+                        <p class="text-sm font-semibold text-[#1F2937]">Allison Rodriguez</p>
+                        <p class="text-[12px] text-[#6B7280]">Server · L2</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6">
+                    <div class="flex items-center gap-2">
+                      <div class="w-7 h-7 bg-[#F3F4F6] rounded-lg flex items-center justify-center">
+                        <iconify-icon icon="lucide:user" class="text-[#9CA3AF]"></iconify-icon>
+                      </div>
+                      <span class="text-sm font-semibold text-[#1F2937] tabular">10:28 AM</span>
+                    </div>
+                  </td>
+                  <td class="px-6 text-sm font-semibold text-[#1F2937] tabular">4:06 PM</td>
+                  <td class="px-6 text-sm text-[#1F2937] tabular">5.6 hrs</td>
+                  <td class="px-6 text-sm text-[#1F2937] tabular">$96.00</td>
+                  <td class="px-6"></td>
+                  <td class="px-4 text-right">
+                    <button class="p-2 text-[#6B7280] hover:text-[#1F2937] rounded-lg">
+                      <iconify-icon icon="lucide:more-vertical"></iconify-icon>
+                    </button>
+                  </td>
+                </tr>
+                <!-- Row 2 -->
+                <tr class="h-[64px] hover:bg-[#FAFAFA] transition-colors">
+                  <td class="px-6 text-sm text-[#1F2937]">Mon Aug 10</td>
+                  <td class="px-6">
+                    <div class="flex items-center gap-3">
+                      <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Isaac" class="w-8 h-8 rounded-full border border-[#E5E7EB] bg-[#F5F4F2]">
+                      <div>
+                        <p class="text-sm font-semibold text-[#1F2937]">Isaac Boynton</p>
+                        <p class="text-[12px] text-[#6B7280]">Bartender · L3</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6">
+                    <div class="flex items-center gap-2">
+                      <div class="w-7 h-7 bg-[#F3F4F6] rounded-lg flex items-center justify-center">
+                        <iconify-icon icon="lucide:user" class="text-[#9CA3AF]"></iconify-icon>
+                      </div>
+                      <span class="text-sm font-semibold text-[#1F2937] tabular">3:26 PM</span>
+                    </div>
+                  </td>
+                  <td class="px-6 text-sm font-semibold text-[#1F2937] tabular">11:14 PM</td>
+                  <td class="px-6 text-sm text-[#1F2937] tabular">7.8 hrs</td>
+                  <td class="px-6 text-sm text-[#1F2937] tabular">$214.00</td>
+                  <td class="px-6"></td>
+                  <td class="px-4 text-right">
+                    <button class="p-2 text-[#6B7280] hover:text-[#1F2937] rounded-lg">
+                      <iconify-icon icon="lucide:more-vertical"></iconify-icon>
+                    </button>
+                  </td>
+                </tr>
+                <!-- Row 3: Edited/Amber Tint -->
+                <tr class="h-[64px] bg-[#FFFBF0] hover:bg-[#FFF8E6] transition-colors">
+                  <td class="px-6 text-sm text-[#1F2937]">Mon Aug 10</td>
+                  <td class="px-6">
+                    <div class="flex items-center gap-3">
+                      <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Anthony" class="w-8 h-8 rounded-full border border-[#E5E7EB] bg-[#F5F4F2]">
+                      <div>
+                        <p class="text-sm font-semibold text-[#1F2937]">Anthony</p>
+                        <p class="text-[12px] text-[#6B7280]">Runner · L1</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6">
+                    <div class="flex items-center gap-2">
+                      <div class="w-7 h-7 bg-[#F3F4F6] rounded-lg flex items-center justify-center">
+                        <iconify-icon icon="lucide:user" class="text-[#9CA3AF]"></iconify-icon>
+                      </div>
+                      <span class="text-sm font-semibold text-[#1F2937] tabular">4:02 PM</span>
+                    </div>
+                  </td>
+                  <td class="px-6 text-sm font-semibold text-[#1F2937] tabular">10:06 PM</td>
+                  <td class="px-6 text-sm text-[#1F2937] tabular">6.1 hrs</td>
+                  <td class="px-6 text-sm text-[#1F2937] tabular">$0.00</td>
+                  <td class="px-6">
+                    <div class="flex flex-col">
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-[#FEF3D9] text-[#F59E0B] text-[11px] font-bold rounded uppercase tracking-wide w-fit">
+                        <iconify-icon icon="lucide:pencil" class="text-[10px]"></iconify-icon>
+                        Edited
+                      </span>
+                      <span class="text-[12px] text-[#6B7280] mt-0.5">Manual punch by Rafa</span>
+                    </div>
+                  </td>
+                  <td class="px-4 text-right">
+                    <button class="p-2 text-[#6B7280] hover:text-[#1F2937] rounded-lg">
+                      <iconify-icon icon="lucide:more-vertical"></iconify-icon>
+                    </button>
+                  </td>
+                </tr>
+                <!-- Row 4: Auto-closed -->
+                <tr class="h-[64px] hover:bg-[#FAFAFA] transition-colors">
+                  <td class="px-6 text-sm text-[#1F2937]">Sun Aug 9</td>
+                  <td class="px-6 text-sm text-[#1F2937]">
+                    <div class="flex items-center gap-3">
+                      <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Anthony2" class="w-8 h-8 rounded-full border border-[#E5E7EB] bg-[#F5F4F2]">
+                      <div>
+                        <p class="text-sm font-semibold text-[#1F2937]">Anthony</p>
+                        <p class="text-[12px] text-[#6B7280]">Runner · L1</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6">
+                    <div class="flex items-center gap-2">
+                      <div class="w-7 h-7 bg-[#F3F4F6] rounded-lg flex items-center justify-center">
+                        <iconify-icon icon="lucide:user" class="text-[#9CA3AF]"></iconify-icon>
+                      </div>
+                      <span class="text-sm font-semibold text-[#1F2937] tabular">4:00 PM</span>
+                    </div>
+                  </td>
+                  <td class="px-6 text-sm font-semibold text-[#EF4444] tabular">11:59 PM</td>
+                  <td class="px-6 text-sm text-[#1F2937] tabular">8.0 hrs</td>
+                  <td class="px-6 text-sm text-[#1F2937] tabular">$0.00</td>
+                  <td class="px-6">
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-[#FDE8E8] text-[#EF4444] text-[11px] font-bold rounded uppercase tracking-wide w-fit">
+                      <iconify-icon icon="lucide:alert-triangle" class="text-[10px]"></iconify-icon>
+                      Auto-closed
+                    </span>
+                  </td>
+                  <td class="px-4 text-right">
+                    <button class="p-2 text-[#6B7280] hover:text-[#1F2937] rounded-lg">
+                      <iconify-icon icon="lucide:more-vertical"></iconify-icon>
+                    </button>
+                  </td>
+                </tr>
+                <!-- Row 5: Outside Fence -->
+                <tr class="h-[64px] hover:bg-[#FAFAFA] transition-colors">
+                  <td class="px-6 text-sm text-[#1F2937]">Sun Aug 9</td>
+                  <td class="px-6">
+                    <div class="flex items-center gap-3">
+                      <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Micah" class="w-8 h-8 rounded-full border border-[#E5E7EB] bg-[#F5F4F2]">
+                      <div>
+                        <p class="text-sm font-semibold text-[#1F2937]">Micah Lozon</p>
+                        <p class="text-[12px] text-[#6B7280]">Server · L2</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6">
+                    <div class="flex items-center gap-2">
+                      <div class="w-7 h-7 bg-[#F3F4F6] rounded-lg flex items-center justify-center">
+                        <iconify-icon icon="lucide:user" class="text-[#9CA3AF]"></iconify-icon>
+                      </div>
+                      <span class="text-sm font-semibold text-[#1F2937] tabular">10:31 AM</span>
+                    </div>
+                  </td>
+                  <td class="px-6 text-sm font-semibold text-[#1F2937] tabular">4:12 PM</td>
+                  <td class="px-6 text-sm text-[#1F2937] tabular">5.7 hrs</td>
+                  <td class="px-6 text-sm text-[#1F2937] tabular">$88.00</td>
+                  <td class="px-6">
+                    <div class="flex flex-col">
+                      <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-[#FEF3D9] text-[#F59E0B] text-[11px] font-bold rounded uppercase tracking-wide w-fit">
+                        <iconify-icon icon="lucide:map-pin" class="text-[10px]"></iconify-icon>
+                        Outside fence
+                      </span>
+                      <span class="text-[12px] text-[#6B7280] mt-0.5">0.4 mi from restaurant</span>
+                    </div>
+                  </td>
+                  <td class="px-4 text-right">
+                    <button class="p-2 text-[#6B7280] hover:text-[#1F2937] rounded-lg">
+                      <iconify-icon icon="lucide:more-vertical"></iconify-icon>
+                    </button>
+                  </td>
+                </tr>
+                <!-- Row 6 -->
+                <tr class="h-[64px] bg-[#FAFAFA] transition-colors group">
+                  <td class="px-6 text-sm text-[#1F2937]">Sun Aug 9</td>
+                  <td class="px-6">
+                    <div class="flex items-center gap-3">
+                      <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Emily" class="w-8 h-8 rounded-full border border-[#E5E7EB] bg-[#F5F4F2]">
+                      <div>
+                        <p class="text-sm font-semibold text-[#1F2937]">Emily Roman</p>
+                        <p class="text-[12px] text-[#6B7280]">Server · L1</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6">
+                    <div class="flex items-center gap-2">
+                      <div class="w-7 h-7 bg-[#F3F4F6] rounded-lg flex items-center justify-center">
+                        <iconify-icon icon="lucide:user" class="text-[#9CA3AF]"></iconify-icon>
+                      </div>
+                      <span class="text-sm font-semibold text-[#1F2937] tabular">3:29 PM</span>
+                    </div>
+                  </td>
+                  <td class="px-6 text-sm font-semibold text-[#1F2937] tabular">10:02 PM</td>
+                  <td class="px-6 text-sm text-[#1F2937] tabular">6.6 hrs</td>
+                  <td class="px-6 text-sm text-[#1F2937] tabular">$132.00</td>
+                  <td class="px-6"></td>
+                  <td class="px-4 text-right">
+                    <div class="flex items-center gap-1 justify-end">
+                      <a href="https://p.superdesign.dev/draft/ae5f4f89-1913-44bf-9f60-6145373e6f82" class="p-2 text-[#6B7280] hover:text-[#2563EB] rounded-lg opacity-100 transition-opacity">
+                        <iconify-icon icon="lucide:pencil" class="text-base"></iconify-icon>
+                      </a>
+                      <button class="p-2 text-[#6B7280] hover:text-[#1F2937] rounded-lg">
+                        <iconify-icon icon="lucide:more-vertical"></iconify-icon>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <!-- Row 7 -->
+                <tr class="h-[64px] hover:bg-[#FAFAFA] transition-colors">
+                  <td class="px-6 text-sm text-[#1F2937]">Sat Aug 8</td>
+                  <td class="px-6">
+                    <div class="flex items-center gap-3">
+                      <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Kevin" class="w-8 h-8 rounded-full border border-[#E5E7EB] bg-[#F5F4F2]">
+                      <div>
+                        <p class="text-sm font-semibold text-[#1F2937]">Kevin Andricain</p>
+                        <p class="text-[12px] text-[#6B7280]">Bartender · L2</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6">
+                    <div class="flex items-center gap-2">
+                      <div class="w-7 h-7 bg-[#F3F4F6] rounded-lg flex items-center justify-center">
+                        <iconify-icon icon="lucide:user" class="text-[#9CA3AF]"></iconify-icon>
+                      </div>
+                      <span class="text-sm font-semibold text-[#1F2937] tabular">10:26 AM</span>
+                    </div>
+                  </td>
+                  <td class="px-6 text-sm font-semibold text-[#1F2937] tabular">4:04 PM</td>
+                  <td class="px-6 text-sm text-[#1F2937] tabular">5.6 hrs</td>
+                  <td class="px-6 text-sm text-[#1F2937] tabular">$104.00</td>
+                  <td class="px-6"></td>
+                  <td class="px-4 text-right">
+                    <button class="p-2 text-[#6B7280] hover:text-[#1F2937] rounded-lg">
+                      <iconify-icon icon="lucide:more-vertical"></iconify-icon>
+                    </button>
+                  </td>
+                </tr>
+                <!-- Row 8 -->
+                <tr class="h-[64px] hover:bg-[#FAFAFA] transition-colors">
+                  <td class="px-6 text-sm text-[#1F2937]">Sat Aug 8</td>
+                  <td class="px-6">
+                    <div class="flex items-center gap-3">
+                      <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Daniela" class="w-8 h-8 rounded-full border border-[#E5E7EB] bg-[#F5F4F2]">
+                      <div>
+                        <p class="text-sm font-semibold text-[#1F2937]">Daniela Zaragoza</p>
+                        <p class="text-[12px] text-[#6B7280]">Host · L2</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6">
+                    <div class="flex items-center gap-2">
+                      <div class="w-7 h-7 bg-[#F3F4F6] rounded-lg flex items-center justify-center">
+                        <iconify-icon icon="lucide:user" class="text-[#9CA3AF]"></iconify-icon>
+                      </div>
+                      <span class="text-sm font-semibold text="#1F2937" tabular">3:28 PM</span>
+                    </div>
+                  </td>
+                  <td class="px-6 text-sm font-semibold text-[#1F2937] tabular">10:08 PM</td>
+                  <td class="px-6 text-sm text-[#1F2937] tabular">6.7 hrs</td>
+                  <td class="px-6 text-sm text-[#1F2937] tabular">$62.00</td>
+                  <td class="px-6"></td>
+                  <td class="px-4 text-right">
+                    <button class="p-2 text-[#6B7280] hover:text-[#1F2937] rounded-lg">
+                      <iconify-icon icon="lucide:more-vertical"></iconify-icon>
+                    </button>
+                  </td>
+                </tr>
+                <!-- Row 9 -->
+                <tr class="h-[64px] hover:bg-[#FAFAFA] transition-colors">
+                  <td class="px-6 text-sm text-[#1F2937]">Sat Aug 8</td>
+                  <td class="px-6">
+                    <div class="flex items-center gap-3">
+                      <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Rebekah" class="w-8 h-8 rounded-full border border-[#E5E7EB] bg-[#F5F4F2]">
+                      <div>
+                        <p class="text-sm font-semibold text-[#1F2937]">Rebekah Rosales</p>
+                        <p class="text-[12px] text-[#6B7280]">Server · L3</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6">
+                    <div class="flex items-center gap-2">
+                      <div class="w-7 h-7 bg-[#F3F4F6] rounded-lg flex items-center justify-center">
+                        <iconify-icon icon="lucide:user" class="text-[#9CA3AF]"></iconify-icon>
+                      </div>
+                      <span class="text-sm font-semibold text-[#1F2937] tabular">10:29 AM</span>
+                    </div>
+                  </td>
+                  <td class="px-6 text-sm font-semibold text-[#1F2937] tabular">4:01 PM</td>
+                  <td class="px-6 text-sm text-[#1F2937] tabular">5.5 hrs</td>
+                  <td class="px-6 text-sm text-[#1F2937] tabular">$118.00</td>
+                  <td class="px-6"></td>
+                  <td class="px-4 text-right">
+                    <button class="p-2 text-[#6B7280] hover:text-[#1F2937] rounded-lg">
+                      <iconify-icon icon="lucide:more-vertical"></iconify-icon>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            
+            <!-- PAGINATION -->
+            <div class="px-6 py-4 flex items-center justify-between bg-white border-t border-[#E5E7EB]">
+              <span class="text-sm text-[#6B7280]">Showing 9 of 84 punches</span>
+              <div class="flex items-center gap-2">
+                <button class="px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-sm text-[#6B7280] hover:bg-[#F8F8F7] disabled:opacity-50" disabled>
+                  Previous
+                </button>
+                <button class="px-3 py-1.5 border border-[#E5E7EB] rounded-lg text-sm text-[#1F2937] font-medium hover:bg-[#F8F8F7]">
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

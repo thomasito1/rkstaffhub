@@ -1,0 +1,173 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="view-transition" content="same-origin">
+  <title>Clock-in Success</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/6f494236-40fa-4963-8e54-5b0acac1b9bb" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/334a74f9-3028-4c0c-872d-a7ce915ee2ce" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/f33f9e0a-a28a-4c64-b384-c2ed13f88a44" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/a3b67654-5375-4c02-81dc-69c58542e6b8" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/57ce6bd1-5649-4bac-be59-fb116c763401" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/ccebabaa-51aa-4e00-8e08-08706d9dea7b" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/f6e95208-9895-464c-b389-aaf02b9efe23" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/e6e8347f-22ef-4291-b502-2e065ebfca6a" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/3620ea22-33b4-4f86-a400-d84af3d744d6" as="document">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    html {
+      background-color: #F3F4F6;
+    }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    @view-transition {
+      navigation: auto;
+    }
+    ::view-transition-old(main-content) {
+      animation: 0.25s ease-out both fade-out;
+    }
+    ::view-transition-new(main-content) {
+      animation: 0.25s ease-in 0.1s both fade-in;
+    }
+    @keyframes fade-out {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    ::view-transition-old(main-nav),
+    ::view-transition-new(main-nav) {
+      animation: none;
+      mix-blend-mode: normal;
+    }
+  </style>
+</head>
+<body>
+  <div class="w-[390px] h-[844px] mx-auto bg-white overflow-hidden relative shadow-2xl flex flex-col">
+    
+    <!-- iOS Top Safe Area (44px) -->
+    <div class="h-[44px] bg-white w-full flex items-center justify-between px-8 shrink-0 z-50">
+      <span class="text-[15px] font-semibold text-[#1F2937]">5:42</span>
+      <div class="flex items-center gap-1.5">
+        <iconify-icon icon="material-symbols:signal-cellular-4-bar-rounded" class="text-lg"></iconify-icon>
+        <iconify-icon icon="material-symbols:wifi" class="text-lg"></iconify-icon>
+        <iconify-icon icon="material-symbols:battery-full-rounded" class="text-xl rotate-180"></iconify-icon>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto px-6 py-8 flex flex-col items-center" style="view-transition-name: main-content">
+      
+      <!-- Success Badge Area -->
+      <div class="flex flex-col items-center mt-4">
+        <div class="w-24 h-24 rounded-full bg-[#E6F7F5] flex items-center justify-center mb-6 animate-[scale-in_0.5s_ease-out]">
+          <iconify-icon icon="lucide:check" class="text-[44px] text-[#14B8A6]" style="stroke-width: 4px;"></iconify-icon>
+        </div>
+        <h1 class="text-[26px] font-semibold text-[#1F2937] text-center leading-tight mb-2">You're clocked in</h1>
+        <p class="text-[15px] text-[#6B7280] text-center">Have a great shift, Allison.</p>
+      </div>
+
+      <!-- Timestamp Block -->
+      <div class="mt-10 mb-10 text-center">
+        <div class="text-[40px] font-semibold text-[#1F2937] tabular-nums tracking-tight">3:28 PM</div>
+        <div class="text-[13px] text-[#6B7280] mt-1 uppercase tracking-wide">Monday, Aug 10, 2026</div>
+      </div>
+
+      <!-- Shift Detail Card -->
+      <div class="w-full bg-white border border-[#E5E7EB] rounded-[16px] overflow-hidden mb-auto">
+        <div class="p-5">
+          <!-- Rows -->
+          <div class="flex items-center justify-between py-3 border-b border-[#F3F4F6]">
+            <span class="text-[13px] font-medium text-[#6B7280]">Shift</span>
+            <span class="text-[14px] font-semibold text-[#1F2937] tabular-nums">3:30 PM – 10:00 PM</span>
+          </div>
+          <div class="flex items-center justify-between py-3 border-b border-[#F3F4F6]">
+            <span class="text-[13px] font-medium text-[#6B7280]">Role</span>
+            <span class="px-2.5 py-0.5 bg-[#FEF3C7] text-[#D97706] text-[11px] font-bold rounded-full uppercase tracking-wider">Server · L2</span>
+          </div>
+          <div class="flex items-center justify-between py-3">
+            <span class="text-[13px] font-medium text-[#6B7280]">Station</span>
+            <span class="text-[14px] font-semibold text-[#1F2937]">Floor</span>
+          </div>
+        </div>
+        <!-- Card Footer -->
+        <div class="px-5 py-3 bg-[#F9FAFB] border-t border-[#E5E7EB] flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <iconify-icon icon="lucide:map-pin" class="text-[#14B8A6] text-sm"></iconify-icon>
+            <span class="text-[12px] text-[#6B7280]">Punched at Rosalia's Kitchen</span>
+          </div>
+          <div class="w-8 h-8 rounded-full bg-gray-200 overflow-hidden ring-1 ring-white">
+             <!-- Selfie Placeholder -->
+             <div class="w-full h-full bg-[#D1D5DB] flex items-center justify-center">
+               <iconify-icon icon="lucide:user" class="text-white text-xs"></iconify-icon>
+             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reminder text -->
+      <div class="mt-6 mb-4">
+        <p class="text-[13px] text-[#6B7280] text-center">You'll be reminded to clock out at 10:00 PM.</p>
+      </div>
+
+      <!-- Actions -->
+      <div class="w-full space-y-3">
+        <a href="#view-shift" id="btn-view-shift" class="w-full h-[54px] border border-[#E5E7EB] text-[#1F2937] font-semibold rounded-[12px] flex items-center justify-center active:bg-gray-50 transition-colors">
+          View my shift
+        </a>
+        <a href="https://p.superdesign.dev/draft/6f494236-40fa-4963-8e54-5b0acac1b9bb" id="btn-done-dismiss" class="w-full h-[54px] text-[#6B7280] font-semibold flex items-center justify-center active:opacity-60 transition-opacity">
+          Done
+        </a>
+      </div>
+
+    </main>
+
+    <!-- Bottom Tab Bar (56px) + Safe Area (34px) -->
+    <nav class="fixed bottom-0 w-[390px] bg-white border-t border-[#E5E7EB] z-50" style="view-transition-name: main-nav">
+      <div class="h-[56px] flex items-center justify-between px-2">
+        <a href="https://p.superdesign.dev/draft/6f494236-40fa-4963-8e54-5b0acac1b9bb" id="nav-home" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280]">
+          <iconify-icon icon="lucide:home" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">Home</span>
+        </a>
+        <a href="#schedule" id="nav-schedule" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280]">
+          <iconify-icon icon="lucide:calendar" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">Schedule</span>
+        </a>
+        <a href="https://p.superdesign.dev/draft/334a74f9-3028-4c0c-872d-a7ce915ee2ce" id="nav-clock" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#2563EB]">
+          <iconify-icon icon="lucide:clock" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">Clock</span>
+        </a>
+        <a href="#tasks" id="nav-tasks" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280] relative">
+          <iconify-icon icon="lucide:clipboard-list" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">Tasks</span>
+          <span class="absolute top-1.5 right-6 w-1.5 h-1.5 bg-[#EF4444] rounded-full"></span>
+        </a>
+        <a href="#more" id="nav-more" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280]">
+          <iconify-icon icon="lucide:more-horizontal" class="text-[22px]"></iconify-icon>
+          <span class="text-[11px] font-medium">More</span>
+        </a>
+      </div>
+      <!-- iOS Home Indicator Area (34px) -->
+      <div class="h-[34px] w-full flex items-center justify-center">
+        <div class="w-[134px] h-[5px] bg-black rounded-full opacity-20"></div>
+      </div>
+    </nav>
+
+  </div>
+
+  <style>
+    @keyframes scale-in {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</body></html>

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manual Punch Modal | Rosalia's Kitchen</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta name="view-transition" content="same-origin">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/e41c1dbf-ab6e-4198-9a9c-bac8186686fa" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/fa23da00-7409-4a70-aee2-15b5e5af9013" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/e56e280a-1259-427e-b4c0-444c8dffaea4" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/72cda96a-1a87-4031-a928-f5120fa0738a" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/05766be2-6692-4d0d-987d-b3af4dbc18a1" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/c1edad40-4e39-4b07-ae05-751852789766" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/fec67817-fd8a-4764-b24e-4290004a83a7" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/1c4f7b28-9865-4246-b8ad-8bdb7358be48" as="document">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .tabular {
+      font-variant-numeric: tabular-nums;
+    }
+    @view-transition {
+      navigation: auto;
+    }
+    html {
+      background-color: #F8F8F7;
+    }
+    aside { view-transition-name: side-rail; }
+    header#top-bar { view-transition-name: top-bar; }
+    ::view-transition-old(side-rail), ::view-transition-new(side-rail),
+    ::view-transition-old(top-bar), ::view-transition-new(top-bar) {
+      animation: none;
+      mix-blend-mode: normal;
+    }
+  </style>
+</head>
+<body>
+  <div class="relative min-h-screen bg-white flex flex-col min-w-[1440px]">
+    <!-- DIMMED BACKGROUND LAYER (UI SHELL) -->
+    <div class="flex h-full w-full absolute inset-0 z-0 pointer-events-none">
+      <!-- LEFT ICON RAIL -->
+      <aside class="w-[60px] h-full bg-[#F5F4F2] border-r border-[#E5E7EB] flex flex-col items-center py-6 shrink-0">
+        <div class="flex flex-col gap-2 items-center w-full">
+          <div class="w-10 h-10 flex items-center justify-center bg-white rounded-lg shadow-sm">
+            <iconify-icon icon="lucide:home" class="text-[20px] text-[#2563EB]"></iconify-icon>
+          </div>
+          <div class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/50">
+            <iconify-icon icon="lucide:calendar" class="text-[20px] text-[#6B7280]"></iconify-icon>
+          </div>
+          <div class="w-10 h-10 flex items-center justify-center rounded-lg hover:bg-white/50">
+            <iconify-icon icon="lucide:clock" class="text-[20px] text-[#6B7280]"></iconify-icon>
+          </div>
+          <div class="w-10 h-10 flex items-center justify-center rounded-lg relative">
+            <iconify-icon icon="lucide:users-round" class="text-[20px] text-[#6B7280]"></iconify-icon>
+            <span class="absolute top-2 right-2 w-2 h-2 bg-[#EF4444] rounded-full ring-2 ring-[#F5F4F2]"></span>
+          </div>
+          <div class="w-10 h-10 flex items-center justify-center rounded-lg">
+            <iconify-icon icon="lucide:check-square" class="text-[20px] text-[#6B7280]"></iconify-icon>
+          </div>
+          <div class="w-10 h-10 flex items-center justify-center rounded-lg">
+            <iconify-icon icon="lucide:contact" class="text-[20px] text-[#6B7280]"></iconify-icon>
+          </div>
+          <div class="w-10 h-10 flex items-center justify-center rounded-lg">
+            <iconify-icon icon="lucide:file-text" class="text-[20px] text-[#6B7280]"></iconify-icon>
+          </div>
+        </div>
+      </aside>
+
+      <div class="flex-1 flex flex-col bg-white min-w-0">
+        <header id="top-bar" class="h-[60px] bg-white border-b border-[#E5E7EB] flex items-center justify-between px-8 shrink-0">
+          <div class="flex items-center gap-8">
+            <div class="flex items-center gap-3">
+              <div class="w-7 h-7 bg-[#B4232A] rounded flex items-center justify-center">
+                <span class="text-white font-bold text-lg">R</span>
+              </div>
+              <span class="text-[#1F2937] text-[16px] font-semibold tracking-tight">Rosalia's Kitchen</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="flex flex-col items-end">
+              <span class="text-sm font-semibold text-[#1F2937]">Rafa</span>
+              <span class="text-[11px] text-[#6B7280]">Owner</span>
+            </div>
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Rafa&backgroundColor=b4232a" class="w-8 h-8 rounded-full border border-[#E5E7EB]">
+          </div>
+        </header>
+        <main class="flex-1 p-8 opacity-25">
+          <div class="max-w-7xl mx-auto">
+            <h1 class="text-[28px] font-semibold text-[#1F2937] tracking-tight mb-8">Punches & Tips</h1>
+            <div class="h-96 w-full border border-[#E5E7EB] rounded-xl bg-[#F8F8F7]"></div>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <!-- MODAL OVERLAY (40% Scrim) -->
+    <div class="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
+      <!-- MODAL CONTAINER (560px) -->
+      <div class="w-[560px] bg-white rounded-[16px] shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+        
+        <!-- MODAL HEADER -->
+        <header class="px-6 py-5 border-b border-[#E5E7EB] flex items-center justify-between">
+          <div class="flex flex-col">
+            <h2 class="text-[18px] font-semibold text-[#1F2937] tracking-tight">Add manual punch</h2>
+            <p class="text-[13px] text-[#6B7280] mt-0.5">Rosalia's Kitchen · Monday, Aug 10, 2026</p>
+          </div>
+          <a href="https://p.superdesign.dev/draft/e41c1dbf-ab6e-4198-9a9c-bac8186686fa" id="modal-close-btn" class="w-8 h-8 flex items-center justify-center rounded-full text-[#6B7280] hover:bg-[#F8F8F7] hover:text-[#1F2937] transition-colors">
+            <iconify-icon icon="lucide:x" class="text-xl"></iconify-icon>
+          </a>
+        </header>
+
+        <!-- MODAL BODY -->
+        <div class="px-6 py-6 space-y-6">
+          
+          <!-- AMBER ADVISORY STRIP -->
+          <div class="bg-[#FEF3D9] border border-[#FDE68A] rounded-xl p-4 flex gap-3">
+            <iconify-icon icon="lucide:info" class="text-[#F59E0B] text-lg shrink-0 mt-0.5"></iconify-icon>
+            <p class="text-[13px] text-[#1F2937] leading-relaxed">
+              Manual punches bypass selfie and location verification. Use them only when an employee could not punch themselves.
+            </p>
+          </div>
+
+          <!-- FIELDS STACK -->
+          <div class="space-y-5">
+            
+            <!-- Employee -->
+            <div class="flex flex-col gap-2">
+              <label class="text-[13px] font-medium text-[#6B7280]">Employee <span class="text-[#EF4444]">*</span></label>
+              <div class="flex items-center justify-between px-3 h-[52px] border border-[#E5E7EB] rounded-lg bg-white shadow-sm cursor-default">
+                <div class="flex items-center gap-3">
+                  <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Anthony" class="w-6 h-6 rounded-full bg-[#F5F4F2]">
+                  <div class="flex flex-col">
+                    <span class="text-sm font-medium text-[#1F2937]">Anthony</span>
+                    <span class="text-[12px] text-[#6B7280]">Runner · L1</span>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2 text-[#6B7280]">
+                  <iconify-icon icon="lucide:search" class="text-lg"></iconify-icon>
+                  <iconify-icon icon="lucide:chevron-down" class="text-md"></iconify-icon>
+                </div>
+              </div>
+            </div>
+
+            <!-- Date -->
+            <div class="flex flex-col gap-2">
+              <label class="text-[13px] font-medium text-[#6B7280]">Date</label>
+              <div class="flex items-center gap-3 px-3 h-[44px] border border-[#E5E7EB] rounded-lg bg-white shadow-sm">
+                <iconify-icon icon="lucide:calendar" class="text-[#6B7280] text-lg"></iconify-icon>
+                <span class="text-sm text-[#1F2937]">Mon, Aug 10, 2026</span>
+              </div>
+            </div>
+
+            <!-- Clock In/Out Row -->
+            <div class="grid grid-cols-2 gap-4">
+              <div class="flex flex-col gap-2">
+                <label class="text-[13px] font-medium text-[#6B7280]">Clock in</label>
+                <div class="flex items-center gap-3 px-3 h-[44px] border border-[#E5E7EB] rounded-lg bg-white shadow-sm">
+                  <iconify-icon icon="lucide:clock" class="text-[#6B7280] text-lg"></iconify-icon>
+                  <span class="text-sm text-[#1F2937] tabular">4:02 PM</span>
+                </div>
+              </div>
+              <div class="flex flex-col gap-2">
+                <label class="text-[13px] font-medium text-[#6B7280]">Clock out</label>
+                <div class="flex items-center gap-3 px-3 h-[44px] border border-[#E5E7EB] rounded-lg bg-white shadow-sm">
+                  <iconify-icon icon="lucide:clock" class="text-[#6B7280] text-lg"></iconify-icon>
+                  <span class="text-sm text-[#1F2937] tabular">10:06 PM</span>
+                </div>
+              </div>
+            </div>
+            <p class="text-[12px] text-[#6B7280] font-medium tabular">Total: 6.1 hrs</p>
+
+            <!-- Scheduled Shift (Cyan Chip for Runner) -->
+            <div class="flex flex-col gap-2">
+              <label class="text-[13px] font-medium text-[#6B7280]">Scheduled shift</label>
+              <div class="p-3 border border-[#E5E7EB] rounded-lg bg-[#F8F8F7]">
+                <div class="flex items-center gap-3">
+                  <span class="px-2 py-0.5 bg-[#06B6D4] text-white text-[10px] font-bold rounded uppercase tracking-wider">Runner</span>
+                  <span class="text-sm text-[#1F2937] font-medium">4:00 PM – 10:00 PM · Floor</span>
+                </div>
+                <p class="text-[12px] text-[#6B7280] mt-1.5 flex items-center gap-1">
+                  <iconify-icon icon="lucide:check-circle-2" class="text-[#14B8A6]"></iconify-icon>
+                  Punch is within 5 minutes of the scheduled shift.
+                </p>
+              </div>
+            </div>
+
+            <!-- Tips Reported -->
+            <div class="flex flex-col gap-2">
+              <label class="text-[13px] font-medium text-[#6B7280]">Tips reported</label>
+              <div class="flex items-center px-3 h-[44px] border border-[#E5E7EB] rounded-lg bg-white shadow-sm">
+                <span class="text-[#6B7280] mr-1">$</span>
+                <span class="text-sm text-[#1F2937] tabular">0.00</span>
+              </div>
+              <p class="text-[12px] text-[#6B7280]">Leave at zero if the employee will report tips later.</p>
+            </div>
+
+            <!-- Reason Textarea -->
+            <div class="flex flex-col gap-2 relative">
+              <label class="text-[13px] font-medium text-[#6B7280]">Reason <span class="text-[#EF4444]">*</span></label>
+              <textarea class="w-full h-24 p-3 text-sm text-[#1F2937] border border-[#E5E7EB] rounded-lg bg-white shadow-sm focus:outline-none focus:ring-1 focus:ring-[#2563EB]/20 resize-none" placeholder="Explain why this manual punch is being added...">Phone battery died at the start of the shift; Anthony was on the floor and verified by Daphne Jalil.</textarea>
+              <span class="absolute bottom-2 right-3 text-[12px] text-[#6B7280]">112 / 500</span>
+            </div>
+
+            <!-- Notify Checkbox -->
+            <div class="flex items-center gap-3">
+              <div class="w-5 h-5 flex items-center justify-center border-2 border-[#2563EB] bg-[#2563EB] rounded">
+                <iconify-icon icon="lucide:check" class="text-white text-sm"></iconify-icon>
+              </div>
+              <span class="text-[14px] font-medium text-[#1F2937]">Notify the employee that a manual punch was added.</span>
+            </div>
+          </div>
+
+          <!-- AUDIT NOTICE -->
+          <div class="mt-4 p-3 border border-[#E5E7EB] rounded-lg bg-[#F8F8F7] flex gap-3">
+            <iconify-icon icon="lucide:shield-check" class="text-[#6B7280] text-lg shrink-0"></iconify-icon>
+            <p class="text-[12px] text-[#6B7280] leading-normal">
+              This entry will be logged to the audit trail as a manual punch by <span class="font-semibold">Rafa</span> on Aug 10, 2026 at 10:22 PM, and flagged in the punches list.
+            </p>
+          </div>
+        </div>
+
+        <!-- MODAL FOOTER -->
+        <footer class="px-6 py-5 bg-[#F9FAFB] border-t border-[#E5E7EB] flex justify-end gap-3">
+          <a href="https://p.superdesign.dev/draft/e41c1dbf-ab6e-4198-9a9c-bac8186686fa" id="btn-cancel" class="px-6 h-10 flex items-center justify-center bg-white border border-[#E5E7EB] text-[#1F2937] text-[14px] font-semibold rounded-lg hover:bg-[#F3F4F6] transition-colors">
+            Cancel
+          </a>
+          <a href="https://p.superdesign.dev/draft/e41c1dbf-ab6e-4198-9a9c-bac8186686fa" id="btn-save" class="px-6 h-10 flex items-center justify-center bg-[#2563EB] text-white text-[14px] font-semibold rounded-lg hover:bg-[#1D4ED8] transition-colors shadow-sm shadow-[#2563EB]/20">
+            Add punch
+          </a>
+        </footer>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

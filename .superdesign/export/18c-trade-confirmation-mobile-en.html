@@ -1,0 +1,208 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="view-transition" content="same-origin">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/6f494236-40fa-4963-8e54-5b0acac1b9bb" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/2f246d82-b262-4fc3-8640-ce0cb36076ac" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/05f3d0ff-7305-4d9e-8f0b-51a57fec31db" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/5cdc6e4f-6839-43c7-a1a9-183bbad0be97" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/680e2d3d-38d9-4d78-9eb1-dfa3c4e1b9b0" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/b8b99020-ac24-4e0b-89e1-65c4ba931dfe" as="document">
+  <link rel="prefetch" href="https://p.superdesign.dev/draft/1f8ccbac-26ae-4023-b406-571c907fe6ac" as="document">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    @view-transition {
+      navigation: auto;
+    }
+    ::view-transition-old(main-nav), ::view-transition-new(main-nav) {
+      animation: none;
+      mix-blend-mode: normal;
+    }
+    ::view-transition-old(main-content) {
+      animation: 0.25s ease-out both fade-out;
+    }
+    ::view-transition-new(main-content) {
+      animation: 0.25s ease-in 0.1s both fade-in;
+    }
+    @keyframes fade-out {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="w-[390px] h-[844px] mx-auto bg-white overflow-hidden relative shadow-2xl flex flex-col">
+    
+    <!-- iOS Top Safe Area (44px) -->
+    <div class="h-[44px] bg-white w-full flex items-center justify-between px-8 shrink-0 z-50">
+      <span class="text-[15px] font-semibold text-[#1F2937]">10:24</span>
+      <div class="flex items-center gap-1.5">
+        <iconify-icon icon="material-symbols:signal-cellular-4-bar-rounded" class="text-lg"></iconify-icon>
+        <iconify-icon icon="material-symbols:wifi" class="text-lg"></iconify-icon>
+        <iconify-icon icon="material-symbols:battery-full-rounded" class="text-xl rotate-180"></iconify-icon>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto no-scrollbar flex flex-col items-center pt-8 px-5" style="view-transition-name: main-content;">
+      <!-- Success Badge -->
+      <div class="w-[88px] h-[88px] bg-[#E6F7F5] rounded-full flex items-center justify-center mb-6">
+        <iconify-icon icon="lucide:check" class="text-[40px] text-[#14B8A6]" style="stroke-width: 4px;"></iconify-icon>
+      </div>
+
+      <!-- Confirmation Message -->
+      <div class="text-center mb-8">
+        <h1 class="text-[24px] font-semibold text-[#1F2937] leading-tight mb-1">Trade request sent</h1>
+        <p class="text-[14px] text-[#6B7280]">Emily Roman and your manager have been notified.</p>
+      </div>
+
+      <!-- Summary Card -->
+      <section class="w-full bg-white border border-[#E5E7EB] rounded-[16px] p-5 mb-6 shadow-sm">
+        <!-- From-To Row -->
+        <div class="flex items-center justify-between mb-5">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-[#B4232A] flex items-center justify-center text-white text-[11px] font-bold">AR</div>
+            <div>
+              <p class="text-[14px] font-semibold text-[#1F2937] leading-tight">You</p>
+              <p class="text-[12px] text-[#6B7280]">Server · L2</p>
+            </div>
+          </div>
+          <div class="w-7 h-7 bg-[#F3F4F6] rounded-full flex items-center justify-center">
+            <iconify-icon icon="lucide:arrow-right" class="text-[#6B7280] text-sm"></iconify-icon>
+          </div>
+          <div class="flex items-center gap-3 text-right">
+            <div class="text-right">
+              <p class="text-[14px] font-semibold text-[#1F2937] leading-tight">Emily Roman</p>
+              <p class="text-[12px] text-[#6B7280]">Server · L2</p>
+            </div>
+            <div class="w-9 h-9 rounded-full bg-[#E5E7EB] flex items-center justify-center text-[#6B7280] text-[11px] font-bold">ER</div>
+          </div>
+        </div>
+
+        <!-- Details Rows -->
+        <div class="space-y-0 border-t border-[#E5E7EB]">
+          <div class="py-3 border-b border-[#E5E7EB] flex justify-between items-center">
+            <span class="text-[13px] font-medium text-[#6B7280]">Shift</span>
+            <span class="text-[14px] font-semibold text-[#1F2937] tabular-nums">Sat, Aug 15 · 3:30 PM – 10:00 PM</span>
+          </div>
+          <div class="py-3 border-b border-[#E5E7EB] flex justify-between items-center">
+            <span class="text-[13px] font-medium text-[#6B7280]">Station</span>
+            <span class="text-[14px] font-semibold text-[#1F2937]">Patio</span>
+          </div>
+          <div class="py-3 border-b border-[#E5E7EB] flex justify-between items-center">
+            <span class="text-[13px] font-medium text-[#6B7280]">Status</span>
+            <span class="px-2 py-0.5 bg-[#FEF3D9] text-[#F59E0B] text-[11px] font-bold rounded-full uppercase">Pending</span>
+          </div>
+        </div>
+
+        <!-- Card Footer -->
+        <div class="pt-3">
+          <p class="text-[12px] text-[#6B7280] tabular-nums">Sent Aug 10 at 10:24 PM · expires in 48 hours</p>
+        </div>
+      </section>
+
+      <!-- What Happens Next Block -->
+      <section class="w-full mb-8">
+        <div class="bg-white border border-[#E5E7EB] rounded-[16px] p-4">
+          <h2 class="text-[13px] font-semibold text-[#1F2937] uppercase tracking-wide mb-4">What happens next</h2>
+          <div class="space-y-4">
+            <div class="flex items-start gap-3">
+              <div class="w-5 h-5 bg-[#F3F4F6] text-[#6B7280] rounded-full flex items-center justify-center text-[11px] font-bold shrink-0">1</div>
+              <p class="text-[13px] text-[#4B5563] leading-snug">Emily accepts or declines the request</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-5 h-5 bg-[#F3F4F6] text-[#6B7280] rounded-full flex items-center justify-center text-[11px] font-bold shrink-0">2</div>
+              <p class="text-[13px] text-[#4B5563] leading-snug">A manager reviews and approves the trade</p>
+            </div>
+            <div class="flex items-start gap-3">
+              <div class="w-5 h-5 bg-[#F3F4F6] text-[#6B7280] rounded-full flex items-center justify-center text-[11px] font-bold shrink-0">3</div>
+              <p class="text-[13px] text-[#4B5563] leading-snug">Your schedule updates automatically</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Push Notification Preview -->
+      <section class="w-full mb-8">
+        <p class="text-[11px] font-bold text-[#6B7280] tracking-[0.1em] uppercase mb-3 px-1">What Emily Sees</p>
+        <!-- iOS Lock Screen Style Notification -->
+        <div class="bg-[#F9FAFB]/90 backdrop-blur-md rounded-[20px] p-3.5 shadow-sm border border-[#E5E7EB]">
+          <div class="flex items-center justify-between mb-1.5">
+            <div class="flex items-center gap-2">
+              <div class="w-5 h-5 bg-[#B4232A] rounded-[4.5px] flex items-center justify-center overflow-hidden">
+                <!-- Tiny Logo Mark -->
+                <span class="text-white font-bold text-[8px]">RK</span>
+              </div>
+              <span class="text-[12px] font-semibold text-[#6B7280] uppercase tracking-wide">RK Staff Hub</span>
+            </div>
+            <span class="text-[12px] text-[#6B7280]">now</span>
+          </div>
+          <div class="mt-1">
+            <p class="text-[14px] font-semibold text-[#1F2937]">Shift trade request</p>
+            <p class="text-[13px] text-[#1F2937] leading-tight mt-0.5">Allison Rodriguez wants to trade her Sat Aug 15 server shift (3:30 PM – 10:00 PM) with you.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Actions & Tab Bar -->
+    <div class="bg-white pt-2">
+      <div class="px-4 space-y-2 mb-4">
+        <a href="#trades" id="action-view-trades" class="w-full h-[52px] border border-[#E5E7EB] text-[#1F2937] font-semibold rounded-xl flex items-center justify-center active:bg-gray-50 transition-colors">View my trades</a>
+        <a href="https://p.superdesign.dev/draft/6f494236-40fa-4963-8e54-5b0acac1b9bb" id="action-done" class="w-full h-[44px] text-[#6B7280] font-medium rounded-xl flex items-center justify-center active:opacity-60 transition-opacity">Done</a>
+      </div>
+
+      <!-- Bottom Tab Bar -->
+      <nav class="bg-white border-t border-[#E5E7EB] shrink-0 z-50" style="view-transition-name: main-nav;">
+        <div class="h-[56px] flex items-center justify-between px-2">
+          <a href="https://p.superdesign.dev/draft/6f494236-40fa-4963-8e54-5b0acac1b9bb" id="nav-home" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280]">
+            <iconify-icon icon="lucide:home" class="text-[22px]"></iconify-icon>
+            <span class="text-[11px] font-medium">Home</span>
+          </a>
+          <a href="https://p.superdesign.dev/draft/05f3d0ff-7305-4d9e-8f0b-51a57fec31db" id="nav-schedule" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#2563EB]">
+            <iconify-icon icon="lucide:calendar" class="text-[22px]"></iconify-icon>
+            <span class="text-[11px] font-medium">Schedule</span>
+          </a>
+          <a href="#clock" id="nav-clock" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280]">
+            <iconify-icon icon="lucide:clock" class="text-[22px]"></iconify-icon>
+            <span class="text-[11px] font-medium">Clock</span>
+          </a>
+          <a href="#tasks" id="nav-tasks" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280] relative">
+            <iconify-icon icon="lucide:clipboard-list" class="text-[22px]"></iconify-icon>
+            <span class="text-[11px] font-medium">Tasks</span>
+          </a>
+          <a href="#more" id="nav-more" class="flex-1 flex flex-col items-center justify-center gap-0.5 text-[#6B7280]">
+            <iconify-icon icon="lucide:more-horizontal" class="text-[22px]"></iconify-icon>
+            <span class="text-[11px] font-medium">More</span>
+          </a>
+        </div>
+        <!-- iOS Home Indicator Area (34px) -->
+        <div class="h-[34px] w-full flex items-center justify-center">
+          <div class="w-[134px] h-[5px] bg-black rounded-full opacity-20"></div>
+        </div>
+      </nav>
+    </div>
+
+  </div>
+</body></html>
