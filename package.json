@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Staff operations hub for Rosalia's Kitchen \u2014 scheduling, availability, trades, time clock, tips, tasks, payroll, HR.",
+  "description": "Staff operations hub for Rosalia's Kitchen — scheduling, availability, trades, time clock, tips, tasks, payroll, HR.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -39,6 +39,7 @@
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "firebase-admin": "^14.2.0",
     "firebase-tools": "^13.29.1",
     "jsdom": "^25.0.1",
     "postcss": "^8.4.49",
