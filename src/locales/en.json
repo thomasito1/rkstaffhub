@@ -18,7 +18,8 @@
     "search": "Search employees, shifts…",
     "notifications": "Notifications",
     "openMenu": "Open menu",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "mainNavigation": "Main navigation"
   },
   "common": {
     "cancel": "Cancel",
@@ -36,6 +37,8 @@
     "retry": "Retry",
     "undo": "Undo",
     "search": "Search",
+    "searchPlaceholder": "Search…",
+    "hoursShort": "hrs",
     "clearFilters": "Clear filters",
     "viewAll": "View all",
     "required": "Required",
@@ -43,7 +46,9 @@
     "comingSoon": "Coming soon",
     "language": "Language",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "english": "English",
+    "spanish": "Spanish"
   },
   "status": {
     "pending": "Pending",
@@ -61,6 +66,7 @@
     "role": "Role",
     "type": "Type",
     "status": "Status",
+    "allLocations": "All locations",
     "allDepartments": "All departments",
     "allRoles": "All roles",
     "allTypes": "All types",
@@ -101,10 +107,99 @@
     "avatarOf": "{{name}}'s photo",
     "rowMenu": "Row actions",
     "closeDialog": "Close dialog",
-    "notificationCount": "{{count}} unread notifications"
+    "notificationCount": "{{count}} unread notifications",
+    "badgeCount": "{{count}} new"
   },
   "dev": {
     "componentsTitle": "Component gallery",
-    "componentsSubtitle": "Every UI-kit primitive, for visual review against the design system."
+    "componentsSubtitle": "Every UI-kit primitive, for visual review against the design system.",
+    "sections": {
+      "buttons": "Buttons",
+      "pills": "Status pills",
+      "cards": "Cards",
+      "avatars": "Avatars",
+      "filterBar": "Filter bar",
+      "table": "Table",
+      "modal": "Modal",
+      "toast": "Toast",
+      "emptyStates": "Empty states"
+    },
+    "variant": {
+      "primary": "Primary",
+      "secondary": "Secondary",
+      "ghost": "Ghost",
+      "danger": "Danger"
+    },
+    "state": {
+      "default": "Default",
+      "disabled": "Disabled",
+      "withIcon": "With icon",
+      "fullWidth": "Full width",
+      "hoverRow": "The middle row is held in its hover state",
+      "padded": "Padded",
+      "flush": "No padding"
+    },
+    "size": {
+      "md": "Medium — desktop",
+      "lg": "Large — mobile and kiosk"
+    },
+    "sample": {
+      "publish": "Publish schedule",
+      "viewDetails": "View details",
+      "clockIn": "Clock in",
+      "addEmployee": "Add employee",
+      "export": "Export",
+      "createShift": "Create shift",
+      "viewProfile": "View profile",
+      "cardTitle": "Labor this week",
+      "cardBody": "Sales, labor cost and labor percentage for the published week.",
+      "sales": "Sales",
+      "labor": "Labor",
+      "laborPercent": "Labor %",
+      "photo": "Photo"
+    },
+    "pillNeutral": "Neutral",
+    "table": {
+      "name": "Name",
+      "role": "Role",
+      "status": "Status",
+      "hours": "Hours"
+    },
+    "roles": {
+      "server": "Server",
+      "bartender": "Bartender",
+      "host": "Host"
+    },
+    "types": {
+      "hourly": "Hourly",
+      "salaried": "Salaried"
+    },
+    "departments": {
+      "foh": "Front of house",
+      "boh": "Back of house"
+    },
+    "modal": {
+      "open": "Open modal",
+      "title": "Publish schedule?",
+      "subtitle": "Week of Aug 10 – 16, 2026",
+      "body": "Everyone on this schedule gets a notification. You can still edit shifts after publishing.",
+      "confirm": "Publish"
+    },
+    "toast": {
+      "showSuccess": "Show success toast",
+      "showWarning": "Show warning toast",
+      "showError": "Show error toast",
+      "showInfo": "Show info toast",
+      "success": "Schedule published",
+      "warning": "Availability closes in 2 hours",
+      "error": "Your punch didn't save",
+      "info": "3 trade requests need review"
+    }
+  },
+  "roles": {
+    "owner": "Owner"
+  },
+  "placeholder": {
+    "phaseNote": "This screen arrives in Phase {{phase}}."
   }
 }

@@ -18,7 +18,8 @@
     "search": "Buscar empleados, turnos…",
     "notifications": "Notificaciones",
     "openMenu": "Abrir menú",
-    "signOut": "Cerrar sesión"
+    "signOut": "Cerrar sesión",
+    "mainNavigation": "Navegación principal"
   },
   "common": {
     "cancel": "Cancelar",
@@ -36,6 +37,8 @@
     "retry": "Reintentar",
     "undo": "Deshacer",
     "search": "Buscar",
+    "searchPlaceholder": "Buscar…",
+    "hoursShort": "h",
     "clearFilters": "Borrar filtros",
     "viewAll": "Ver todo",
     "required": "Obligatorio",
@@ -43,7 +46,9 @@
     "comingSoon": "Próximamente",
     "language": "Idioma",
     "yes": "Sí",
-    "no": "No"
+    "no": "No",
+    "english": "Inglés",
+    "spanish": "Español"
   },
   "status": {
     "pending": "Pendiente",
@@ -61,6 +66,7 @@
     "role": "Puesto",
     "type": "Tipo",
     "status": "Estado",
+    "allLocations": "Todas las ubicaciones",
     "allDepartments": "Todos los departamentos",
     "allRoles": "Todos los puestos",
     "allTypes": "Todos los tipos",
@@ -101,10 +107,99 @@
     "avatarOf": "Foto de {{name}}",
     "rowMenu": "Acciones de la fila",
     "closeDialog": "Cerrar diálogo",
-    "notificationCount": "{{count}} notificaciones sin leer"
+    "notificationCount": "{{count}} notificaciones sin leer",
+    "badgeCount": "{{count}} nuevos"
   },
   "dev": {
     "componentsTitle": "Galería de componentes",
-    "componentsSubtitle": "Todos los componentes base, para revisión visual contra el sistema de diseño."
+    "componentsSubtitle": "Todos los componentes base, para revisión visual contra el sistema de diseño.",
+    "sections": {
+      "buttons": "Botones",
+      "pills": "Etiquetas de estado",
+      "cards": "Tarjetas",
+      "avatars": "Avatares",
+      "filterBar": "Barra de filtros",
+      "table": "Tabla",
+      "modal": "Ventana modal",
+      "toast": "Aviso emergente",
+      "emptyStates": "Estados vacíos"
+    },
+    "variant": {
+      "primary": "Principal",
+      "secondary": "Secundario",
+      "ghost": "Discreto",
+      "danger": "Destructivo"
+    },
+    "state": {
+      "default": "Predeterminado",
+      "disabled": "Desactivado",
+      "withIcon": "Con ícono",
+      "fullWidth": "Ancho completo",
+      "hoverRow": "La fila del medio se muestra con el cursor encima",
+      "padded": "Con relleno",
+      "flush": "Sin relleno"
+    },
+    "size": {
+      "md": "Mediano — escritorio",
+      "lg": "Grande — móvil y quiosco"
+    },
+    "sample": {
+      "publish": "Publicar horario",
+      "viewDetails": "Ver detalles",
+      "clockIn": "Marcar entrada",
+      "addEmployee": "Agregar empleado",
+      "export": "Exportar",
+      "createShift": "Crear turno",
+      "viewProfile": "Ver perfil",
+      "cardTitle": "Costo laboral de la semana",
+      "cardBody": "Ventas, costo laboral y porcentaje laboral de la semana publicada.",
+      "sales": "Ventas",
+      "labor": "Costo laboral",
+      "laborPercent": "% laboral",
+      "photo": "Foto"
+    },
+    "pillNeutral": "Neutro",
+    "table": {
+      "name": "Nombre",
+      "role": "Puesto",
+      "status": "Estado",
+      "hours": "Horas"
+    },
+    "roles": {
+      "server": "Mesero",
+      "bartender": "Cantinero",
+      "host": "Anfitrión"
+    },
+    "types": {
+      "hourly": "Por hora",
+      "salaried": "Asalariado"
+    },
+    "departments": {
+      "foh": "Salón",
+      "boh": "Cocina"
+    },
+    "modal": {
+      "open": "Abrir ventana modal",
+      "title": "¿Publicar el horario?",
+      "subtitle": "Semana del 10 al 16 de agosto de 2026",
+      "body": "Todos los que aparecen en este horario recibirán una notificación. Aún puedes editar turnos después de publicar.",
+      "confirm": "Publicar"
+    },
+    "toast": {
+      "showSuccess": "Mostrar aviso de éxito",
+      "showWarning": "Mostrar aviso de advertencia",
+      "showError": "Mostrar aviso de error",
+      "showInfo": "Mostrar aviso informativo",
+      "success": "Horario publicado",
+      "warning": "La disponibilidad cierra en 2 horas",
+      "error": "Tu marcaje no se guardó",
+      "info": "3 solicitudes de cambio necesitan revisión"
+    }
+  },
+  "roles": {
+    "owner": "Propietario"
+  },
+  "placeholder": {
+    "phaseNote": "Esta pantalla llega en la Fase {{phase}}."
   }
 }
