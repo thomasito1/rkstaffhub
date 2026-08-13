@@ -12,7 +12,16 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react'
  * The brand red (#B4232A) is NEVER a button color — blue owns every primary
  * action. There is deliberately no `brand` variant.
  */
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
+/**
+ * `success` exists because the mockups consistently pair a TEAL Approve with a
+ * white Decline — dashboard "items requiring attention", availability requests,
+ * shift pool, trade approval. Teal is the design system's approved/affirmative
+ * colour, and CLAUDE.md gives mockups the final say on visuals.
+ *
+ * It does NOT weaken the rule that #2563EB owns primary actions: `success` is
+ * only for approving an item in a list, never for a page's main CTA.
+ */
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success'
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant
@@ -31,6 +40,7 @@ const VARIANT: Record<ButtonVariant, string> = {
   secondary: 'border border-line bg-page text-ink hover:bg-hover',
   ghost: 'bg-transparent text-ink-muted hover:bg-app',
   danger: 'bg-danger text-white hover:bg-red-700',
+  success: 'bg-success text-white hover:bg-teal-600',
 }
 
 const SIZE: Record<'md' | 'lg', string> = {

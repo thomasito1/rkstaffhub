@@ -219,7 +219,8 @@
       "primary": "Primary",
       "secondary": "Secondary",
       "ghost": "Ghost",
-      "danger": "Danger"
+      "danger": "Danger",
+      "success": "Success — approve in a list"
     },
     "state": {
       "default": "Default",

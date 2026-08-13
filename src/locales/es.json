@@ -219,7 +219,8 @@
       "primary": "Principal",
       "secondary": "Secundario",
       "ghost": "Discreto",
-      "danger": "Destructivo"
+      "danger": "Destructivo",
+      "success": "Éxito — aprobar en una lista"
     },
     "state": {
       "default": "Predeterminado",

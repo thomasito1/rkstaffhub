@@ -179,6 +179,13 @@ function GalleryBody() {
               {t('common.cancel')}
             </Button>
           </Row>
+          <Row label={t('dev.variant.success')}>
+            <Button variant="success">{t('common.approve')}</Button>
+            <Button variant="success" disabled>
+              {t('common.approve')}
+            </Button>
+          </Row>
+
           <Row label={t('dev.variant.ghost')}>
             <Button variant="ghost">{t('dev.sample.viewDetails')}</Button>
             <Button variant="ghost" icon={<PlusIcon />}>

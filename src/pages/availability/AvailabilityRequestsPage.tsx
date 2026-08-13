@@ -558,7 +558,7 @@ function RequestsScreen({
                       <span className="flex flex-wrap items-center gap-3">
                         <Pill tone="pending">{t('status.pending')}</Pill>
                         <Button
-                          variant="primary"
+                          variant="success"
                           disabled={busy}
                           onClick={() => void approve(row)}
                         >
