@@ -1,0 +1,79 @@
+rules_version = '2';
+
+// RK StaffHub — Cloud Storage rules (spec §17)
+//
+// Two asset classes exist in Phase 0's scope:
+//   punch-selfies/{employeeId}/{yyyy-mm}/{punchId}.jpg  — written Phase 2
+//   signed-pdfs/{employeeId}/{docId}.pdf                — written Phase 4
+// Both are gated now so nothing is world-readable the moment a later phase
+// starts writing to them.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function myRole() {
+      return signedIn() ? request.auth.token.get('role', 'staff') : 'none';
+    }
+
+    function myEmployeeId() {
+      return signedIn() ? request.auth.token.get('employeeId', '') : '';
+    }
+
+    function rank(role) {
+      return role == 'owner' ? 5
+           : role == 'gm' ? 4
+           : role == 'manager' ? 3
+           : role == 'supervisor' ? 2
+           : role == 'staff' ? 1
+           : 0;
+    }
+
+    // Manager-and-above, or the owner of the asset. Storage rules cannot read
+    // Firestore, so the target's access role is not available here — this is a
+    // deliberately coarser mirror of canAccessSensitive(). The below-level
+    // comparison against a specific target is enforced in the Cloud Function
+    // that issues download URLs.
+    function isManagerOrAbove() {
+      return rank(myRole()) >= rank('manager');
+    }
+
+    // Selfies: readable by the employee who punched, and by managers+.
+    // Written by the client at punch time (spec §8) — the punch document is
+    // only created after this upload succeeds.
+    match /punch-selfies/{employeeId}/{yearMonth}/{fileName} {
+      allow read: if signedIn()
+                  && (myEmployeeId() == employeeId || isManagerOrAbove());
+      allow create: if signedIn()
+                    && myEmployeeId() == employeeId
+                    && request.resource.size < 2 * 1024 * 1024
+                    && request.resource.contentType.matches('image/jpe?g');
+      // Punch evidence is immutable. Corrections happen via punch editHistory.
+      allow update, delete: if false;
+    }
+
+    // Signed policy/disciplinary PDFs: the employee plus authorized admins.
+    // Generated server-side only.
+    match /signed-pdfs/{employeeId}/{fileName} {
+      allow read: if signedIn()
+                  && (myEmployeeId() == employeeId || isManagerOrAbove());
+      allow write: if false; // Cloud Function only.
+    }
+
+    // Employee profile photos.
+    match /profile-photos/{employeeId}/{fileName} {
+      allow read: if signedIn();
+      allow write: if signedIn()
+                   && (myEmployeeId() == employeeId || isManagerOrAbove())
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

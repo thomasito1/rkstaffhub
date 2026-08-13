@@ -24,3 +24,5 @@ emulator-data/
 coverage/
 .vite/
 .superdesign/tmp/
+tsconfig.tsbuildinfo
+*.tsbuildinfo

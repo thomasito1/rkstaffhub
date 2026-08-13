@@ -1,0 +1,209 @@
+rules_version = '2';
+
+// RK StaffHub — Firestore security rules (Phase 0)
+//
+// Mirrors src/lib/permissions/* server-side. The client helpers decide what to
+// SHOW; these rules decide what is ALLOWED. Spec §4, §17.
+//
+// ── ARCHITECTURAL DEVIATION FROM SPEC §3 (needs Rafa's sign-off) ─────────────
+// Spec §17 requires field-level read control ("staff read own profile minus
+// schedulingNotes/rates"; "a Manager cannot see another Manager's salary").
+// Firestore has NO field-level read security — rules gate whole documents.
+// With hourlyRate/salaryAmount/schedulingNotes on employees/{id} as §3 lists
+// them, any rule permitting a roster read also leaks every salary.
+//
+// Resolution: sensitive fields move to gated subdocuments.
+//   employees/{id}                     ← non-sensitive profile; broadly readable
+//   employees/{id}/private/compensation ← hourlyRate, salaryAmount, salaryPeriod
+//   employees/{id}/private/admin        ← schedulingNotes, permissionOverrides
+// The logical model in §3 is unchanged; only the physical layout differs.
+// ─────────────────────────────────────────────────────────────────────────────
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── identity ─────────────────────────────────────────────────────────────
+    // role + employeeId arrive as custom claims, set by a Cloud Function on
+    // invite acceptance and on role change (spec §2). Claims keep the common
+    // path to zero extra reads.
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function myRole() {
+      return signedIn() ? request.auth.token.get('role', 'staff') : 'none';
+    }
+
+    function myEmployeeId() {
+      return signedIn() ? request.auth.token.get('employeeId', '') : '';
+    }
+
+    function isSelf(employeeId) {
+      return signedIn() && myEmployeeId() == employeeId;
+    }
+
+    // Access-role hierarchy, high → low (spec §4).
+    function rank(role) {
+      return role == 'owner' ? 5
+           : role == 'gm' ? 4
+           : role == 'manager' ? 3
+           : role == 'supervisor' ? 2
+           : role == 'staff' ? 1
+           : 0;
+    }
+
+    // ── permissions ──────────────────────────────────────────────────────────
+
+    function roleDefaults() {
+      return get(/databases/$(database)/documents/permissions/roleDefaults).data.defaults;
+    }
+
+    function myOverrides() {
+      return get(/databases/$(database)/documents/employees/$(myEmployeeId())/private/admin)
+        .data.get('permissionOverrides', {});
+    }
+
+    // Effective permission = override ?? roleDefault. Mirrors hasPermission().
+    function hasPerm(key) {
+      return signedIn()
+        && myOverrides().get(key, roleDefaults().get(myRole(), {}).get(key, false)) == true;
+    }
+
+    // Cheap variant for hot paths where overrides are not consulted. Use only
+    // where a false negative is acceptable (never for a deny decision).
+    function roleGrants(key) {
+      return signedIn() && roleDefaults().get(myRole(), {}).get(key, false) == true;
+    }
+
+    // The "below your level" rule (spec §4). Mirrors canAccessSensitive().
+    // Self → yes. Owner → yes. Strictly-lower rank → yes. EQUAL RANK → NO.
+    function canAccessSensitive(targetId, targetRole) {
+      return signedIn() && (
+        myEmployeeId() == targetId
+        || myRole() == 'owner'
+        || rank(myRole()) > rank(targetRole)
+      );
+    }
+
+    function targetRoleOf(employeeId) {
+      return get(/databases/$(database)/documents/employees/$(employeeId)).data.accessRole;
+    }
+
+    // ── employees ────────────────────────────────────────────────────────────
+    // Non-sensitive profile. Any signed-in employee may read the roster — names,
+    // roles and departments are needed to render a schedule. Sensitive data
+    // lives under /private (below).
+
+    match /employees/{employeeId} {
+      allow read: if signedIn();
+
+      // Writes go through Cloud Functions in production so accessRole and
+      // authUids cannot be self-escalated. Direct writes are limited to
+      // employees.edit holders acting on someone strictly below them.
+      allow create: if hasPerm('employees.edit');
+
+      allow update: if (
+        // A person may edit their own non-privileged profile fields.
+        (isSelf(employeeId)
+          && !request.resource.data.diff(resource.data).affectedKeys()
+               .hasAny(['accessRole', 'status', 'employmentType', 'clockRequired',
+                        'tipsRequired', 'employeeNumber', 'authUids', 'shiftRoles']))
+        ||
+        // Or an authorized admin acting strictly downward.
+        (hasPerm('employees.edit')
+          && canAccessSensitive(employeeId, resource.data.accessRole)
+          // Nobody may grant a role at or above their own.
+          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['accessRole'])
+              || rank(request.resource.data.accessRole) < rank(myRole())
+              || myRole() == 'owner'))
+      );
+
+      // Archive, never hard-delete — archived staff are kept for the record
+      // (spec §18) and excluded from scheduling/eligibility.
+      allow delete: if false;
+
+      // Compensation: own rate is visible to the employee (spec §17 confirms
+      // "show own rate: yes"); otherwise requires employees.editPay AND below-level.
+      match /private/compensation {
+        allow read: if isSelf(employeeId)
+                    || (hasPerm('employees.editPay')
+                        && canAccessSensitive(employeeId, targetRoleOf(employeeId)));
+        allow write: if hasPerm('employees.editPay')
+                     && canAccessSensitive(employeeId, targetRoleOf(employeeId));
+      }
+
+      // Admin-only: schedulingNotes + permissionOverrides.
+      // The employee may READ their own overrides (hasPerm() needs it) but
+      // never write them, and never sees schedulingNotes written about them.
+      match /private/admin {
+        allow read: if isSelf(employeeId)
+                    || (hasPerm('employees.view')
+                        && canAccessSensitive(employeeId, targetRoleOf(employeeId)));
+        allow write: if hasPerm('permissions.manage')
+                     && canAccessSensitive(employeeId, targetRoleOf(employeeId));
+      }
+    }
+
+    // ── permissions/roleDefaults ─────────────────────────────────────────────
+    // Readable by every signed-in user: the client needs it to resolve its own
+    // effective permissions. Writable only with permissions.manage.
+
+    match /permissions/{docId} {
+      allow read: if signedIn();
+      allow write: if hasPerm('permissions.manage');
+    }
+
+    // ── shiftRoles ───────────────────────────────────────────────────────────
+    // The role catalog + canCoverRoleIds hierarchy. Everyone reads (needed to
+    // render role chips and evaluate trade eligibility); settings.manage writes.
+
+    match /shiftRoles/{roleId} {
+      allow read: if signedIn();
+      allow write: if hasPerm('settings.manage');
+    }
+
+    // ── settings ─────────────────────────────────────────────────────────────
+
+    match /settings/app {
+      allow read: if signedIn();
+      allow write: if hasPerm('settings.manage');
+    }
+
+    // AI provider metadata only — keys live in Secret Manager and are NEVER
+    // stored here or returned to a client (spec §13).
+    match /settings/aiProviders {
+      allow read: if hasPerm('ai.configureKeys');
+      allow write: if false; // Cloud Function only.
+    }
+
+    // ── invites ──────────────────────────────────────────────────────────────
+    // Acceptance is performed by a Cloud Function that validates the token and
+    // sets custom claims, so clients never write these directly.
+
+    match /invites/{inviteId} {
+      allow read: if hasPerm('employees.edit');
+      allow create: if hasPerm('employees.edit');
+      allow update, delete: if false;
+    }
+
+    // ── auditLog ─────────────────────────────────────────────────────────────
+    // Append-only, and only from the server. Immutable once written (spec §17).
+
+    match /auditLog/{entryId} {
+      allow read: if hasPerm('settings.manage');
+      allow create, update, delete: if false; // Cloud Function only.
+    }
+
+    // ── default deny ─────────────────────────────────────────────────────────
+    // Collections for later phases (schedules, availability, punches, trades,
+    // tipReports, tasks, policies, signatures, disciplinaryActions, payPeriods)
+    // are intentionally absent and therefore denied. Each phase adds its own
+    // match block together with its rules tests. Do not add a permissive
+    // catch-all here.
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

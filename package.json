@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Staff operations hub for Rosalia's Kitchen — scheduling, availability, trades, time clock, tips, tasks, payroll, HR.",
+  "description": "Staff operations hub for Rosalia's Kitchen \u2014 scheduling, availability, trades, time clock, tips, tasks, payroll, HR.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -16,7 +16,8 @@
     "emulators": "PATH=\"$(brew --prefix openjdk)/bin:$PATH\" firebase emulators:start --project demo-rk-staffhub",
     "emulators:exec": "PATH=\"$(brew --prefix openjdk)/bin:$PATH\" firebase emulators:exec --project demo-rk-staffhub",
     "seed": "tsx scripts/seed.ts",
-    "i18n:check": "tsx scripts/check-locales.ts"
+    "i18n:check": "tsx scripts/check-locales.ts",
+    "test:rules:emulated": "PATH=\"$(brew --prefix openjdk)/bin:$PATH\" firebase emulators:exec --project demo-rk-staffhub --only firestore \"vitest run --config vitest.rules.config.ts\""
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.1.1",
