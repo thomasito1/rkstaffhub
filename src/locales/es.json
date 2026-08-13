@@ -91,7 +91,11 @@
       "networkError": "No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.",
       "tooManyAttempts": "Demasiados intentos. Espera un momento e inténtalo de nuevo.",
       "generic": "Algo salió mal al iniciar sesión."
-    }
+    },
+    "notLinkedTitle": "Tu cuenta aún no está vinculada",
+    "notLinkedBody": "Iniciaste sesión, pero esta cuenta no está conectada a un registro de empleado. Pídele a tu gerente que te envíe una invitación.",
+    "noPermissionTitle": "No tienes acceso a esto",
+    "noPermissionBody": "Habla con un gerente si crees que deberías poder ver esta pantalla."
   },
   "empty": {
     "noShifts": "Aún no hay turnos programados",

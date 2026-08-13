@@ -91,7 +91,11 @@
       "networkError": "Couldn't reach the server. Check your connection and try again.",
       "tooManyAttempts": "Too many attempts. Wait a moment and try again.",
       "generic": "Something went wrong signing you in."
-    }
+    },
+    "notLinkedTitle": "Your account isn't linked yet",
+    "notLinkedBody": "You're signed in, but this account isn't connected to an employee record. Ask your manager to send you an invite.",
+    "noPermissionTitle": "You don't have access to this",
+    "noPermissionBody": "Ask a manager if you think you should be able to see this screen."
   },
   "empty": {
     "noShifts": "No shifts scheduled yet",
