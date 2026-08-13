@@ -63,6 +63,11 @@ export default {
           manager: '#EC4899',
           expo: '#14B8A6',
           barista: '#A16207',
+          // Kitchen Lead is absent from design-system.md §2 (it appears only in
+          // mockup 32's role table). Rafa ruled it a distinct deep bronze on
+          // Aug 13 2026 so it cannot be confused with Hot Line Cook's oranger
+          // #B45309 or Cold Line Cook's redder #92400E at chip size.
+          kitchenLead: '#7B4B2A',
           hotLine: '#B45309',
           coldLine: '#92400E',
           prep: '#78716C',

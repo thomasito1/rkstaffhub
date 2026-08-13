@@ -135,8 +135,15 @@ export interface ShiftRole {
    * a Server does NOT list Bartender. Asymmetric by design.
    */
   canCoverRoleIds: string[]
-  /** Minimum skill level required to cover into this role. */
-  minSkillLevelToCover?: SkillLevel
+  /**
+   * NOTE: there is deliberately no `minSkillLevelToCover` here. Spec §7 gates
+   * eligibility with exactly two independent checks: directional coverage via
+   * `canCoverRoleIds` (declared on the COVERING role), and the claimant's
+   * `skillLevel` for the role being worked being >= the SHIFT's
+   * `requiredSkillLevel`. The shift carries the only skill bar. Mockup 32
+   * phrases coverage from the opposite direction and is wrong on behavior —
+   * see PROGRESS.md "Accepted spec deviations".
+   */
 }
 
 // ── permissions/roleDefaults ─────────────────────────────────────────────────
@@ -210,7 +217,22 @@ export interface AppSettings {
   availabilityDeadline: { day: string; time: string }
   publishDeadline: { day: string; time: string }
   laborTargetPct: number | null
-  payPeriod: { frequency: 'weekly' | 'biweekly'; startDay: string }
+  /**
+   * Configurable per spec §11. Default is semimonthly on the 5th and 20th.
+   * `startDay` still anchors the schedule week (always Mon–Sun) and the
+   * weekly/biweekly modes; `semimonthlyDays` applies only when frequency is
+   * 'semimonthly'.
+   *
+   * WARNING (Phase 3): FLSA overtime is per WORKWEEK (>40 hrs Mon–Sun). A
+   * semimonthly period contains partial workweeks at both ends, so OT must be
+   * computed per workweek and then allocated to periods — never by summing
+   * hours inside a period.
+   */
+  payPeriod: {
+    frequency: 'weekly' | 'biweekly' | 'semimonthly'
+    startDay: string
+    semimonthlyDays?: [number, number]
+  }
   featureFlags: FeatureFlags
   restaurant: {
     name: string

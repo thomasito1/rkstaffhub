@@ -1,49 +1,70 @@
 rules_version = '2';
 
-// RK StaffHub — Firestore security rules (Phase 0)
+// RK StaffHub — Firestore security rules
 //
 // Mirrors src/lib/permissions/* server-side. The client helpers decide what to
 // SHOW; these rules decide what is ALLOWED. Spec §4, §17.
 //
-// ── ARCHITECTURAL DEVIATION FROM SPEC §3 (needs Rafa's sign-off) ─────────────
+// ── ACCEPTED SPEC DEVIATION (approved by Rafa, Aug 13 2026) ──────────────────
 // Spec §17 requires field-level read control ("staff read own profile minus
 // schedulingNotes/rates"; "a Manager cannot see another Manager's salary").
 // Firestore has NO field-level read security — rules gate whole documents.
 // With hourlyRate/salaryAmount/schedulingNotes on employees/{id} as §3 lists
 // them, any rule permitting a roster read also leaks every salary.
 //
-// Resolution: sensitive fields move to gated subdocuments.
-//   employees/{id}                     ← non-sensitive profile; broadly readable
+// Permanent resolution: sensitive fields live in gated subdocuments.
+//   employees/{id}                      ← non-sensitive profile; broadly readable
 //   employees/{id}/private/compensation ← hourlyRate, salaryAmount, salaryPeriod
 //   employees/{id}/private/admin        ← schedulingNotes, permissionOverrides
 // The logical model in §3 is unchanged; only the physical layout differs.
+//
+// ── DEFENSIVE EVALUATION (why every read is guarded) ─────────────────────────
+// A rule that THROWS denies the request, but it denies it dirtily: the emulator
+// logs "evaluation error", the deny reason is unreadable, and — more dangerous —
+// an expression that throws on the deny path can equally throw on an ALLOW path
+// once a document shape changes, turning a legitimate grant into a mystery 403.
+//
+// So: every get() is guarded by exists(), and every field read uses
+// .get(field, default) rather than dot access. Defaults FAIL CLOSED — a missing
+// employee doc resolves to accessRole 'owner' (the highest rank), so a missing
+// parent can never widen access. Never introduce an unguarded get() or a bare
+// field access below.
 // ─────────────────────────────────────────────────────────────────────────────
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
     // ── identity ─────────────────────────────────────────────────────────────
-    // role + employeeId arrive as custom claims, set by a Cloud Function on
-    // invite acceptance and on role change (spec §2). Claims keep the common
-    // path to zero extra reads.
+    // role + employeeId arrive as custom claims, set by the acceptInvite /
+    // setEmployeeClaims Functions and the onEmployeeRoleChange trigger
+    // (spec §2). Claims keep the common path to zero extra reads.
 
     function signedIn() {
       return request.auth != null;
     }
 
     function myRole() {
-      return signedIn() ? request.auth.token.get('role', 'staff') : 'none';
+      return (signedIn() && 'role' in request.auth.token)
+        ? request.auth.token.role
+        : 'none';
     }
 
     function myEmployeeId() {
-      return signedIn() ? request.auth.token.get('employeeId', '') : '';
+      return (signedIn() && 'employeeId' in request.auth.token)
+        ? request.auth.token.employeeId
+        : '';
+    }
+
+    function hasIdentity() {
+      return signedIn() && myEmployeeId() != '';
     }
 
     function isSelf(employeeId) {
-      return signedIn() && myEmployeeId() == employeeId;
+      return hasIdentity() && myEmployeeId() == employeeId;
     }
 
     // Access-role hierarchy, high → low (spec §4).
+    // An unknown role ranks 0, below staff — an unrecognised claim grants nothing.
     function rank(role) {
       return role == 'owner' ? 5
            : role == 'gm' ? 4
@@ -53,41 +74,84 @@ service cloud.firestore {
            : 0;
     }
 
-    // ── permissions ──────────────────────────────────────────────────────────
+    // ── guarded document reads ───────────────────────────────────────────────
 
+    // An empty path segment makes a MALFORMED path, and rules construct paths
+    // eagerly rather than short-circuiting on the guarding &&. So an absent or
+    // empty employeeId claim would throw before hasIdentity() could deny it.
+    // Substituting a sentinel that can never exist keeps the denial clean.
+    function safeId(employeeId) {
+      return (employeeId is string && employeeId != '') ? employeeId : '__nobody__';
+    }
+
+    function employeePath(employeeId) {
+      return /databases/$(database)/documents/employees/$(safeId(employeeId));
+    }
+
+    function adminPath(employeeId) {
+      return /databases/$(database)/documents/employees/$(safeId(employeeId))/private/admin;
+    }
+
+    function roleDefaultsPath() {
+      return /databases/$(database)/documents/permissions/roleDefaults;
+    }
+
+    // These read maps with `in` + bracket indexing rather than chained
+    // .get(key, default). A chained .get() on a nested document map evaluates
+    // DIRTILY here — proven by bisection: exists() alone is clean, and adding
+    // the .get() chain reintroduced 8 evaluation errors. `in` guards each level
+    // explicitly, so every miss yields a value instead of throwing.
+
+    // Missing roleDefaults ⇒ empty map ⇒ every permission resolves false.
     function roleDefaults() {
-      return get(/databases/$(database)/documents/permissions/roleDefaults).data.defaults;
+      return (exists(roleDefaultsPath())
+              && 'defaults' in get(roleDefaultsPath()).data)
+        ? get(roleDefaultsPath()).data.defaults
+        : {};
     }
 
+    // Missing private/admin ⇒ no overrides ⇒ fall through to role defaults.
     function myOverrides() {
-      return get(/databases/$(database)/documents/employees/$(myEmployeeId())/private/admin)
-        .data.get('permissionOverrides', {});
+      return (hasIdentity()
+              && exists(adminPath(myEmployeeId()))
+              && 'permissionOverrides' in get(adminPath(myEmployeeId())).data)
+        ? get(adminPath(myEmployeeId())).data.permissionOverrides
+        : {};
     }
+
+    function roleGrants(key) {
+      return myRole() in roleDefaults()
+             && key in roleDefaults()[myRole()]
+             && roleDefaults()[myRole()][key] == true;
+    }
+
+    // Missing employee doc ⇒ 'owner', the HIGHEST rank. Fails closed: a missing
+    // parent document can never widen anyone's access.
+    function targetRoleOf(employeeId) {
+      return (exists(employeePath(employeeId))
+              && 'accessRole' in get(employeePath(employeeId)).data)
+        ? get(employeePath(employeeId)).data.accessRole
+        : 'owner';
+    }
+
+    // ── permissions ──────────────────────────────────────────────────────────
 
     // Effective permission = override ?? roleDefault. Mirrors hasPermission().
     function hasPerm(key) {
-      return signedIn()
-        && myOverrides().get(key, roleDefaults().get(myRole(), {}).get(key, false)) == true;
-    }
-
-    // Cheap variant for hot paths where overrides are not consulted. Use only
-    // where a false negative is acceptable (never for a deny decision).
-    function roleGrants(key) {
-      return signedIn() && roleDefaults().get(myRole(), {}).get(key, false) == true;
+      return hasIdentity()
+        && (key in myOverrides()
+              ? myOverrides()[key] == true
+              : roleGrants(key));
     }
 
     // The "below your level" rule (spec §4). Mirrors canAccessSensitive().
     // Self → yes. Owner → yes. Strictly-lower rank → yes. EQUAL RANK → NO.
-    function canAccessSensitive(targetId, targetRole) {
-      return signedIn() && (
-        myEmployeeId() == targetId
+    function canAccessSensitive(employeeId) {
+      return hasIdentity() && (
+        myEmployeeId() == employeeId
         || myRole() == 'owner'
-        || rank(myRole()) > rank(targetRole)
+        || rank(myRole()) > rank(targetRoleOf(employeeId))
       );
-    }
-
-    function targetRoleOf(employeeId) {
-      return get(/databases/$(database)/documents/employees/$(employeeId)).data.accessRole;
     }
 
     // ── employees ────────────────────────────────────────────────────────────
@@ -96,27 +160,51 @@ service cloud.firestore {
     // lives under /private (below).
 
     match /employees/{employeeId} {
+
+      // Privileged fields are compared one by one rather than via
+      // diff().affectedKeys().hasAny(). The diff/Set path evaluates dirtily
+      // whenever a privileged key actually changes — exactly the case that
+      // matters — and a rule that throws is a rule whose deny reason nobody can
+      // read. Explicit equality also states the intent plainly: these fields
+      // must be IDENTICAL before and after a self-edit.
+
+      function unchanged(field) {
+        return request.resource.data.get(field, null) == resource.data.get(field, null);
+      }
+
+      // Fields an employee may never change about themselves.
+      function selfEditIsBenign() {
+        return unchanged('accessRole')
+          && unchanged('status')
+          && unchanged('employmentType')
+          && unchanged('clockRequired')
+          && unchanged('tipsRequired')
+          && unchanged('employeeNumber')
+          && unchanged('authUids')
+          && unchanged('shiftRoles');
+      }
+
+      // Nobody confers a role at or above their own. Owners are exempt.
+      function roleGrantIsLegal() {
+        return unchanged('accessRole')
+          || myRole() == 'owner'
+          || rank(request.resource.data.get('accessRole', 'owner')) < rank(myRole());
+      }
+
       allow read: if signedIn();
 
-      // Writes go through Cloud Functions in production so accessRole and
-      // authUids cannot be self-escalated. Direct writes are limited to
-      // employees.edit holders acting on someone strictly below them.
-      allow create: if hasPerm('employees.edit');
+      allow create: if hasPerm('employees.edit')
+                    && (myRole() == 'owner'
+                        || rank(request.resource.data.get('accessRole', 'owner')) < rank(myRole()));
 
       allow update: if (
         // A person may edit their own non-privileged profile fields.
-        (isSelf(employeeId)
-          && !request.resource.data.diff(resource.data).affectedKeys()
-               .hasAny(['accessRole', 'status', 'employmentType', 'clockRequired',
-                        'tipsRequired', 'employeeNumber', 'authUids', 'shiftRoles']))
+        (isSelf(employeeId) && selfEditIsBenign())
         ||
         // Or an authorized admin acting strictly downward.
         (hasPerm('employees.edit')
-          && canAccessSensitive(employeeId, resource.data.accessRole)
-          // Nobody may grant a role at or above their own.
-          && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['accessRole'])
-              || rank(request.resource.data.accessRole) < rank(myRole())
-              || myRole() == 'owner'))
+         && canAccessSensitive(employeeId)
+         && roleGrantIsLegal())
       );
 
       // Archive, never hard-delete — archived staff are kept for the record
@@ -127,10 +215,8 @@ service cloud.firestore {
       // "show own rate: yes"); otherwise requires employees.editPay AND below-level.
       match /private/compensation {
         allow read: if isSelf(employeeId)
-                    || (hasPerm('employees.editPay')
-                        && canAccessSensitive(employeeId, targetRoleOf(employeeId)));
-        allow write: if hasPerm('employees.editPay')
-                     && canAccessSensitive(employeeId, targetRoleOf(employeeId));
+                    || (hasPerm('employees.editPay') && canAccessSensitive(employeeId));
+        allow write: if hasPerm('employees.editPay') && canAccessSensitive(employeeId);
       }
 
       // Admin-only: schedulingNotes + permissionOverrides.
@@ -138,10 +224,8 @@ service cloud.firestore {
       // never write them, and never sees schedulingNotes written about them.
       match /private/admin {
         allow read: if isSelf(employeeId)
-                    || (hasPerm('employees.view')
-                        && canAccessSensitive(employeeId, targetRoleOf(employeeId)));
-        allow write: if hasPerm('permissions.manage')
-                     && canAccessSensitive(employeeId, targetRoleOf(employeeId));
+                    || (hasPerm('employees.view') && canAccessSensitive(employeeId));
+        allow write: if hasPerm('permissions.manage') && canAccessSensitive(employeeId);
       }
     }
 
@@ -178,13 +262,14 @@ service cloud.firestore {
     }
 
     // ── invites ──────────────────────────────────────────────────────────────
-    // Acceptance is performed by a Cloud Function that validates the token and
-    // sets custom claims, so clients never write these directly.
+    // The invitee is SIGNED OUT when they open an invite link, so reading an
+    // invite by token is served by the getInvite Cloud Function, not by a rule.
+    // Admin SDK bypasses these rules, which is what makes that work.
 
     match /invites/{inviteId} {
       allow read: if hasPerm('employees.edit');
       allow create: if hasPerm('employees.edit');
-      allow update, delete: if false;
+      allow update, delete: if false; // acceptInvite Function only.
     }
 
     // ── auditLog ─────────────────────────────────────────────────────────────

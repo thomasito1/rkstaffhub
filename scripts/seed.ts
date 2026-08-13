@@ -123,10 +123,15 @@ const APP_SETTINGS: AppSettings = {
   availabilityDeadline: { day: 'thursday', time: '23:59' },
   publishDeadline: { day: 'friday', time: '23:59' },
   laborTargetPct: 40,
-  // Mockup 35 shows Biweekly / Monday and a current period of Aug 3–16 2026.
-  // Spec §21 item 5 lists the pay period as an open question, so the mockup is
-  // the only concrete evidence — seeding biweekly/monday.
-  payPeriod: { frequency: 'biweekly', startDay: 'monday' },
+  // RESOLVED (Rafa, Aug 13 2026): semimonthly, paid on the 5th and the 20th.
+  // Schedule weeks stay Mon–Sun (scheduleWeekStart above); startDay anchors the
+  // workweek, not the pay period. Mockups 26 and 35 show a biweekly Aug 3–16
+  // period — visual-only where they differ from this.
+  //
+  // Phase 3 trap: FLSA overtime is per workweek (>40 hrs Mon–Sun), and a
+  // semimonthly period cuts through workweeks at both ends. Compute OT per
+  // workweek first, then allocate to periods.
+  payPeriod: { frequency: 'semimonthly', startDay: 'monday', semimonthlyDays: [5, 20] },
   featureFlags: {
     phoneOtp: false,
     payrollIntegration: false,
@@ -143,21 +148,22 @@ const APP_SETTINGS: AppSettings = {
 // ── shiftRoles ───────────────────────────────────────────────────────────────
 
 /**
- * Colors are verbatim from .superdesign/design-system.md §2.
- *
- * KNOWN COLLISION: Kitchen Lead and Hot Line Cook are both #B45309. Kitchen
- * Lead appears only in mockup 32's role table and has no entry in the design
- * system's band palette, so it inherits the nearest BOH lead colour. Flagged
- * for Rafa rather than invented away.
+ * Colors are verbatim from .superdesign/design-system.md §2, except Kitchen
+ * Lead, which has no entry in the design system's band palette (it appears only
+ * in mockup 32's role table). It previously collided with Hot Line Cook's
+ * #B45309; Rafa ruled it a distinct deep bronze #7B4B2A on Aug 13 2026.
+ * assertUniqueRoleColors() below makes that collision impossible to reintroduce
+ * silently.
  *
  * canCoverRoleIds is asymmetric on purpose (spec §7.1): Bartender covers
  * Server/Host/Runner, and no Server entry lists Bartender.
  *
- * minSkillLevelToCover is read per models.ts as "minimum skill level required
- * to cover INTO this role". Mockup 32 phrases the same setting from the other
- * direction ("a Bartender must be at least L2 to pick up a Server shift"); the
- * type comment in models.ts is the contract, so the L2 floor is stored on
- * Server and Bartender — the roles being covered into.
+ * There is deliberately NO minSkillLevelToCover. Per spec §7 (Rafa's ruling,
+ * Aug 13 2026) eligibility is exactly two independent checks: directional
+ * coverage declared on the COVERING role, and the claimant's skillLevel for the
+ * role being worked >= the SHIFT's requiredSkillLevel. The shift carries the
+ * only skill bar. seedShiftRoles() deletes the retired field from any doc that
+ * still carries it.
  */
 const FOH_COVERABLE = [
   'shift-supervisor',
@@ -201,7 +207,6 @@ const SHIFT_ROLES: ShiftRole[] = [
     sortOrder: 3,
     active: true,
     canCoverRoleIds: ['server', 'host', 'runner'],
-    minSkillLevelToCover: 2,
   },
   {
     id: 'server',
@@ -212,7 +217,6 @@ const SHIFT_ROLES: ShiftRole[] = [
     sortOrder: 4,
     active: true,
     canCoverRoleIds: ['on-call-server', 'host', 'runner'],
-    minSkillLevelToCover: 2,
   },
   {
     id: 'on-call-server',
@@ -269,7 +273,9 @@ const SHIFT_ROLES: ShiftRole[] = [
     name: 'Kitchen Lead',
     nameEs: 'Jefe/a de cocina',
     department: 'BOH',
-    color: '#B45309',
+    // Deep bronze — distinct from Hot Line Cook #B45309 (oranger), Cold Line
+    // Cook #92400E (redder), Prep #78716C and Dishwasher #57534E (both grey).
+    color: '#7B4B2A',
     sortOrder: 10,
     active: true,
     // "All BOH roles" (mockup 32).
@@ -284,7 +290,6 @@ const SHIFT_ROLES: ShiftRole[] = [
     sortOrder: 11,
     active: true,
     canCoverRoleIds: ['cold-line-cook', 'prep-cook'],
-    minSkillLevelToCover: 2,
   },
   {
     id: 'cold-line-cook',
@@ -324,9 +329,11 @@ interface SeedEmployee {
   employeeNumber: string
   firstName: string
   /**
-   * Empty for the four personas the mockups only ever render mononymously
-   * (Rafa, Tom, Anthony, Oli). Inventing surnames would put unsourced data in
-   * front of Rafa at review — flagged as an open question instead.
+   * Every persona has one. The four the mockups render mononymously (Rafa, Tom,
+   * Anthony, Oli) were given real surnames by Rafa on Aug 13 2026. Emails follow
+   * the first.last@example.com convention; spaced surnames close up
+   * ("Brazon Vasquez" -> brazonvasquez). The real roster arrives later via the
+   * import wizard — this is seed data only.
    */
   lastName: string
   preferredName?: string | null
@@ -363,8 +370,8 @@ const EMPLOYEES: SeedEmployee[] = [
   {
     employeeNumber: '1030',
     firstName: 'Rafa',
-    lastName: '',
-    email: 'rafa@rosaliaskitchen.example.com',
+    lastName: 'Brazon Vasquez',
+    email: 'rafa.brazonvasquez@example.com',
     language: 'en',
     accessRole: 'owner',
     department: 'Admin',
@@ -381,8 +388,8 @@ const EMPLOYEES: SeedEmployee[] = [
   {
     employeeNumber: '1031',
     firstName: 'Tom',
-    lastName: '',
-    email: 'tom@rosaliaskitchen.example.com',
+    lastName: 'Rabi',
+    email: 'tom.rabi@example.com',
     language: 'en',
     accessRole: 'owner',
     department: 'Admin',
@@ -651,8 +658,8 @@ const EMPLOYEES: SeedEmployee[] = [
   {
     employeeNumber: '1047',
     firstName: 'Anthony',
-    lastName: '',
-    email: 'anthony@example.com',
+    lastName: 'Di Fatta',
+    email: 'anthony.difatta@example.com',
     phone: '(305) 555-0147',
     language: 'en',
     accessRole: 'staff',
@@ -732,8 +739,8 @@ const EMPLOYEES: SeedEmployee[] = [
   {
     employeeNumber: '1048',
     firstName: 'Oli',
-    lastName: '',
-    email: 'oli@example.com',
+    lastName: 'Fonseca',
+    email: 'oli.fonseca@example.com',
     phone: '(305) 555-0148',
     language: 'es',
     accessRole: 'staff',
@@ -1079,17 +1086,57 @@ async function seedSettings(): Promise<number> {
   return 1
 }
 
+/**
+ * Two roles sharing a colour render as identical bands on the schedule grid —
+ * the Kitchen Lead / Hot Line Cook collision that shipped in the first seed.
+ * Throwing here means it can never regress silently: the seed refuses to run.
+ */
+function assertUniqueRoleColors(roles: ShiftRole[]): void {
+  const seen = new Map<string, string>()
+  const collisions: string[] = []
+  for (const r of roles) {
+    const key = r.color.trim().toUpperCase()
+    const owner = seen.get(key)
+    if (owner) collisions.push(`${r.color}  ${owner} + ${r.id}`)
+    else seen.set(key, r.id)
+  }
+  if (collisions.length > 0) {
+    throw new Error(
+      `Duplicate shift-role colours — two roles would render identically on the\n` +
+        `schedule grid. Give each role its own colour:\n  ${collisions.join('\n  ')}`,
+    )
+  }
+}
+
 async function seedShiftRoles(): Promise<number> {
+  assertUniqueRoleColors(SHIFT_ROLES)
+
   const batch = db.batch()
   for (const shiftRole of SHIFT_ROLES) {
-    const { id, minSkillLevelToCover, ...rest } = shiftRole
+    const { id, ...rest } = shiftRole
     batch.set(db.collection('shiftRoles').doc(id), {
       ...rest,
-      ...(minSkillLevelToCover === undefined ? {} : { minSkillLevelToCover }),
       updatedAt: FieldValue.serverTimestamp(),
     })
   }
   await batch.commit()
+
+  // Migration cleanup. `minSkillLevelToCover` was retired (spec §7 — the
+  // shift's requiredSkillLevel is the only skill bar), and previously seeded
+  // documents still carry it. The non-merge set() above already dropped it from
+  // the 14 catalog roles; this pass also clears any role an admin created from
+  // Settings → Roles, which the seed does not own.
+  //
+  // It has to be a separate update(): Firestore rejects a FieldValue.delete()
+  // sentinel inside a set() that is not a merge.
+  const existing = await db.collection('shiftRoles').get()
+  const stale = existing.docs.filter((d) => d.get('minSkillLevelToCover') !== undefined)
+  if (stale.length > 0) {
+    const cleanup = db.batch()
+    for (const d of stale) cleanup.update(d.ref, { minSkillLevelToCover: FieldValue.delete() })
+    await cleanup.commit()
+    console.log(`  cleared retired minSkillLevelToCover from ${stale.length} role(s)`)
+  }
   return SHIFT_ROLES.length
 }
 

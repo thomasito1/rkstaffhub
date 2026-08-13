@@ -16,7 +16,6 @@
 
 import {
   collection,
-  deleteField,
   doc,
   getDoc,
   getDocs,
@@ -30,7 +29,7 @@ import {
 } from 'firebase/firestore'
 
 import { COLLECTIONS, db } from '@/lib/firebase'
-import type { Department, ShiftRole, SkillLevel } from '@/types/models'
+import type { Department, ShiftRole } from '@/types/models'
 
 function shiftRoleDoc(id: string) {
   return doc(db, COLLECTIONS.shiftRoles, id)
@@ -47,9 +46,6 @@ function toShiftRole(snap: DocumentSnapshot<DocumentData>): ShiftRole {
     sortOrder: Number(d.sortOrder ?? 0),
     active: d.active !== false,
     canCoverRoleIds: (d.canCoverRoleIds as string[]) ?? [],
-  }
-  if (d.minSkillLevelToCover !== undefined) {
-    role.minSkillLevelToCover = d.minSkillLevelToCover as SkillLevel
   }
   return role
 }
@@ -99,12 +95,11 @@ export async function getShiftRoleMap(): Promise<Map<string, ShiftRole>> {
 
 /** Create or replace a role. `id` doubles as the document id. */
 export async function upsertShiftRole(role: ShiftRole): Promise<void> {
-  const { id, minSkillLevelToCover, ...rest } = role
+  const { id, ...rest } = role
+  // Full overwrite (no merge), so any stale field on the existing document —
+  // including the retired `minSkillLevelToCover` — is dropped.
   await setDoc(shiftRoleDoc(id), {
     ...rest,
-    // Absent means "no minimum" — write a deletion rather than an undefined,
-    // which Firestore rejects.
-    minSkillLevelToCover: minSkillLevelToCover ?? deleteField(),
     updatedAt: serverTimestamp(),
   })
 }

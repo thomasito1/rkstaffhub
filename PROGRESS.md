@@ -1,7 +1,9 @@
 # PROGRESS — RK StaffHub
 
 **Current phase: Phase 0 — Foundation** (spec §19)
-Last updated: Aug 13, 2026
+Last updated: Aug 13, 2026 — Rafa's rulings applied (role colours, surnames,
+skill-coverage model, semimonthly pay period, Node 20 pin, compensation split
+approved).
 
 Phases are sequential. Do not build later-phase features early, even scaffolding.
 
@@ -47,9 +49,15 @@ auth screens → routing → people.
 
 ---
 
-## ⚠️ Decisions needing Rafa's sign-off
+## ✅ Accepted spec deviations
 
-### 1. Sensitive employee fields moved to subdocuments (deviation from spec §3)
+Approved by Rafa. These are settled — do not reopen them, and build later phases
+against what is written here rather than against the source document they
+deviate from.
+
+### A1. Sensitive employee fields live in subdocuments (deviates from spec §3)
+
+**Approved by Rafa, Aug 13 2026.** This is the permanent model.
 
 **The problem.** Spec §17 requires field-level read control — staff read their own
 profile "minus schedulingNotes/rates", and §4 says a Manager must not see another
@@ -57,7 +65,7 @@ Manager's salary. **Firestore has no field-level read security.** Rules gate who
 documents. With `hourlyRate` and `schedulingNotes` on `employees/{id}` as §3 lists
 them, any rule that lets a supervisor read the roster also hands them every salary.
 
-**What I did.** Split the physical layout, leaving the logical model from §3 intact:
+**The layout.** The physical split; the logical model from §3 is intact:
 
 ```
 employees/{id}                        ← profile; readable by any signed-in employee
@@ -66,20 +74,58 @@ employees/{id}/private/admin          ← schedulingNotes, permissionOverrides
 ```
 
 Own-rate reads still work (§17 confirms "show own rate: yes"). Equal-rank reads are
-denied, proven by rules tests.
+denied, proven by rules tests. The rejected alternative was routing every employee
+read through a Cloud Function that strips fields per caller — slower, costlier, and
+it breaks real-time listeners.
 
-**Alternative if you'd rather not deviate:** route every employee read through a
-Cloud Function that strips fields per caller. Slower, costlier, and it breaks
-real-time listeners. I recommend keeping the split.
+### A2. Mockup 32 is wrong on coverage direction (deviates from that mockup)
 
-### 2. Access roles — "Assistant Manager" (RESOLVED, recorded here for the trail)
+**Ruled by Rafa, Aug 13 2026.** Trade/claim eligibility is **exactly two
+independent checks** (spec §7):
+
+1. **Directional role coverage** via `canCoverRoleIds`, declared on the
+   **covering** role. Bartender lists Server/Host/Runner; Server lists nothing
+   upward. Asymmetric by design.
+2. **Skill gating**: the claimant's `skillLevel` for the role being worked must be
+   `>=` the **shift's** `requiredSkillLevel`.
+
+There is **no separate `minSkillLevelToCover` field** — the shift's required level
+is the only skill bar. The field has been removed from `src/types/models.ts`,
+`src/lib/db/shiftRoles.ts` and `scripts/seed.ts`, and the seed's role writer
+issues an explicit `FieldValue.delete()` pass so a re-seed strips it from any
+document that still carries it.
+
+Mockup 32 phrases the same control from the opposite direction ("a Bartender must
+be at least L2 to pick up a Server shift", a floor stored on the role being covered
+*into*). Coverage is behavior, so per CLAUDE.md's conflict rule the spec wins:
+**mockup 32 is a layout reference only on this point.** When Settings → Roles is
+built, that column must not be reintroduced.
+
+### A3. Mockups 26 and 35 show the wrong pay period — visual only
+
+**Ruled by Rafa, Aug 13 2026.** The default pay period is **semimonthly, paid on
+the 5th and the 20th of each month**. Schedule weeks stay **Mon–Sun**. The toggle
+stays configurable per spec §11; `AppSettings.payPeriod` is now
+`{ frequency: 'weekly' | 'biweekly' | 'semimonthly'; startDay: string; semimonthlyDays?: [number, number] }`
+and the seed writes `{ frequency: 'semimonthly', startDay: 'monday', semimonthlyDays: [5, 20] }`.
+
+Mockups 26 and 35 render a biweekly period (Aug 3–16 2026). Where they differ from
+the above they are **visual-only** — replicate their layout, not their period math.
+
+See the semimonthly/overtime trap in "Known issues" below before starting Phase 3.
+
+---
+
+## Resolved during Phase 0 (recorded for the trail)
+
+### 1. Access roles — "Assistant Manager"
 
 Spec §3/§4 enumerate exactly five: owner, gm, manager, supervisor, staff. Mockup
 `33-permissions-matrix` shows an "Assistant Mgr" column — my design-time invention,
 not from your spec. **Confirmed with Rafa: job title only.** Armando Hernandez and
 Robin Leyva carry `accessRole: 'manager'`; any narrowing uses `permissionOverrides`.
 
-### 3. Permission key names — mockup 33 is not authoritative (RESOLVED)
+### 2. Permission key names — mockup 33 is not authoritative
 
 Mockup 33 renders invented keys (`schedule.ai`, `punch.view`, `payroll.run`,
 `people.rate`, `hr.discipline`, `settings.roles`…). Permission keys are behavior,
@@ -87,13 +133,13 @@ so per CLAUDE.md's conflict rule the **spec §4 list wins**. Mockup 33 is a layo
 reference only. When that screen is built in a later phase, its rows must be
 relabeled to the real keys.
 
-### 4. Supervisor gets `employees.view` (inferred, not specified)
+### 3. Supervisor gets `employees.view` (inferred, not specified)
 
 Spec §4 lists the supervisor grant set without `employees.view`, but a supervisor
 who can read the schedule needs the roster for it to make sense. Granted by
 default. Defaults are admin-editable, so this is cheap to reverse.
 
-### 5. Geofence address conflict
+### 4. Geofence address conflict
 
 Spec §3/§8 say **12130 Miramar Pkwy, Miramar FL**. Mockup `35-general-settings`
 shows *1802 SW 22nd St, Miami* — a design-time invention. Spec wins; the seed uses
@@ -103,61 +149,50 @@ Miramar. Confirm the real address and the 150 m radius on-site (spec §21 item 1
 
 ## Open questions for Rafa (spec §21, plus new)
 
+Four items were answered on **Aug 13 2026** and have been removed from this list:
+Kitchen Lead's colour, the four missing surnames, the `minSkillLevelToCover`
+direction, and the pay period. See "Accepted spec deviations" above.
+
 From spec §21, to confirm when each phase reaches them:
 
 1. Geofence radius default 150 m — confirm on-site.
 2. Selfie retention 13 months — confirm.
 3. Staff see their own hourly rate — spec says yes; **implemented as yes**.
 4. Exact escalation ladder steps/thresholds — needed for Phase 4.
-5. Pay period weekly Mon–Sun — **conflict**: mockups `26`/`35` show *biweekly*
-   (Aug 3–16). Spec §11 defaults weekly. Needed before Phase 3.
-6. Skill levels fixed at 1–3 — confirm 3 tiers is enough.
+5. Skill levels fixed at 1–3 — confirm 3 tiers is enough. Now load-bearing: with
+   `minSkillLevelToCover` gone, a shift's `requiredSkillLevel` is the *only*
+   skill bar in the eligibility check.
 
 New during Phase 0. Ordered by when they block work:
 
-**Before Phase 1 (scheduling):**
-
-7. **Kitchen Lead has no colour.** It appears only in mockup 32's table and is
-   absent from design-system.md §2, so it currently reuses Hot Line Cook's
-   `#B45309` — two roles rendering identically on the schedule grid.
-8. **Real surnames for Rafa, Tom, Anthony and Oli.** The mockups only ever show
-   them by first name, so they are seeded with `lastName: ''`. This is the thing
-   most likely to look broken in the roster UI.
-
 **Before Phase 2 (trades + clock):**
 
-9. **`minSkillLevelToCover` direction.** It is stored the way `models.ts`
-   documents it — the floor sits on the role being covered *into*. Mockup 32
-   phrases the same control from the opposite direction. Same practical outcome,
-   opposite storage. **Spec §7 condition 2 is the heart of the product**, so
-   confirm before eligibility is built on it.
-10. **Geofence coordinates are a best-effort geocode** (25.9773, -80.3225) of the
-    Miramar address. Confirm on-site alongside §21 item 1.
+6. **Geofence coordinates are a best-effort geocode** (25.9773, -80.3225) of the
+   Miramar address. Confirm on-site alongside §21 item 1.
 
 **Before Phase 3 (payroll):**
 
-11. **Salaried amounts.** Mockup 26 shows per-period figures ($1,730.77 Daphne,
-    $2,019.23 Denise); the seed stores derived monthly salaries (3750 / 4375).
-    Verify the annualisation.
-12. **Payroll figures are illustrative.** Mockup 26's rates, hours and
-    `$9,864.50` total, and mockup 11's daily labor splits, were constructed to be
-    internally consistent — they are not real Rosalia's numbers.
+7. **Salaried amounts.** Mockup 26 shows per-period figures ($1,730.77 Daphne,
+   $2,019.23 Denise); the seed stores derived monthly salaries (3750 / 4375).
+   Verify the annualisation — and note the per-period figures were computed
+   against a *biweekly* period, so they need restating for semimonthly.
+8. **Payroll figures are illustrative.** Mockup 26's rates, hours and
+   `$9,864.50` total, and mockup 11's daily labor splits, were constructed to be
+   internally consistent — they are not real Rosalia's numbers.
 
 **Before Phase 5 (AI):**
 
-13. `34-ai-providers` shows real Anthropic model ids (`claude-opus-5`, Sonnet 5,
-    Haiku 4.5) but placeholder OpenAI/Google names. Confirm which providers you
-    actually want configured.
+9. `34-ai-providers` shows real Anthropic model ids (`claude-opus-5`, Sonnet 5,
+   Haiku 4.5) but placeholder OpenAI/Google names. Confirm which providers you
+   actually want configured.
 
 **Anytime — schema additions, cheap now and costly later:**
 
-14. **Sign off on the subdocument split** (decision 1 above). This is the one
-    with real architectural weight.
-15. **No `jobTitle` field exists.** "Assistant Manager" is now a title with
+10. **No `jobTitle` field exists.** "Assistant Manager" is now a title with
     nowhere to live: Armando and Robin carry `accessRole: 'manager'` narrowed by a
     real override (`discipline.issue: false`). If any screen must *display*
     "Assistant Manager", `Employee` needs a `jobTitle` field.
-16. **`AuditAction` has no invite/claims member.** The union in
+11. **`AuditAction` has no invite/claims member.** The union in
     `src/types/models.ts` is verbatim spec §17 and stops at `permission.change`.
     The three Functions that move claims around (invite acceptance, manual
     re-sync, the role-change trigger) all log as `permission.change`,
@@ -169,6 +204,24 @@ New during Phase 0. Ordered by when they block work:
 
 ## Known issues / cleanup backlog
 
+- **⚠️ Semimonthly pay periods vs. per-workweek overtime — a real correctness
+  trap, Phase 3.** FLSA computes overtime per **workweek**: hours over 40 in a
+  fixed Mon–Sun week. Pay periods are now **semimonthly** (5th and 20th), and a
+  semimonthly period does not align to week boundaries — it *always* cuts through
+  a workweek at both ends. So:
+  - Summing hours inside a pay period and taking everything over some threshold
+    as OT is **wrong**, and wrong in the employer's favour, which is the
+    expensive direction.
+  - The correct order is: bucket punches into Mon–Sun workweeks → compute
+    OT per workweek → *then* allocate each workweek's regular and OT hours to
+    whichever pay period each day falls in.
+  - A single workweek can therefore be split across two pay periods and two
+    payslips. The period-boundary day is the one to write tests for.
+  - The same trap applies to any weekly cap or weekly-average rate math, and to
+    the period lock (`payroll.lockPeriod`): locking a period must not prevent
+    the *other* half of a straddling workweek from being computed.
+  This is why `AppSettings.payPeriod` and `scheduleWeekStart` are separate
+  fields. Do not collapse them.
 - **Rules evaluation errors on deny paths.** Several deny-path rules tests log
   `evaluation error at L106/L143` rather than cleanly returning false. The denials
   are correct and all allow-paths evaluate cleanly, but an evaluation error can
@@ -191,7 +244,19 @@ New during Phase 0. Ordered by when they block work:
 
 ## How to run
 
+**Node 20 is required.** `.nvmrc` pins it and the root `package.json` declares
+`engines.node: "20.x"`; run `nvm use` in the project root before anything else.
+
+This is not cosmetic. `functions/` deploys to the **`nodejs20`** Cloud Functions
+runtime and declares `engines.node: "20"` of its own, and the Functions emulator
+runs your local Node against that declared runtime. A mismatched local Node
+produces confusing, misattributed failures — functions that fail to load, worker
+processes killed on first request, or native-module errors from
+`firebase-tools` — none of which name the Node version as the cause. If the
+emulator misbehaves in a way that makes no sense, check `node --version` first.
+
 ```bash
+nvm use                        # Node 20, per .nvmrc
 npm install
 npm run dev                    # http://localhost:5173
 npm run functions:install      # once — functions/ is its own npm package
@@ -216,6 +281,7 @@ comparison against `.superdesign/export/01-design-system-desktop-en.html`.
 ## How to review Phase 0
 
 ```bash
+nvm use                    # Node 20, per .nvmrc — see the note above
 npm install
 npm run functions:install  # once — functions/ has its own node_modules
 npm run emulators          # terminal 1 — builds functions, then leaves the suite running

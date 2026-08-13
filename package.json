@@ -3,7 +3,10 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Staff operations hub for Rosalia's Kitchen — scheduling, availability, trades, time clock, tips, tasks, payroll, HR.",
+  "description": "Staff operations hub for Rosalia's Kitchen \u2014 scheduling, availability, trades, time clock, tips, tasks, payroll, HR.",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -19,7 +22,8 @@
     "emulators:exec": "PATH=\"$(brew --prefix openjdk)/bin:$PATH\" firebase emulators:exec --project demo-rk-staffhub",
     "seed": "tsx scripts/seed.ts",
     "i18n:check": "tsx scripts/check-locales.ts",
-    "test:rules:emulated": "PATH=\"$(brew --prefix openjdk)/bin:$PATH\" firebase emulators:exec --project demo-rk-staffhub --only firestore \"vitest run --config vitest.rules.config.ts\""
+    "test:rules:emulated": "PATH=\"$(brew --prefix openjdk)/bin:$PATH\" firebase emulators:exec --project demo-rk-staffhub --only firestore \"npx vitest run --config vitest.rules.config.ts\"",
+    "test:rules:clean": "PATH=\"$(brew --prefix openjdk)/bin:$PATH\" firebase emulators:exec --project demo-rk-staffhub --only firestore \"node scripts/check-rules-clean.mjs\""
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.1.1",
