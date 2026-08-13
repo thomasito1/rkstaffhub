@@ -1,6 +1,7 @@
 # PROGRESS — RK StaffHub
 
-**Current phase: Phase 0 — Foundation** (spec §19)
+**Current phase: Phase 1 — Availability + Scheduling** (spec §19)
+Phase 0 complete and reviewed.
 Last updated: Aug 13, 2026 — Rafa's rulings applied (role colours, surnames,
 skill-coverage model, semimonthly pay period, Node 20 pin, compensation split
 approved).
@@ -203,6 +204,29 @@ New during Phase 0. Ordered by when they block work:
 ---
 
 ## Known issues / cleanup backlog
+
+- **QUARANTINED: one dirty denial** in `employees/{id}/private/admin` allow-write.
+  It denies by throwing rather than returning false. The rules are correct —
+  33/33 rules tests pass, including equal-rank denial. **Revisit before Phase 2
+  expands the rules.** Surfaced by `npm run test:rules:clean`, which fails by
+  design; full ruled-out list is in that script's header so nobody retraces it.
+  Root cause of the sibling site, now fixed: rules do not memoize function
+  results, so repeated `roleDefaults()`/`myOverrides()` calls in one condition
+  multiply document accesses until evaluation blows up.
+
+### Phase 3 payroll math — RULED, build on this from the start
+
+Overtime is **always** computed per Mon–Sun workweek (>40 hrs, FLSA 1.5×), never
+by summing hours inside a pay period. Each workweek's regular/OT split is then
+**allocated to pay periods by where the hours fell**. Pay periods are semimonthly
+(5th and 20th), so a period contains partial workweeks at both ends — summing
+within a period would silently mis-state overtime.
+
+The payroll workshop must surface **both**: the per-workweek OT truth and the
+period allocation. Mockup 26's per-period salary figures ($1,730.77 / $2,019.23)
+were computed against a biweekly period and are **visual-only deviations** — they
+need restating for semimonthly.
+
 
 - **⚠️ Semimonthly pay periods vs. per-workweek overtime — a real correctness
   trap, Phase 3.** FLSA computes overtime per **workweek**: hours over 40 in a
