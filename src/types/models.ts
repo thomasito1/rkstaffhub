@@ -281,3 +281,179 @@ export interface Invite {
   acceptedAt?: unknown | null
   expiresAt: unknown
 }
+
+// ── availability/{weekId}_{employeeId} ───────────────────────────────────────
+
+/**
+ * Day keys for the availability grid. Mon–Sun, matching the spec §3 `days` map
+ * and the Mon-start week (§5). Used as an ordered tuple so the glance grid and
+ * the effective-availability merge iterate in display order.
+ */
+export const WEEKDAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const
+export type WeekdayKey = (typeof WEEKDAY_KEYS)[number]
+
+export type AvailabilityDayStatus = 'available' | 'unavailable' | 'partial'
+
+/**
+ * One day of an availability submission. `from`/`to` are "HH:mm" in restaurant
+ * local time and are only meaningful when status is 'partial' (spec §5).
+ */
+export interface AvailabilityDay {
+  status: AvailabilityDayStatus
+  from?: string | null
+  to?: string | null
+}
+
+/**
+ * 'recurring' rolls forward week over week; 'temporary' is a week-specific
+ * override that WINS for that week only (spec §5, same model as 7shifts).
+ * Resolution lives in db/availability.ts → resolveEffectiveAvailability().
+ */
+export type AvailabilityType = 'recurring' | 'temporary'
+
+export type AvailabilityStatus = 'pending' | 'approved' | 'declined'
+
+export interface Availability {
+  /** Document id — `{weekId}_{employeeId}` (spec §3). */
+  id: string
+  employeeId: string
+  /**
+   * ISO Monday of the week this covers, e.g. "2026-08-10" — or the sentinel
+   * `RECURRING_WEEK_ID` for the rolling baseline, which by definition belongs
+   * to no single week. See the header of db/availability.ts.
+   */
+  weekId: string
+  type: AvailabilityType
+  days: Record<WeekdayKey, AvailabilityDay>
+  status: AvailabilityStatus
+  reviewedBy?: string | null
+  reviewedAt?: unknown
+  submittedAt?: unknown
+  /**
+   * Spec §5: "declines require a reason shown to the employee". The §3 field
+   * list does not name the field, so it is stored here and is REQUIRED by
+   * declineAvailability() — a decline with no reason is rejected client-side.
+   */
+  declineReason?: string | null
+  locationId?: string | null
+  createdAt?: unknown
+  updatedAt?: unknown
+}
+
+// ── schedules/{weekId} ───────────────────────────────────────────────────────
+
+export type ScheduleStatus = 'draft' | 'published' | 'republished'
+
+/** Provenance for an AI-generated draft (spec §13). Metadata only — no keys. */
+export interface AiDraftMeta {
+  provider: string
+  model: string
+  generatedAt: unknown
+  promptSummary: string
+}
+
+export interface Schedule {
+  /** Document id — the weekId itself (spec §3). */
+  id: string
+  weekId: string
+  status: ScheduleStatus
+  publishedAt?: unknown
+  publishedBy?: string | null
+  /** Falls back to settings/app.laborTargetPct when null (§6 labor footer). */
+  laborTargetPct: number | null
+  aiDraftMeta: AiDraftMeta | null
+  locationId?: string | null
+  createdAt?: unknown
+  updatedAt?: unknown
+}
+
+// ── schedules/{weekId}/shifts/{shiftId} ──────────────────────────────────────
+
+export type ShiftStatus = 'draft' | 'published' | 'traded' | 'dropped' | 'cancelled'
+
+export interface Shift {
+  id: string
+  /**
+   * Parent key, denormalised onto the logical record. The document lives at
+   * schedules/{weekId}/shifts/{shiftId}, so this is never stored redundantly —
+   * db/schedules.ts fills it from the path on read and on write.
+   */
+  weekId: string
+  /** null = OPEN SHIFT — the unassigned row per role in the builder (§6). */
+  employeeId: string | null
+  /** "YYYY-MM-DD" in restaurant local time. */
+  date: string
+  /** "HH:mm" 24h, restaurant local time. */
+  startTime: string
+  endTime: string
+  roleId: string
+  /** The only skill bar in the system — see the ShiftRole note above (§7). */
+  requiredSkillLevel: SkillLevel
+  department: Department
+  /** e.g. "Bar", "Floor", "Expo". */
+  station: string | null
+  notes?: string | null
+  /** On-Call Server renders as its own band at the bottom of FOH (§6). */
+  isOnCall: boolean
+  status: ShiftStatus
+  locationId?: string | null
+  createdAt?: unknown
+  updatedAt?: unknown
+}
+
+// ── shiftTemplates/{templateId} ──────────────────────────────────────────────
+
+/** "4 Servers, min level 1" — one line of a day-part's headcount need (§6). */
+export interface ShiftTemplateRequirement {
+  roleId: string
+  count: number
+  minSkillLevel: SkillLevel
+}
+
+export interface ShiftTemplate {
+  id: string
+  /** e.g. "Fri Dinner". */
+  name: string
+  /**
+   * Spec §3 says `dayOfWeek` without fixing an encoding. Stored as the same
+   * 'mon'..'sun' key the availability grid uses, deliberately: a numeric day
+   * would reintroduce the 0-vs-1 Sunday ambiguity across a Mon-start week.
+   */
+  dayOfWeek: WeekdayKey
+  /** "HH:mm" 24h, restaurant local time. */
+  startTime: string
+  endTime: string
+  requirements: ShiftTemplateRequirement[]
+  locationId?: string | null
+  createdAt?: unknown
+  updatedAt?: unknown
+}
+
+// ── timeOff/{requestId} ──────────────────────────────────────────────────────
+
+export type TimeOffCategory = 'unpaid' | 'paid'
+
+export type TimeOffStatus = 'pending' | 'approved' | 'declined'
+
+export interface TimeOffRequest {
+  id: string
+  employeeId: string
+  /** Inclusive "YYYY-MM-DD" bounds. */
+  startDate: string
+  endDate: string
+  category: TimeOffCategory
+  reason: string
+  status: TimeOffStatus
+  reviewedBy?: string | null
+  reviewedAt?: unknown
+  /**
+   * Shift ids that overlap the requested range, computed at request time by
+   * findConflictingShifts(). Approved time off BLOCKS scheduling (§6 conflicts
+   * engine), so an approver sees exactly what they are about to break.
+   */
+  conflicts: string[]
+  declineReason?: string | null
+  locationId?: string | null
+  createdAt?: unknown
+  updatedAt?: unknown
+}
