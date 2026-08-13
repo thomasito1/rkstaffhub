@@ -11,6 +11,9 @@ import { EmployeeListPage } from '@/pages/people/EmployeeListPage'
 import { EmployeeProfilePage } from '@/pages/people/EmployeeProfilePage'
 import { MyProfilePage } from '@/pages/people/MyProfilePage'
 import { ImportWizardPage } from '@/pages/people/ImportWizardPage'
+import { MyAvailabilityPage } from '@/pages/availability/MyAvailabilityPage'
+import { AvailabilityRequestsPage } from '@/pages/availability/AvailabilityRequestsPage'
+import { GlanceViewPage } from '@/pages/availability/GlanceViewPage'
 
 /**
  * Phase 0 routing.
@@ -48,6 +51,24 @@ export default function App() {
           element={<PlaceholderPage titleKey="nav.schedule" phase={1} />}
         />
         <Route path="clock" element={<PlaceholderPage titleKey="nav.clock" phase={2} />} />
+
+        {/* Availability — Phase 1 (spec §5). Each page self-guards its own
+            permission; the routes below only need to match each page's
+            default cross-link paths. */}
+        <Route path="availability" element={<MyAvailabilityPage />} />
+        <Route
+          path="availability/requests"
+          element={
+            <AvailabilityRequestsPage
+              glancePath="/availability/glance"
+              peoplePath="/people"
+            />
+          }
+        />
+        <Route
+          path="availability/glance"
+          element={<GlanceViewPage requestsPath="/availability/requests" />}
+        />
         <Route
           path="shift-pool"
           element={<PlaceholderPage titleKey="nav.shiftPool" phase={2} />}
