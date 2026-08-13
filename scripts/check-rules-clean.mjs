@@ -13,24 +13,31 @@
  *
  * Invoked by `npm run test:rules:clean`.
  *
- * ── STATUS: CURRENTLY FAILING, DELIBERATELY NOT MASKED ──────────────────────
- * Two dirty denials remain, in the employees `allow update` rule and the
- * employees/{id}/private/admin `allow write` rule. All 33 rules tests pass, so
- * the rules are CORRECT — they deny what must be denied and allow what must be
- * allowed. They just deny by throwing rather than by returning false.
+ * ── STATUS: ONE quarantined dirty denial remains ────────────────────────────
+ * Down from two sites to one: employees/{id}/private/admin `allow write`.
+ * All 33 rules tests pass, so the rules are CORRECT — they deny what must be
+ * denied and allow what must be allowed. That one condition denies by throwing.
  *
- * Bisection results, so the next person does not repeat them:
- *   - exists() alone is clean.
- *   - Replacing chained .get(key, default) with `in` + bracket indexing: no change.
- *   - Replacing diff().affectedKeys().hasAny() with per-field equality: no change.
- *   - Replacing request.auth.token.get() with `in` + dot access: no change.
- *   - A constant hasPerm() removes 8 of 13; the other 5 live in the update rule.
- * So there are two independent causes, and neither is any of the constructs
- * above. Suspect remaining: .get(field, null) with a null default against
- * documents that lack the field.
+ * THE FIX THAT WORKED, for the employees update rule: rules do NOT memoize
+ * function results, so every call to roleDefaults()/myOverrides() re-runs its
+ * exists()+get(). Calling them repeatedly inside one condition multiplies
+ * document accesses until evaluation blows up instead of returning false.
+ * Resolving each map ONCE and passing it as a parameter fixed that site.
  *
- * This is a code-health issue, not a security hole. Do not "fix" it by
- * loosening this script.
+ * Ruled out by bisection — do not retry:
+ *   - chained .get(key, default) → `in` + bracket indexing
+ *   - diff().affectedKeys().hasAny() → per-field equality
+ *   - request.auth.token.get() → `in` + dot access
+ *   - dropping the overrides lookup entirely
+ *   - splitting `write` into create+update (WORSE: both then evaluate, 13→14)
+ *   - reordering the conjunction cheapest-first
+ *
+ * Remaining lead: the surviving rule reads employees/{id}/private/admin (via
+ * myOverrides, for the ACTOR) from inside a rule that WRITES a private/admin
+ * document. Every other site that reads a different collection is clean.
+ *
+ * This is code health, not a security hole. Do not "fix" it by loosening this
+ * script.
  * ────────────────────────────────────────────────────────────────────────────
  */
 import { spawn } from 'node:child_process'

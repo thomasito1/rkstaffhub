@@ -104,44 +104,65 @@ service cloud.firestore {
 
     // Missing roleDefaults ⇒ empty map ⇒ every permission resolves false.
     function roleDefaults() {
-      return (exists(roleDefaultsPath())
-              && 'defaults' in get(roleDefaultsPath()).data)
-        ? get(roleDefaultsPath()).data.defaults
+      return exists(roleDefaultsPath())
+        ? defaultsOf(get(roleDefaultsPath()).data)
         : {};
+    }
+
+    function defaultsOf(data) {
+      return 'defaults' in data ? data.defaults : {};
     }
 
     // Missing private/admin ⇒ no overrides ⇒ fall through to role defaults.
     function myOverrides() {
-      return (hasIdentity()
-              && exists(adminPath(myEmployeeId()))
-              && 'permissionOverrides' in get(adminPath(myEmployeeId())).data)
-        ? get(adminPath(myEmployeeId())).data.permissionOverrides
+      return (hasIdentity() && exists(adminPath(myEmployeeId())))
+        ? overridesOf(get(adminPath(myEmployeeId())).data)
         : {};
     }
 
-    function roleGrants(key) {
-      return myRole() in roleDefaults()
-             && key in roleDefaults()[myRole()]
-             && roleDefaults()[myRole()][key] == true;
+    function overridesOf(data) {
+      return 'permissionOverrides' in data ? data.permissionOverrides : {};
+    }
+
+    // Rules do NOT memoize function results: every call to roleDefaults() or
+    // myOverrides() re-runs its exists()+get(). Calling them repeatedly inside
+    // one condition multiplies document accesses and the evaluation blows up
+    // rather than returning false — which is exactly the dirty-denial symptom.
+    //
+    // So the maps are resolved ONCE at the call site and passed in as
+    // parameters. Everything below indexes parameters, which is free.
+    function grantedBy(key, defaults, role) {
+      return role in defaults
+             && key in defaults[role]
+             && defaults[role][key] == true;
+    }
+
+    function effectivePerm(key, overrides, defaults, role) {
+      return key in overrides
+        ? overrides[key] == true
+        : grantedBy(key, defaults, role);
     }
 
     // Missing employee doc ⇒ 'owner', the HIGHEST rank. Fails closed: a missing
     // parent document can never widen anyone's access.
     function targetRoleOf(employeeId) {
-      return (exists(employeePath(employeeId))
-              && 'accessRole' in get(employeePath(employeeId)).data)
-        ? get(employeePath(employeeId)).data.accessRole
+      return exists(employeePath(employeeId))
+        ? roleOf(get(employeePath(employeeId)).data)
         : 'owner';
+    }
+
+    function roleOf(data) {
+      return 'accessRole' in data ? data.accessRole : 'owner';
     }
 
     // ── permissions ──────────────────────────────────────────────────────────
 
     // Effective permission = override ?? roleDefault. Mirrors hasPermission().
+    // Effective permission = override ?? roleDefault. Mirrors hasPermission().
+    // myOverrides() and roleDefaults() are each evaluated exactly once here.
     function hasPerm(key) {
       return hasIdentity()
-        && (key in myOverrides()
-              ? myOverrides()[key] == true
-              : roleGrants(key));
+        && effectivePerm(key, myOverrides(), roleDefaults(), myRole());
     }
 
     // The "below your level" rule (spec §4). Mirrors canAccessSensitive().
@@ -168,8 +189,21 @@ service cloud.firestore {
       // read. Explicit equality also states the intent plainly: these fields
       // must be IDENTICAL before and after a self-edit.
 
+      // TOTAL cross-object comparison. Each access is guarded by an `in` on
+      // the SAME object it reads — never on the other one. A field that is
+      // absent from both is unchanged; present in only one is a change.
+      // Absent ⇒ 'owner', the highest rank: an omitted role can never be a
+      // legal grant.
+      function incomingRole() {
+        return 'accessRole' in request.resource.data
+          ? request.resource.data.accessRole
+          : 'owner';
+      }
+
       function unchanged(field) {
-        return request.resource.data.get(field, null) == resource.data.get(field, null);
+        return (field in request.resource.data) == (field in resource.data)
+          && (!(field in request.resource.data)
+              || request.resource.data[field] == resource.data[field]);
       }
 
       // Fields an employee may never change about themselves.
@@ -188,14 +222,14 @@ service cloud.firestore {
       function roleGrantIsLegal() {
         return unchanged('accessRole')
           || myRole() == 'owner'
-          || rank(request.resource.data.get('accessRole', 'owner')) < rank(myRole());
+          || rank(incomingRole()) < rank(myRole());
       }
 
       allow read: if signedIn();
 
       allow create: if hasPerm('employees.edit')
                     && (myRole() == 'owner'
-                        || rank(request.resource.data.get('accessRole', 'owner')) < rank(myRole()));
+                        || rank(incomingRole()) < rank(myRole()));
 
       allow update: if (
         // A person may edit their own non-privileged profile fields.
@@ -225,6 +259,25 @@ service cloud.firestore {
       match /private/admin {
         allow read: if isSelf(employeeId)
                     || (hasPerm('employees.view') && canAccessSensitive(employeeId));
+        // -- QUARANTINED DIRTY DENIAL - revisit before Phase 2 rules --------
+        // This single condition still denies by throwing rather than returning
+        // false. It is CORRECT: every rules test covering it passes, including
+        // equal-rank denial and staff-cannot-write-own-overrides. The fault is
+        // evaluation hygiene, not authorization.
+        //
+        // Ruled out by bisection (do not retry): chained .get(k, default) ->
+        // `in` + indexing; diff().affectedKeys() -> per-field equality;
+        // token.get() -> `in` + dot access; dropping overrides entirely;
+        // splitting write into create+update (worse - both then evaluate);
+        // reordering the conjunction.
+        //
+        // What DID fix the other site: resolve each map ONCE and pass it as a
+        // parameter, because rules do not memoize function results. This rule
+        // already does that and still throws, so the remaining cause looks
+        // specific to reading employees/{id}/private/admin from inside a rule
+        // that writes a private/admin document.
+        //
+        // Surfaced by `npm run test:rules:clean`, which fails by design.
         allow write: if hasPerm('permissions.manage') && canAccessSensitive(employeeId);
       }
     }
