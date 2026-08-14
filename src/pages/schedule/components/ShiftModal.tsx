@@ -441,7 +441,7 @@ export function ShiftModal({
               onChange={(e) => setOverrideReason(e.target.value)}
               rows={2}
               className={`${FIELD_CLASS} mt-1 h-auto resize-none py-2`}
-              placeholder={t('conflicts.overrideReasonHelp')}
+              placeholder={t('conflicts.overrideReasonPlaceholder')}
             />
             <p className="mt-1 text-chip text-ink-muted">{t('conflicts.overrideReasonHelp')}</p>
           </div>

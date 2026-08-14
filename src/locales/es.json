@@ -626,6 +626,7 @@
     "warningTitle": "Programado con una advertencia",
     "overrideCta": "Asignar de todos modos",
     "overrideReasonLabel": "Motivo de la excepción",
+    "overrideReasonPlaceholder": "P. ej., la única otra persona calificada llamó enferma",
     "overrideReasonHelp": "Obligatorio. Se registra en el historial de auditoría con tu nombre."
   },
   "weekdays": {

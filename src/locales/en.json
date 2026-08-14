@@ -626,6 +626,7 @@
     "warningTitle": "Scheduled with a warning",
     "overrideCta": "Assign anyway",
     "overrideReasonLabel": "Reason for override",
+    "overrideReasonPlaceholder": "e.g., the only other qualified person called in sick",
     "overrideReasonHelp": "Required. Recorded in the audit log with your name."
   },
   "weekdays": {
