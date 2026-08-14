@@ -407,6 +407,15 @@ export interface Shift {
   isOnCall: boolean
   status: ShiftStatus
   locationId?: string | null
+  /**
+   * Set true by any edit to a shift that is already live (published or
+   * republished) — a time change, a reassignment, an override. Republish
+   * reads this alongside `status === 'draft'` to find every shift that
+   * changed since the last publish, not just newly-added ones (spec §6).
+   * Cleared back to false by `recordSchedulePublish` once it has counted
+   * and notified for it.
+   */
+  dirtySincePublish?: boolean
   createdAt?: unknown
   updatedAt?: unknown
 }

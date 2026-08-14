@@ -158,6 +158,7 @@ function toShift(
     isOnCall: d.isOnCall === true,
     status: SHIFT_STATUSES.includes(status) ? status : 'draft',
     locationId: (d.locationId as string | null) ?? null,
+    dirtySincePublish: d.dirtySincePublish === true,
     createdAt: d.createdAt,
     updatedAt: d.updatedAt,
   }
@@ -365,6 +366,12 @@ export async function createShift(weekId: string, input: NewShiftInput): Promise
  * Patch a shift. `weekId` and `id` are not patchable — moving a shift to a
  * different week means a different document, so callers create and delete
  * rather than pretending a subcollection key can be edited.
+ *
+ * Every patch sets `dirtySincePublish: true` unconditionally. For a shift
+ * still in `draft` this is a no-op (already-unpublished shifts are counted
+ * by status alone); for an already-live shift it is exactly the signal
+ * `recordSchedulePublish` needs to notice a time change, reassignment, or
+ * cancellation made after publish and count it on the next republish.
  */
 export async function updateShift(
   weekId: string,
@@ -373,6 +380,7 @@ export async function updateShift(
 ): Promise<void> {
   await updateDoc(shiftDoc(weekId, shiftId), {
     ...pruneUndefined(patch),
+    dirtySincePublish: true,
     updatedAt: serverTimestamp(),
   })
 }
@@ -440,10 +448,11 @@ export async function publishSchedule(weekId: string): Promise<PublishResult> {
 
 /**
  * Published → Republished (§6): edits made after a publish go live, and only
- * the affected employees are notified — the owners of shifts THIS call
- * flipped from draft. Edits to an ALREADY-published shift (a time change, a
- * reassignment) do not currently appear in that set; catching those needs a
- * per-shift change log, which remains a separate, not-yet-built gap.
+ * the affected employees are notified. "Affected" is every shift where
+ * `status === 'draft'` (newly added since the last publish) OR
+ * `dirtySincePublish === true` (a time change, reassignment, or cancellation
+ * made to an already-live shift) — `recordSchedulePublish` reads both,
+ * flips/clears them atomically, and notifies each shift's current occupant.
  */
 export async function republishSchedule(weekId: string): Promise<PublishResult> {
   return callRecordSchedulePublish(weekId)

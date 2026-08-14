@@ -30,6 +30,7 @@
  * logging an override nobody needed — that would make the audit trail lie.
  */
 
+import { FieldValue } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 
 import { COLLECTIONS, db } from './firebase'
@@ -179,7 +180,14 @@ export const recordScheduleOverride = onCall<RecordScheduleOverrideRequest>(
           'This shift changed since you opened it — reload and try again.',
         )
       }
-      tx.update(shiftRef, { employeeId })
+      // dirtySincePublish flags this for the next republish's change count
+      // (see schedulePublish.ts) — an override on an already-live shift is
+      // exactly the kind of post-publish edit that must not go unnoticed.
+      tx.update(shiftRef, {
+        employeeId,
+        dirtySincePublish: true,
+        updatedAt: FieldValue.serverTimestamp(),
+      })
     })
 
     await writeAudit({

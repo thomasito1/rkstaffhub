@@ -46,13 +46,20 @@ export interface RecordSchedulePublishRequest {
 export interface RecordSchedulePublishResponse {
   weekId: string
   status: 'published' | 'republished'
+  /**
+   * Every shift this call counted as changed: newly-drafted shifts flipped to
+   * `published`, PLUS already-live shifts edited since the last publish
+   * (`dirtySincePublish === true` — a time change, reassignment, or
+   * cancellation). Both groups are cleared back to clean in this same
+   * transaction.
+   */
   publishedShiftIds: string[]
   /**
    * §6: first publish notifies everyone scheduled; a republish notifies only
-   * the owners of shifts THIS call flipped from draft — "targeted
-   * notifications only to affected employees". Actually sending anything
-   * (FCM) is a later phase; this Function only computes and returns who WOULD
-   * be notified, same scope as the client code it replaces.
+   * the current occupants of shifts THIS call counted as changed —
+   * "targeted notifications only to affected employees". Actually sending
+   * anything (FCM) is a later phase; this Function only computes and returns
+   * who WOULD be notified, same scope as the client code it replaces.
    */
   notifyEmployeeIds: string[]
 }
@@ -93,14 +100,27 @@ export const recordSchedulePublish = onCall<RecordSchedulePublishRequest>(
         mode === 'publish' ? 'published' : 'republished'
 
       const draftShiftIds: string[] = []
+      // Already live but edited since — a time change, reassignment, or
+      // cancellation made to a published shift. `dirtySincePublish` is the
+      // signal (see Shift model + updateShift()/scheduleOverride.ts); without
+      // it a republish only ever notices brand-new draft shifts and silently
+      // drops reassignments to already-published ones.
+      const dirtyLiveShiftIds: string[] = []
       const everyoneScheduled = new Set<string>()
       const affectedByThisCall = new Set<string>()
 
       for (const doc of shiftsSnap.docs) {
-        const data = doc.data() as { status?: string; employeeId?: string | null }
+        const data = doc.data() as {
+          status?: string
+          employeeId?: string | null
+          dirtySincePublish?: boolean
+        }
         if (data.employeeId) everyoneScheduled.add(data.employeeId)
         if (data.status === 'draft') {
           draftShiftIds.push(doc.id)
+          if (data.employeeId) affectedByThisCall.add(data.employeeId)
+        } else if (data.dirtySincePublish === true) {
+          dirtyLiveShiftIds.push(doc.id)
           if (data.employeeId) affectedByThisCall.add(data.employeeId)
         }
       }
@@ -108,6 +128,14 @@ export const recordSchedulePublish = onCall<RecordSchedulePublishRequest>(
       for (const shiftId of draftShiftIds) {
         tx.update(shiftsRef.doc(shiftId), {
           status: 'published',
+          dirtySincePublish: false,
+          updatedAt: FieldValue.serverTimestamp(),
+        })
+      }
+
+      for (const shiftId of dirtyLiveShiftIds) {
+        tx.update(shiftsRef.doc(shiftId), {
+          dirtySincePublish: false,
           updatedAt: FieldValue.serverTimestamp(),
         })
       }
@@ -131,7 +159,7 @@ export const recordSchedulePublish = onCall<RecordSchedulePublishRequest>(
       return {
         weekId,
         status: newStatus,
-        publishedShiftIds: draftShiftIds,
+        publishedShiftIds: [...draftShiftIds, ...dirtyLiveShiftIds],
         notifyEmployeeIds,
         previousStatus,
       }

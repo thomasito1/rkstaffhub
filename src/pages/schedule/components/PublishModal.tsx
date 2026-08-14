@@ -11,7 +11,9 @@ import { computeWeekLabor } from './LaborFooter'
  *
  * "Changes since last publish" is real data, not mockup 15's fabricated
  * per-field diffs (drafted from field-level history nothing in this app
- * currently records): a shift still in `status: 'draft'` is exactly the set
+ * currently records): a shift is "changed" when `status === 'draft'` (new
+ * since the last publish) OR `dirtySincePublish === true` (a time change,
+ * reassignment, or cancellation to an already-live shift) — exactly the set
  * `republishSchedule()` itself notifies (see functions/src/schedulePublish.ts),
  * so the affected-employees list here is that same set, honestly computed —
  * not invented "time changed 4p→11p" copy this data can't support yet.
@@ -46,15 +48,18 @@ export function PublishModal({
     () => data.shifts.filter((s) => s.status !== 'cancelled'),
     [data.shifts],
   )
-  const draftShifts = useMemo(() => activeShifts.filter((s) => s.status === 'draft'), [activeShifts])
+  const changedShifts = useMemo(
+    () => activeShifts.filter((s) => s.status === 'draft' || s.dirtySincePublish === true),
+    [activeShifts],
+  )
 
   const assignedEmployeeIds = useMemo(
     () => [...new Set(activeShifts.map((s) => s.employeeId).filter((id): id is string => id !== null))],
     [activeShifts],
   )
   const affectedEmployeeIds = useMemo(
-    () => [...new Set(draftShifts.map((s) => s.employeeId).filter((id): id is string => id !== null))],
-    [draftShifts],
+    () => [...new Set(changedShifts.map((s) => s.employeeId).filter((id): id is string => id !== null))],
+    [changedShifts],
   )
   const unchangedCount = Math.max(assignedEmployeeIds.length - affectedEmployeeIds.length, 0)
 
@@ -160,7 +165,7 @@ export function PublishModal({
               <div className="divide-y divide-line overflow-hidden rounded-card border border-line">
                 {affectedEmployeeIds.map((id) => {
                   const person = data.employeesById.get(id)
-                  const count = draftShifts.filter((s) => s.employeeId === id).length
+                  const count = changedShifts.filter((s) => s.employeeId === id).length
                   return (
                     <div key={id} className="flex items-center justify-between p-3">
                       <div className="flex items-center gap-3">
