@@ -54,6 +54,18 @@ export default defineConfig({
       // not precache anything in dev, so this does not risk serving stale
       // bundles during development.
       devOptions: { enabled: true, type: 'module' },
+      // Registration is done explicitly via `virtual:pwa-register` in
+      // src/main.tsx rather than the plugin's auto-injected <script>/HMR-round
+      // -trip flow. The auto-inject dev path (no `virtual:pwa-register` import
+      // in app code) round-trips through Vite's WebSocket HMR channel to learn
+      // devOptions.type before calling navigator.serviceWorker.register(),
+      // which is fragile against stale/prior registrations at the same scope
+      // and produced repeated "ServiceWorker script evaluation failed" dev
+      // console errors. Calling registerSW() ourselves uses workbox-window's
+      // Workbox wrapper directly, in both dev (devOptions.enabled routes it to
+      // the same real registration template used in production, targeting
+      // dev-sw.js) and production — one consistent, documented code path.
+      injectRegister: false,
     }),
   ],
   server: { port: 5173, host: true },
