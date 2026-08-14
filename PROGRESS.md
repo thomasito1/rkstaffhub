@@ -2,7 +2,9 @@
 
 **Current phase: Phase 2 — Trades + Time Clock + Tips** (spec §19)
 Phase 0 and Phase 1 complete and reviewed.
-Last updated: Aug 14, 2026 — trade eligibility engine + claim/accept/approve/decline.
+Last updated: Aug 14, 2026 — trade eligibility engine, claim/accept/approve/decline,
+and the FCM push + ZenZap stub infrastructure (server side; client registration
+and the Shift Pool UI are the next task).
 
 Phases are sequential. Do not build later-phase features early, even scaffolding.
 
@@ -15,10 +17,99 @@ Phases are sequential. Do not build later-phase features early, even scaffolding
 | Data model + rules (trades, punches, tipReports) | ✅ Done — `firestore.rules`, `src/types/models.ts`, 119 rules tests |
 | Trade eligibility engine | ✅ Done — `src/lib/scheduling/tradeEligibility.ts`, spec §7's four conditions, one shared implementation (see below) |
 | Direct trades, open pool, manager approvals | ✅ Done — `src/lib/db/trades.ts` (post/cancel, client writes) + `functions/src/tradeActions.ts` (claim/accept/approve/decline, Cloud Functions) |
-| Push + ZenZap webhook stub | ⬜ Not started |
+| Push send infrastructure (server) | ✅ Done — `functions/src/push.ts`; retrofitted onto `schedulePublish.ts` (see below) |
+| ZenZap webhook stub | ✅ Done — `functions/src/zenzap.ts`, log-only, called from the pool-drop trigger |
+| Pool-drop eligibility-filtered notifications | ✅ Done — `functions/src/tradeTriggers.ts`'s `onTradeCreated` |
+| Push client registration (tokens, service worker, permission UX) | ⬜ Not started |
+| Shift Pool UI (mockups 16/17) | ⬜ Not started |
 | Geofenced selfie clock in/out + offline queue | ⬜ Not started |
 | Tip report at clock-out | ⬜ Not started |
 | Shifts & Tips admin section | ⬜ Not started |
+
+**Push infrastructure — the whole vertical slice.** `Employee.pushTokens:
+PushToken[]` (`{ token, platform, updatedAt }`) is a new, already-self-editable
+field — firestore.rules' `employees/{id}` update rule is a FREEZE-list
+(`selfEditIsBenign()`), not an allow-list, so a field it doesn't name needs no
+rules change at all; confirmed, not touched this round. `PushCategory` is a
+closed union (`trade.pool-drop` / `trade.claimed` / `trade.approved` /
+`schedule.published` / `schedule.republished`) carried in every FCM payload's
+`data`, so Phase 6's notification-preferences screen can filter on data that
+already exists.
+
+**Notification strings live in `src/locales/{en,es}.json`'s new `push`
+section** — the SAME two files `npm run i18n:check` already diffs, so this
+needed zero changes to the checker (825 keys, parity holds). Functions reaches
+them via `functions/src/locales -> ../../src/locales`, a directory symlink —
+the same trick as `tradeEligibility.ts`, this time proven to also work for a
+whole directory, not just one file. One wrinkle the file-symlink didn't have:
+`import en from './locales/en.json'` needs `esModuleInterop`, which this
+package's `tsconfig.json` doesn't set; `import * as en from './locales/en.json'`
+(a namespace import) sidesteps that with no config change. Interpolation is a
+small hand-rolled `{{var}}` replace (`push.ts`) — Functions has no
+react-i18next runtime. A person's name isn't translated (plain string param);
+a role name is (`ShiftRole.name`/`nameEs`) — passed as `{ en, es }` and
+resolved per recipient's own `Employee.language`. Dates/times in notification
+bodies are deliberately NOT per-recipient-language — a fixed `en-US`-numerals
+format (`formatShiftDateLabel`/`formatShiftTime`, `tradeHelpers.ts`) reads
+fine bilingually, and localizing it would cost a second timezone-aware pass
+per recipient for marginal benefit. Flagged here in case that reads as an
+oversight later — it isn't.
+
+**`sendPush()` never throws** (matches `writeAudit`'s contract): reports which
+employeeIds it couldn't reach (no token on file, or every token failed), and
+prunes any token FCM reports as `registration-token-not-registered`.
+`markPushPending()` mirrors `markAuditPending()` — flags the record the push
+was ABOUT (`Schedule.pushPending*` / `Trade.pushPending*`, both new fields) so
+a gap is durably surfaced, never silently dropped. `ScheduleBuilderPage` grew
+a second banner alongside its existing `auditPending` one — same visual
+treatment, distinct copy (a missed push isn't a compliance gap).
+
+**Category → call site, and why some transitions send nothing.** Only
+`trade.claimed` (claimTrade) and `trade.approved` (approveTrade) are wired
+among the four trade callables — `acceptTrade`/`declineTrade` have no
+assigned `PushCategory` and deliberately send nothing; spec doesn't call for
+a push at either of those moments. Pool drops fire from a NEW Firestore
+trigger, `onTradeCreated` (`tradeTriggers.ts`), not a callable — posting a
+trade is a plain client write (`src/lib/db/trades.ts`), so there is no
+request-path callable to hang the eligibility fan-out off of. The trigger
+reuses the exact same `evaluateEligibility()` every other trade transition
+calls (factored into `functions/src/tradeHelpers.ts` alongside the other
+Firestore glue, so that plumbing isn't duplicated either, even though it
+isn't the eligibility ALGORITHM the "one implementation" ruling was about) —
+"eligible" for a pool-drop notification means the full spec §7 check, not
+merely the coarser same-department visibility `mayReadTrade` grants for
+browsing the pool. The ACTOR of a transition is never pushed about their own
+action (`excludingActor()`, `tradeActions.ts`), even when they're technically
+part of the computed `notifyEmployeeIds` set returned to the client.
+
+**`approveTrade`'s and `schedulePublish`'s per-recipient sends.** Two of the
+five notification bodies need content that differs BY RECIPIENT, which
+`sendPush()`'s batch call (one shared `params` object) can't express:
+`trade.approved`'s "{{approverName}} approved your trade with {{otherName}}"
+needs `otherName` flipped depending which side of the trade is reading it, and
+`schedule.published`'s "You work {{shiftCount}} shifts this week" needs each
+person's own count. Both send one `sendPush()` call per recipient instead of
+one batch call for the whole notify set — `schedule.republished`'s copy has no
+such per-recipient content and stays a single batch call.
+
+**ZenZap is called from exactly one place: the pool-drop trigger.** Spec §7's
+own text names the webhook stub for that specific moment ("A drops shift →
+... webhook stub notifyZenZap(payload)"), not every trade/schedule event.
+`ZenZapPayload` (the documented integration contract for Tom) types
+`eventType` as the full `PushCategory` union so the same stub can be reused
+for other events later without a contract change, but nothing else currently
+calls it — deliberate, not a gap. `deepLink` uses the existing `/shift-pool`
+placeholder route (`src/App.tsx`), which the next task's Shift Pool UI will
+fill in.
+
+**Verified**: `npm run build`, 138 unit tests, i18n parity (825 keys),
+`functions/tsc --noEmit` and a clean `functions/tsc` build (confirms the
+`locales` directory symlink resolves and its JSON lands in `functions/lib/locales/`).
+firestore.rules was NOT touched this round — the rules-emulator suite (119
+tests) was re-run after the trades-slice commit and holds unchanged; no new
+rules-relevant behavior was introduced (pushTokens is already self-editable,
+pushPending fields are server-only writes via the admin SDK, which bypasses
+rules by design).
 
 **Shared eligibility module, and the build-boundary question it resolved.**
 `scheduleOverride.ts` (Phase 1) duplicated `effectiveSkillFor` rather than

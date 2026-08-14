@@ -115,9 +115,37 @@ export interface Employee {
   schedulingNotes?: string | null
 
   locationId?: string | null
+  /** FCM registration tokens — see PushToken. Self-editable (rules' selfEditIsBenign). */
+  pushTokens?: PushToken[]
   createdAt?: unknown
   updatedAt?: unknown
 }
+
+export type PushPlatform = 'web' | 'ios' | 'android'
+
+/**
+ * One FCM registration. `updatedAt` is refreshed on every app-foreground
+ * re-registration so a stale token from a device the employee stopped using
+ * ages out even before FCM itself reports it dead.
+ */
+export interface PushToken {
+  token: string
+  platform: PushPlatform
+  updatedAt: unknown
+}
+
+/**
+ * Every push/ZenZap event category — carried in the FCM payload's `data`
+ * field (not just the title/body) so Phase 6's notification-preferences
+ * screen can filter by category using data that already exists, rather than
+ * needing a second pass to add it later.
+ */
+export type PushCategory =
+  | 'trade.pool-drop'
+  | 'trade.claimed'
+  | 'trade.approved'
+  | 'schedule.published'
+  | 'schedule.republished'
 
 // ── shiftRoles/{roleId} ──────────────────────────────────────────────────────
 
@@ -383,6 +411,17 @@ export interface Schedule {
   auditPending?: boolean
   auditPendingAction?: AuditAction
   auditPendingAt?: unknown
+  /**
+   * Set when `sendPush` (functions/src/push.ts) could not reach one or more
+   * of the intended recipients after a publish/republish — same "never
+   * silently dropped" guarantee as auditPending, surfaced by the same
+   * banner. The publish itself already committed; this only means some
+   * employees may not have been notified and it needs a human's attention.
+   */
+  pushPending?: boolean
+  pushPendingCategory?: PushCategory
+  pushPendingEmployeeIds?: string[]
+  pushPendingAt?: unknown
   createdAt?: unknown
   updatedAt?: unknown
 }
@@ -555,6 +594,11 @@ export interface Trade {
    */
   expiresAt?: unknown
   locationId?: string | null
+  /** See the matching note on `Schedule.pushPending`. */
+  pushPending?: boolean
+  pushPendingCategory?: PushCategory
+  pushPendingEmployeeIds?: string[]
+  pushPendingAt?: unknown
   createdAt?: unknown
   updatedAt?: unknown
 }

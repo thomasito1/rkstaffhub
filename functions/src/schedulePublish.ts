@@ -29,6 +29,15 @@
  *   3. The state change itself (steps within step 1's transaction) IS atomic:
  *      every draft shift flips to live and the schedule doc flips status in
  *      one transaction, so nothing can observe a half-published week.
+ *
+ * PUSH RETROFIT (Rafa's ruling, Aug 14 2026): compute-and-return was the
+ * original scope; sending is now wired up (functions/src/push.ts) the same
+ * way as the audit write — a THIRD best-effort step after it, never rolled
+ * back into the transaction. `schedule.published`'s copy needs each
+ * recipient's own shift COUNT for the week ("You work 5 shifts this week"),
+ * which varies per person, so a first publish sends one call per recipient;
+ * `schedule.republished`'s copy has no such per-recipient content, so a
+ * republish sends as a single shared-params batch.
  */
 
 import { FieldValue } from 'firebase-admin/firestore'
@@ -37,7 +46,22 @@ import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { COLLECTIONS, db } from './firebase'
 import { requirePermission } from './permissions'
 import { markAuditPending, writeAudit } from './audit'
+import { markPushPending, sendPush } from './push'
 import type { ScheduleDoc } from './model'
+
+function addDays(dateStr: string, days: number): string {
+  const d = new Date(`${dateStr}T12:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + days)
+  return d.toISOString().slice(0, 10)
+}
+
+function formatMonthDay(dateStr: string): string {
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    timeZone: 'America/New_York',
+  }).format(new Date(`${dateStr}T12:00:00Z`))
+}
 
 export interface RecordSchedulePublishRequest {
   weekId: string
@@ -108,6 +132,11 @@ export const recordSchedulePublish = onCall<RecordSchedulePublishRequest>(
       const dirtyLiveShiftIds: string[] = []
       const everyoneScheduled = new Set<string>()
       const affectedByThisCall = new Set<string>()
+      // Per-recipient shift count for `schedule.published`'s "you work N
+      // shifts this week" copy — counts every shift assigned to them this
+      // week, not just the ones this call flipped, matching what a first
+      // publish means to the person reading it.
+      const shiftCountByEmployee = new Map<string, number>()
 
       for (const doc of shiftsSnap.docs) {
         const data = doc.data() as {
@@ -115,7 +144,10 @@ export const recordSchedulePublish = onCall<RecordSchedulePublishRequest>(
           employeeId?: string | null
           dirtySincePublish?: boolean
         }
-        if (data.employeeId) everyoneScheduled.add(data.employeeId)
+        if (data.employeeId) {
+          everyoneScheduled.add(data.employeeId)
+          shiftCountByEmployee.set(data.employeeId, (shiftCountByEmployee.get(data.employeeId) ?? 0) + 1)
+        }
         if (data.status === 'draft') {
           draftShiftIds.push(doc.id)
           if (data.employeeId) affectedByThisCall.add(data.employeeId)
@@ -162,6 +194,8 @@ export const recordSchedulePublish = onCall<RecordSchedulePublishRequest>(
         publishedShiftIds: [...draftShiftIds, ...dirtyLiveShiftIds],
         notifyEmployeeIds,
         previousStatus,
+        mode,
+        shiftCountByEmployee,
       }
     })
 
@@ -180,6 +214,39 @@ export const recordSchedulePublish = onCall<RecordSchedulePublishRequest>(
       },
     })
     if (!audited) await markAuditPending(scheduleRef, 'schedule.publish')
+
+    if (result.notifyEmployeeIds.length > 0) {
+      const weekRange = `${formatMonthDay(weekId)} – ${formatMonthDay(addDays(weekId, 6))}`
+      const failedAll: string[] = []
+
+      if (result.mode === 'publish') {
+        await Promise.all(
+          result.notifyEmployeeIds.map(async (employeeId) => {
+            const { failed } = await sendPush({
+              employeeIds: [employeeId],
+              category: 'schedule.published',
+              params: { weekRange, shiftCount: result.shiftCountByEmployee.get(employeeId) ?? 0 },
+            })
+            failedAll.push(...failed)
+          }),
+        )
+      } else {
+        const { failed } = await sendPush({
+          employeeIds: result.notifyEmployeeIds,
+          category: 'schedule.republished',
+          params: { weekRange },
+        })
+        failedAll.push(...failed)
+      }
+
+      if (failedAll.length > 0) {
+        await markPushPending(
+          scheduleRef,
+          result.mode === 'publish' ? 'schedule.published' : 'schedule.republished',
+          failedAll,
+        )
+      }
+    }
 
     return {
       weekId: result.weekId,

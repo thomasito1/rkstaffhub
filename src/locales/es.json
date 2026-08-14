@@ -872,6 +872,10 @@
     "auditPending": {
       "banner_one": "El registro de auditoría de 1 cambio reciente no se pudo guardar todavía. El cambio en sí se guardó — esto solo afecta al historial de auditoría. Contacta a soporte si esto no se resuelve por sí solo.",
       "banner_other": "El registro de auditoría de {{count}} cambios recientes no se pudo guardar todavía. Los cambios en sí se guardaron — esto solo afecta al historial de auditoría. Contacta a soporte si esto no se resuelve por sí solo."
+    },
+    "pushPending": {
+      "banner_one": "1 empleado/a no pudo ser notificado/a sobre este horario. El horario en sí se guardó — solo puede que no haya visto la notificación.",
+      "banner_other": "{{count}} empleados/as no pudieron ser notificados/as sobre este horario. El horario en sí se guardó — solo puede que no hayan visto la notificación."
     }
   },
   "more": {
@@ -1044,6 +1048,32 @@
     "stats": {
       "onNow": "En turno ahora",
       "scheduled": "Programados hoy"
+    }
+  },
+  "push": {
+    "trade": {
+      "poolDrop": {
+        "title": "Turno disponible",
+        "body": "{{posterName}} soltó un turno de {{roleName}} el {{dateLabel}} ({{startTime}}–{{endTime}})."
+      },
+      "claimed": {
+        "title": "Solicitudes de cambio",
+        "body": "{{claimantName}} reclamó el turno de {{roleName}} de {{posterName}} el {{dateLabel}}."
+      },
+      "approved": {
+        "title": "Cambio aprobado",
+        "body": "{{approverName}} aprobó tu cambio con {{otherName}} para el {{dateLabel}}."
+      }
+    },
+    "schedule": {
+      "published": {
+        "title": "Horario publicado",
+        "body": "Tus turnos para {{weekRange}} ya están listos. Trabajas {{shiftCount}} turnos esta semana."
+      },
+      "republished": {
+        "title": "Horario actualizado",
+        "body": "Tu horario para {{weekRange}} fue actualizado."
+      }
     }
   }
 }

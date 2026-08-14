@@ -125,6 +125,11 @@ function ScheduleBuilderScreen(): JSX.Element {
   const auditPendingCount =
     (data.schedule?.auditPending ? 1 : 0) + data.shifts.filter((s) => s.auditPending).length
 
+  // Same "never silently dropped" guarantee, for a publish/republish push
+  // send that couldn't reach everyone (functions/src/push.ts) rather than an
+  // audit write — its own banner since it's not a compliance gap.
+  const pushPendingCount = data.schedule?.pushPendingEmployeeIds?.length ?? 0
+
   const modalCanEdit = modal?.shift ? canEditExisting : canCreate
 
   return (
@@ -210,6 +215,18 @@ function ScheduleBuilderScreen(): JSX.Element {
           </svg>
           <p className="text-chip font-medium text-danger">
             {t('scheduleBuilder.auditPending.banner', { count: auditPendingCount })}
+          </p>
+        </div>
+      ) : null}
+
+      {pushPendingCount > 0 && canPublish ? (
+        <div className="flex shrink-0 items-center gap-2 border-b border-line bg-warning-tint px-8 py-2">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="h-4 w-4 shrink-0 text-warning" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 8v4M12 15.8h.01" />
+          </svg>
+          <p className="text-chip font-medium text-warning">
+            {t('scheduleBuilder.pushPending.banner', { count: pushPendingCount })}
           </p>
         </div>
       ) : null}

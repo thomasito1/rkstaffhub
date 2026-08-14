@@ -872,6 +872,10 @@
     "auditPending": {
       "banner_one": "The compliance record for 1 recent change couldn't be saved yet. The change itself was saved — this only affects the audit log. Contact support if this doesn't resolve on its own.",
       "banner_other": "The compliance record for {{count}} recent changes couldn't be saved yet. The changes themselves were saved — this only affects the audit log. Contact support if this doesn't resolve on its own."
+    },
+    "pushPending": {
+      "banner_one": "1 employee couldn't be notified about this schedule. The schedule itself was saved — they just may not have seen a push notification about it.",
+      "banner_other": "{{count}} employees couldn't be notified about this schedule. The schedule itself was saved — they just may not have seen a push notification about it."
     }
   },
   "more": {
@@ -1044,6 +1048,32 @@
     "stats": {
       "onNow": "On now",
       "scheduled": "Scheduled today"
+    }
+  },
+  "push": {
+    "trade": {
+      "poolDrop": {
+        "title": "Shift up for grabs",
+        "body": "{{posterName}} dropped a {{dateLabel}} {{roleName}} shift ({{startTime}}–{{endTime}})."
+      },
+      "claimed": {
+        "title": "Trade requests",
+        "body": "{{claimantName}} claimed {{posterName}}'s {{dateLabel}} {{roleName}} shift."
+      },
+      "approved": {
+        "title": "Trade approved",
+        "body": "{{approverName}} approved your trade with {{otherName}} for {{dateLabel}}."
+      }
+    },
+    "schedule": {
+      "published": {
+        "title": "Schedule published",
+        "body": "Your shifts for {{weekRange}} are ready. You work {{shiftCount}} shifts this week."
+      },
+      "republished": {
+        "title": "Schedule updated",
+        "body": "Your schedule for {{weekRange}} was updated."
+      }
     }
   }
 }

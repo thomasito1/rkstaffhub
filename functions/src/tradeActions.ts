@@ -8,9 +8,10 @@
  * duplicate — `checkTradeEligibility()` (and `effectiveSkillFor`, the
  * department check) live in the one shared, Firebase-free module at
  * `../../src/lib/scheduling/tradeEligibility.ts`, reached here through the
- * symlink at `./tradeEligibility.ts`. Plain symlinks resolve cleanly under
- * this package's `rootDir: "src"` — no build config changes were needed to
- * make this the single implementation.
+ * symlink at `./tradeEligibility.ts`. The Firestore glue around it (doc
+ * shapes, refs, gathering eligibility context) lives in `./tradeHelpers.ts`,
+ * shared with `tradeTriggers.ts`'s pool-drop notification trigger so that
+ * plumbing isn't duplicated either.
  *
  * AUDIT: spec §17 requires an auditLog entry for "trade overrides" only — a
  * normal, eligible claim/accept/approve/decline is not itself audited, unlike
@@ -18,154 +19,46 @@
  * overrides an ineligible candidate (`trade.override`, mirroring
  * `schedule.override`'s shape).
  *
- * NOTIFICATIONS: each callable computes and returns the directly-affected
- * employee ids (the same "compute now, send later" split
- * `recordSchedulePublish` established) — actually sending anything (FCM,
- * the ZenZap webhook stub) is the next Phase 2 task, not this one. Fanning a
- * pool drop out to every eligible employee also belongs there; these
- * `notifyEmployeeIds` lists are deliberately narrow — the poster and the
- * other named party to this specific transition, nothing broader.
- *
- * ShiftLike (from the shared module) has no weekId field — a schedule week is
- * this package's own concern, not the pure eligibility engine's — so weekId is
- * threaded through as a plain parameter rather than smuggled onto that type.
+ * PUSH: only the transitions with an assigned PushCategory send anything —
+ * `claimTrade` (`trade.claimed`) and `approveTrade` (`trade.approved`).
+ * `acceptTrade`/`declineTrade` have no category and send nothing. ZenZap is
+ * NOT called here — spec §7 names the webhook stub for the pool-drop moment
+ * specifically (`tradeTriggers.ts`), not every transition. A failed push is
+ * best-effort: it never blocks or rolls back the transition that already
+ * committed, and marks `pushPending` on the trade so the gap surfaces
+ * (`markPushPending`, ./push.ts) rather than vanishing. The ACTOR of a
+ * transition is never pushed about their own action, even if they'd
+ * otherwise be in the notify set.
  */
 
 import { FieldValue } from 'firebase-admin/firestore'
-import { HttpsError, onCall, type FunctionsErrorCode } from 'firebase-functions/v2/https'
+import { HttpsError, onCall } from 'firebase-functions/v2/https'
 
-import { COLLECTIONS, db } from './firebase'
+import { db } from './firebase'
 import { hasPermission, loadRoleDefaults, requirePermission } from './permissions'
 import { markAuditPending, writeAudit } from './audit'
-import type { EmployeeDoc, ShiftDoc, ShiftRoleDoc, TimeOffDoc, TradeDoc } from './model'
+import { markPushPending, sendPush } from './push'
+import type { ShiftDoc, TradeDoc } from './model'
+import { tradeIneligibilityCode } from './tradeEligibility'
 import {
-  checkTradeEligibility,
-  tradeIneligibilityCode,
-  type ConflictContext,
-  type EmployeeLike,
-  type ShiftLike,
-  type TimeOffLike,
-  type TradeErrorCode,
-} from './tradeEligibility'
+  assertShiftUnchanged,
+  evaluateEligibility,
+  fetchDisplayName,
+  fetchRoleName,
+  formatShiftDateLabel,
+  loadTradeAndShift,
+  shiftRef,
+  throwTradeError,
+  tradeRef,
+} from './tradeHelpers'
 
-function throwTradeError(httpsCode: FunctionsErrorCode, tradeCode: TradeErrorCode, message: string): never {
-  throw new HttpsError(httpsCode, message, { code: tradeCode })
+function dedupe(ids: (string | null | undefined)[]): string[] {
+  return Array.from(new Set(ids.filter((id): id is string => Boolean(id))))
 }
 
-function shiftsCollection(weekId: string) {
-  return db.collection(COLLECTIONS.schedules).doc(weekId).collection('shifts')
-}
-
-function shiftRef(weekId: string, shiftId: string) {
-  return shiftsCollection(weekId).doc(shiftId)
-}
-
-function tradeRef(tradeId: string) {
-  return db.collection(COLLECTIONS.trades).doc(tradeId)
-}
-
-function toShiftLike(shiftId: string, shift: ShiftDoc): ShiftLike {
-  return {
-    id: shiftId,
-    date: shift.date ?? '',
-    startTime: shift.startTime ?? '',
-    endTime: shift.endTime ?? '',
-    roleId: shift.roleId ?? '',
-    requiredSkillLevel: (shift.requiredSkillLevel ?? 1) as 1 | 2 | 3,
-    employeeId: shift.employeeId ?? null,
-    department: shift.department,
-  }
-}
-
-function toEmployeeLike(id: string, employee: EmployeeDoc): EmployeeLike {
-  return {
-    id,
-    status: employee.status ?? 'inactive',
-    department: employee.department,
-    shiftRoles: (employee.shiftRoles ?? []).map((r) => ({
-      roleId: r.roleId,
-      skillLevel: r.skillLevel as 1 | 2 | 3,
-    })),
-  }
-}
-
-/**
- * Re-fetches the shift a client's write must never be trusted for, and
- * re-verifies it still matches what the trade was posted against: exists,
- * still assigned to the trade's `fromEmployeeId`, not cancelled. Used both
- * before eligibility is evaluated and again inside the write transaction —
- * the second check is the one that actually guards the write.
- */
-function assertShiftUnchanged(shift: ShiftDoc | undefined, fromEmployeeId: string | null): asserts shift {
-  if (!shift || (shift.employeeId ?? null) !== fromEmployeeId || shift.status === 'cancelled') {
-    throwTradeError(
-      'failed-precondition',
-      'trade/shift-changed',
-      'This shift changed since it was posted — refresh and try again.',
-    )
-  }
-}
-
-async function loadTradeAndShift(
-  tradeId: string,
-): Promise<{ trade: TradeDoc; weekId: string; shift: ShiftLike }> {
-  const snap = await tradeRef(tradeId).get()
-  if (!snap.exists) {
-    throwTradeError('not-found', 'trade/shift-changed', 'That trade no longer exists.')
-  }
-  const trade = snap.data() as TradeDoc
-  if (!trade.weekId || !trade.shiftId) {
-    throwTradeError('failed-precondition', 'trade/shift-changed', 'This trade is missing its shift reference.')
-  }
-
-  const shiftSnap = await shiftRef(trade.weekId, trade.shiftId).get()
-  const shiftData = shiftSnap.exists ? (shiftSnap.data() as ShiftDoc) : undefined
-  assertShiftUnchanged(shiftData, trade.fromEmployeeId ?? null)
-
-  return { trade, weekId: trade.weekId, shift: toShiftLike(trade.shiftId, shiftData) }
-}
-
-/**
- * Gathers everything `checkTradeEligibility()` needs for `employeeId` against
- * `shift`, and runs it. Reads happen OUTSIDE any transaction (matching
- * `scheduleOverride.ts`'s shape) — role catalogs, time off and other-shifts
- * don't change mid-request the way the shift/trade's own status can, so only
- * that narrower state gets re-verified inside the write transaction.
- */
-async function evaluateEligibility(
-  employeeId: string,
-  weekId: string,
-  shift: ShiftLike,
-): Promise<ReturnType<typeof checkTradeEligibility>> {
-  const [employeeSnap, roleRolesSnap, timeOffSnap, otherShiftsSnap] = await Promise.all([
-    db.collection(COLLECTIONS.employees).doc(employeeId).get(),
-    db.collection(COLLECTIONS.shiftRoles).get(),
-    db.collection(COLLECTIONS.timeOff).where('employeeId', '==', employeeId).get(),
-    shiftsCollection(weekId).where('employeeId', '==', employeeId).get(),
-  ])
-
-  if (!employeeSnap.exists) {
-    throwTradeError('not-found', 'trade/shift-changed', 'That employee no longer exists.')
-  }
-  const employee = toEmployeeLike(employeeId, employeeSnap.data() as EmployeeDoc)
-
-  const canCoverRoleIds: Record<string, string[]> = {}
-  for (const doc of roleRolesSnap.docs) {
-    const data = doc.data() as ShiftRoleDoc
-    canCoverRoleIds[doc.id] = data.canCoverRoleIds ?? []
-  }
-
-  const timeOff: TimeOffLike[] = timeOffSnap.docs.map((doc) => {
-    const data = doc.data() as TimeOffDoc
-    return { startDate: data.startDate ?? '', endDate: data.endDate ?? '', status: data.status ?? '' }
-  })
-
-  const otherShifts: ShiftLike[] = otherShiftsSnap.docs
-    .filter((doc) => doc.id !== shift.id)
-    .map((doc) => toShiftLike(doc.id, doc.data() as ShiftDoc))
-
-  const context: ConflictContext = { employee, timeOff, otherShifts, canCoverRoleIds }
-  return checkTradeEligibility(shift, context)
+/** The push audience is always a subset of the notify audience: never push to the actor about their own action. */
+function excludingActor(ids: string[], actorId: string): string[] {
+  return ids.filter((id) => id !== actorId)
 }
 
 // ── claimTrade ───────────────────────────────────────────────────────────────
@@ -227,9 +120,21 @@ export const claimTrade = onCall<ClaimTradeRequest>(
       })
     })
 
-    const notifyEmployeeIds = Array.from(
-      new Set([trade.postedBy, trade.fromEmployeeId ?? undefined].filter((id): id is string => Boolean(id))),
-    )
+    const notifyEmployeeIds = dedupe([trade.postedBy, trade.fromEmployeeId])
+    const pushTargets = excludingActor(notifyEmployeeIds, actor.id)
+    if (pushTargets.length > 0) {
+      const [claimantName, posterName, roleName] = await Promise.all([
+        fetchDisplayName(actor.id),
+        fetchDisplayName(trade.fromEmployeeId ?? trade.postedBy),
+        fetchRoleName(shift.roleId),
+      ])
+      const { failed } = await sendPush({
+        employeeIds: pushTargets,
+        category: 'trade.claimed',
+        params: { claimantName, posterName, roleName, dateLabel: formatShiftDateLabel(shift.date) },
+      })
+      if (failed.length > 0) await markPushPending(tradeRef(tradeId), 'trade.claimed', failed)
+    }
 
     return { tradeId, status: 'claimed', claimedBy: actor.id, notifyEmployeeIds }
   },
@@ -292,9 +197,9 @@ export const acceptTrade = onCall<AcceptTradeRequest>(
       tx.update(tradeRef(tradeId), { status: 'pending-approval', updatedAt: FieldValue.serverTimestamp() })
     })
 
-    const notifyEmployeeIds = Array.from(
-      new Set([trade.postedBy, trade.fromEmployeeId ?? undefined].filter((id): id is string => Boolean(id))),
-    )
+    // No PushCategory is assigned to acceptance (src/types/models.ts) —
+    // deliberately silent; the next signal a party gets is the approval.
+    const notifyEmployeeIds = dedupe([trade.postedBy, trade.fromEmployeeId])
 
     return { tradeId, status: 'pending-approval', notifyEmployeeIds }
   },
@@ -377,10 +282,7 @@ export const approveTrade = onCall<ApproveTradeRequest>(
       if (!freshTrade.exists || (freshTrade.data() as TradeDoc).status !== expectedStatus) {
         throwTradeError('failed-precondition', 'trade/not-pending', 'This trade is not awaiting approval.')
       }
-      assertShiftUnchanged(
-        freshShift.exists ? (freshShift.data() as ShiftDoc) : undefined,
-        previousEmployeeId,
-      )
+      assertShiftUnchanged(freshShift.exists ? (freshShift.data() as ShiftDoc) : undefined, previousEmployeeId)
       tx.update(shiftRef(weekId, shift.id as string), {
         employeeId: assigneeId,
         dirtySincePublish: true,
@@ -410,13 +312,34 @@ export const approveTrade = onCall<ApproveTradeRequest>(
       if (!audited) await markAuditPending(tradeRef(tradeId), 'trade.override')
     }
 
-    const notifyEmployeeIds = Array.from(
-      new Set(
-        [assigneeId, trade.fromEmployeeId ?? undefined, trade.postedBy].filter(
-          (id): id is string => Boolean(id),
-        ),
-      ),
-    )
+    const notifyEmployeeIds = dedupe([assigneeId, trade.fromEmployeeId, trade.postedBy])
+
+    // "{{approverName}} approved your trade with {{otherName}} for
+    // {{dateLabel}}." — otherName differs per recipient (each side of the
+    // trade sees the OTHER party's name), so this sends per-recipient rather
+    // than as one shared-params batch.
+    const pushTargets = excludingActor(notifyEmployeeIds, actor.id)
+    if (pushTargets.length > 0) {
+      const [approverName, assigneeName, fromName, dateLabel] = await Promise.all([
+        fetchDisplayName(actor.id),
+        fetchDisplayName(assigneeId),
+        fetchDisplayName(trade.fromEmployeeId ?? trade.postedBy),
+        Promise.resolve(formatShiftDateLabel(shift.date)),
+      ])
+      const failedAll: string[] = []
+      await Promise.all(
+        pushTargets.map(async (employeeId) => {
+          const otherName = employeeId === assigneeId ? fromName : assigneeName
+          const { failed } = await sendPush({
+            employeeIds: [employeeId],
+            category: 'trade.approved',
+            params: { approverName, otherName, dateLabel },
+          })
+          failedAll.push(...failed)
+        }),
+      )
+      if (failedAll.length > 0) await markPushPending(tradeRef(tradeId), 'trade.approved', failedAll)
+    }
 
     return { tradeId, status: 'approved', assigneeId, overridden, notifyEmployeeIds }
   },
@@ -480,9 +403,8 @@ export const declineTrade = onCall<DeclineTradeRequest>(
       })
     })
 
-    const notifyEmployeeIds = Array.from(
-      new Set([trade.postedBy, declinedParty ?? undefined].filter((id): id is string => Boolean(id))),
-    )
+    // No PushCategory is assigned to a decline either — deliberately silent.
+    const notifyEmployeeIds = dedupe([trade.postedBy, declinedParty])
 
     return { tradeId, status: nextStatus, notifyEmployeeIds }
   },

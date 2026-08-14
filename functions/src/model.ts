@@ -37,6 +37,22 @@ export type EmployeeStatus = 'active' | 'pending' | 'inactive' | 'archived'
 
 export type Department = 'FOH' | 'BOH' | 'Admin'
 
+export type PushPlatform = 'web' | 'ios' | 'android'
+
+/** Mirrors PushToken (src/types/models.ts). */
+export interface PushTokenDoc {
+  token: string
+  platform: PushPlatform
+}
+
+/** Mirrors PushCategory (src/types/models.ts) — keep both in sync. */
+export type PushCategory =
+  | 'trade.pool-drop'
+  | 'trade.claimed'
+  | 'trade.approved'
+  | 'schedule.published'
+  | 'schedule.republished'
+
 /** Only the fields the server reads. The employee document has many more. */
 export interface EmployeeDoc {
   firstName?: string
@@ -46,8 +62,10 @@ export interface EmployeeDoc {
   accessRole?: AccessRole
   status?: EmployeeStatus
   department?: Department
+  language?: 'en' | 'es'
   authUids?: string[]
   shiftRoles?: { roleId: string; skillLevel: number; isPrimary?: boolean }[]
+  pushTokens?: PushTokenDoc[]
 }
 
 /** Only the fields the publish callable needs. */
@@ -55,9 +73,11 @@ export interface ScheduleDoc {
   status?: string
 }
 
-/** Only the fields the override callable needs. */
+/** Only the fields the override/trade callables need. */
 export interface ShiftRoleDoc {
   canCoverRoleIds?: string[]
+  name?: string
+  nameEs?: string
 }
 
 /** Only the fields the override/trade callables need. */
@@ -87,6 +107,7 @@ export interface TradeDoc {
   status?: TradeStatus
   approvedBy?: string | null
   department?: Department
+  eligibilitySnapshot?: { roleId: string; requiredSkillLevel: number }
 }
 
 /** Only the fields the trade action callables need. */
