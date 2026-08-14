@@ -230,10 +230,16 @@ describe('auditLog is append-only from the server', () => {
 describe('later-phase collections are denied by default', () => {
   it('denies reads of collections no phase has enabled yet', async () => {
     // schedules/availability/shiftTemplates/timeOff moved OUT of this list when
-    // Phase 1 scheduling rules landed — see scheduling.rules.test.ts.
+    // Phase 1 scheduling rules landed (scheduling.rules.test.ts); punches/
+    // trades/tipReports moved out when Phase 2 landed
+    // (punchesTipsTrades.rules.test.ts) — even an owner reading a NONEXISTENT
+    // doc there now gets a real rule verdict (allowed, since owners bypass
+    // department scoping) rather than the old blanket deny, so those three no
+    // longer belong in this list.
     const owner = ctx('uid-emp-owner', 'emp-owner', 'owner')
-    await assertFails(getDoc(doc(owner, 'punches/punch-1')))
-    await assertFails(getDoc(doc(owner, 'trades/trade-1')))
-    await assertFails(getDoc(doc(owner, 'tipReports/tip-1')))
+    await assertFails(getDoc(doc(owner, 'tasks/task-1')))
+    await assertFails(getDoc(doc(owner, 'taskInstances/instance-1')))
+    await assertFails(getDoc(doc(owner, 'policies/policy-1')))
+    await assertFails(getDoc(doc(owner, 'disciplinaryActions/action-1')))
   })
 })

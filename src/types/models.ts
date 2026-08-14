@@ -490,3 +490,142 @@ export interface TimeOffRequest {
   createdAt?: unknown
   updatedAt?: unknown
 }
+
+// ── trades/{tradeId} ─────────────────────────────────────────────────────────
+
+export type TradeType = 'direct' | 'pool'
+
+/**
+ * Two statuses cover "awaiting manager approval" — `claimed` for a pool drop
+ * (someone claimed it) and `pending-approval` for a direct offer (the
+ * recipient accepted it) — kept distinct because the two flows differ in what
+ * happens next (the CLAIMANT is fixed for a direct accept; a declined pool
+ * claim reopens for anyone else to claim, a declined direct offer does not).
+ */
+export type TradeStatus =
+  | 'open'
+  | 'claimed'
+  | 'pending-approval'
+  | 'approved'
+  | 'declined'
+  | 'cancelled'
+
+/** Recomputed independently at claim/accept/approval time — never trusted from a stale snapshot (same reason ShiftModal recomputes eligibility live, spec §7). This is display/audit context only. */
+export interface TradeEligibilitySnapshot {
+  roleId: string
+  requiredSkillLevel: SkillLevel
+}
+
+export interface Trade {
+  id: string
+  type: TradeType
+  shiftId: string
+  weekId: string
+  /**
+   * Whose shift this was. `null` when a manager posts an already-OPEN shift
+   * to the pool (mockup 16's "Open shift · posted by Daphne Jalil" row) —
+   * there is no employee to attribute it to. `postedBy` always has someone.
+   */
+  fromEmployeeId: string | null
+  /** Who posted this trade — same as fromEmployeeId for a self-service drop/offer, the manager's id for a posted-open-shift pool drop. */
+  postedBy: string
+  /** Direct offers only. Set at creation, fixed for that offer's lifetime. */
+  toEmployeeId: string | null
+  /** Pool claims only. Who currently holds the claim awaiting approval. */
+  claimedBy: string | null
+  status: TradeStatus
+  approvedBy?: string | null
+  declineReason?: string | null
+  /**
+   * Denormalized from the shift so firestore.rules can scope trade
+   * approvals to the approver's own department (spec §4: "FOH managers
+   * approve FOH trades; BOH effectively has no trades") without a
+   * cross-document read in the rule itself.
+   */
+  department: Department
+  eligibilitySnapshot: TradeEligibilitySnapshot
+  message?: string | null
+  /**
+   * Direct offers only. Set to createdAt + 48h at creation (mockup 18c —
+   * no written spec text covers this, inferred from the mockup's own
+   * "expires in 48 hours" copy; there is no pending-prompt brief for 18a/b/c
+   * to cross-check it against). Purely advisory for display — nothing
+   * currently flips status on expiry; a still-`open` offer past this instant
+   * just reads as expired in the UI.
+   */
+  expiresAt?: unknown
+  locationId?: string | null
+  createdAt?: unknown
+  updatedAt?: unknown
+}
+
+// ── punches/{punchId} ────────────────────────────────────────────────────────
+
+export type PunchType = 'in' | 'out'
+
+export interface PunchGeo {
+  lat: number
+  lng: number
+  accuracy: number
+  insideFence: boolean
+}
+
+export interface PunchEditHistoryEntry {
+  by: string
+  at: unknown
+  oldTimestamp: unknown
+  newTimestamp: unknown
+  reason: string
+}
+
+export interface Punch {
+  id: string
+  employeeId: string
+  shiftId: string | null
+  type: PunchType
+  /** Server timestamp — never the device clock (spec §8). This is what pay and reporting read. */
+  timestamp: unknown
+  /** What the device's own clock said at submit time — kept for audit only, never trusted for pay. */
+  deviceTimestamp: unknown
+  /** Null for a manual punch (spec §8/§9 — a manager punch bypasses geofence + selfie by design). */
+  geo: PunchGeo | null
+  /** Null for a manual punch. */
+  selfieStoragePath: string | null
+  /** Set when a manager creates this punch on the employee's behalf (spec §8's manual-punch path), distinct from `editedBy` on a later edit. */
+  manualBy?: string | null
+  manualReason?: string | null
+  /** True once auto-flagged for a 14h+ still-open punch (spec §8) or manually flagged for review — surfaced in the admin Shifts & Tips list, never hidden. */
+  flagged?: boolean
+  flagReason?: string | null
+  editedBy?: string | null
+  editHistory: PunchEditHistoryEntry[]
+  locationId?: string | null
+  createdAt?: unknown
+  updatedAt?: unknown
+}
+
+// ── tipReports/{reportId} ────────────────────────────────────────────────────
+
+export interface TipReportEditHistoryEntry {
+  by: string
+  at: unknown
+  oldAmount: number
+  newAmount: number
+  reason: string
+}
+
+export interface TipReport {
+  id: string
+  employeeId: string
+  /** "YYYY-MM-DD" in restaurant local time. */
+  date: string
+  shiftId: string | null
+  /** Total tips, self-reported at clock-out. $0 is a valid, explicitly-confirmed value (spec §8) — never treated as "not yet reported". */
+  amount: number
+  reportedAt: unknown
+  editedBy?: string | null
+  editHistory: TipReportEditHistoryEntry[]
+  locationId?: string | null
+  createdAt?: unknown
+  updatedAt?: unknown
+}

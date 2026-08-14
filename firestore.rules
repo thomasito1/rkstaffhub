@@ -754,11 +754,180 @@ service cloud.firestore {
       allow create, update, delete: if false; // Cloud Function only.
     }
 
+    // ── punches (spec §8, §9, §17) ────────────────────────────────────────────
+    // EVERY write is Cloud-Function-only. The self-service clock-in/out path
+    // needs a server timestamp ("never trust the device clock", spec §8) and
+    // the manual-punch and edit paths need editHistory + an auditLog entry
+    // (§17) — both are exactly the "independently verified, not a client
+    // write with a promise to also log it later" shape recordScheduleOverride
+    // already established. So unlike trades (below), there is no client-
+    // writable slice here at all: create/update/delete are all `false`, and
+    // recordPunch/editPunch write through the Admin SDK, which bypasses this
+    // rule entirely.
+    //
+    // READ is the one thing worth a client rule. Spec §4 lists "punch
+    // editing" (not viewing) as the below-your-level-sensitive example, so
+    // viewing is department-scoped only; canAccessSensitive is reserved for
+    // the edit path itself (enforced inside editPunch, since all writes are
+    // false here anyway).
+
+    match /punches/{punchId} {
+      function subjectEmployeeId() {
+        return resource != null && 'employeeId' in resource.data
+          ? resource.data.employeeId
+          : '__nobody__';
+      }
+
+      allow read: if hasIdentity()
+                  && (isSelf(subjectEmployeeId())
+                      || (hasPerm('punches.viewAll') && scopedTo(subjectEmployeeId())));
+
+      allow create, update, delete: if false;
+    }
+
+    // ── tipReports (spec §8, §9, §17) ─────────────────────────────────────────
+    // Same shape as punches: every write is Cloud-Function-only (recordPunch
+    // creates the tip report in the SAME transaction as the clock-out punch,
+    // so "clock-out gates tips" — spec §8 — is a server-enforced atomicity,
+    // not a client sequencing convention a bypassed client could skip).
+    //
+    // Tips ARE explicitly named in spec §4's below-level example ("tips of
+    // others"), unlike punches, so viewing here also requires
+    // canAccessSensitive, not just department scope.
+
+    match /tipReports/{reportId} {
+      function subjectEmployeeId() {
+        return resource != null && 'employeeId' in resource.data
+          ? resource.data.employeeId
+          : '__nobody__';
+      }
+
+      allow read: if hasIdentity()
+                  && (isSelf(subjectEmployeeId())
+                      || (hasPerm('tips.viewAll') && canAccessSensitive(subjectEmployeeId())));
+
+      allow create, update, delete: if false;
+    }
+
+    // ── trades (spec §7, §17) ─────────────────────────────────────────────────
+    // Unlike punches/tipReports, POSTING a trade risks nothing irreversible —
+    // no shift reassignment happens until a manager approves — so create and
+    // "cancel my own still-open post" are ordinary client writes, gated here.
+    // Everything that risks putting someone under-qualified or double-booked
+    // on the floor (claim, accept, approve/decline) goes through a Cloud
+    // Function that independently recomputes spec §7's eligibility — the
+    // same reasoning recordScheduleOverride already established for the
+    // skill-floor block — so those transitions are NOT reachable from this
+    // rule at all; `allow update` below permits only the cancel shape.
+
+    match /trades/{tradeId} {
+
+      function shiftPath(weekId, shiftId) {
+        return /databases/$(database)/documents/schedules/$(safeId(weekId))/shifts/$(safeId(shiftId));
+      }
+
+      function referencedShift() {
+        return exists(shiftPath(request.resource.data.weekId, request.resource.data.shiftId))
+          ? get(shiftPath(request.resource.data.weekId, request.resource.data.shiftId)).data
+          : null;
+      }
+
+      // A trade posted by the shift's own owner, or a manager posting an
+      // already-open shift (fromEmployeeId null, postedBy the manager).
+      function selfPost() {
+        return request.resource.data.fromEmployeeId == myEmployeeId()
+          && request.resource.data.postedBy == myEmployeeId()
+          && effectivePerm('trades.request', myOverrides(), roleDefaults(), myRole());
+      }
+
+      function managerPost() {
+        return request.resource.data.fromEmployeeId == null
+          && request.resource.data.postedBy == myEmployeeId()
+          && effectivePerm('trades.manualAssign', myOverrides(), roleDefaults(), myRole());
+      }
+
+      // Department and eligibilitySnapshot must match the ACTUAL shift, not
+      // whatever the client typed — the shift doc is the authority both for
+      // approval-scoping (department) and for the display snapshot.
+      function matchesShift() {
+        let shift = referencedShift();
+        return shift != null
+          && request.resource.data.department == shift.department
+          && request.resource.data.eligibilitySnapshot.roleId == shift.roleId
+          && request.resource.data.eligibilitySnapshot.requiredSkillLevel == shift.requiredSkillLevel;
+      }
+
+      function freshPost() {
+        return request.resource.data.status == 'open'
+          && request.resource.data.claimedBy == null
+          && request.resource.data.approvedBy == null
+          && (request.resource.data.type == 'pool'
+              ? request.resource.data.toEmployeeId == null
+              : request.resource.data.toEmployeeId != null);
+      }
+
+      function mayCreate() {
+        return hasIdentity()
+          && (selfPost() || managerPost())
+          && matchesShift()
+          && freshPost();
+      }
+
+      // The only client-writable transition: the poster withdraws their own
+      // still-open post. Checked field-by-field, not via diff() — this file's
+      // employees rule found `diff().affectedKeys()` makes a genuine denial's
+      // reason unreadable; explicit equality says exactly which field failed.
+      function identityUnchanged() {
+        return request.resource.data.fromEmployeeId == resource.data.fromEmployeeId
+          && request.resource.data.postedBy == resource.data.postedBy
+          && request.resource.data.toEmployeeId == resource.data.toEmployeeId
+          && request.resource.data.claimedBy == resource.data.claimedBy
+          && request.resource.data.type == resource.data.type
+          && request.resource.data.shiftId == resource.data.shiftId
+          && request.resource.data.weekId == resource.data.weekId
+          && request.resource.data.department == resource.data.department
+          && request.resource.data.eligibilitySnapshot == resource.data.eligibilitySnapshot;
+      }
+
+      function isOwnCancel() {
+        return resource.data.status == 'open'
+          && request.resource.data.status == 'cancelled'
+          && resource.data.postedBy == myEmployeeId()
+          && identityUnchanged();
+      }
+
+      // Pool visibility is intentionally broader than true eligibility: the
+      // full spec §7 check (role coverage graph + skill + conflicts) is not
+      // cheaply expressible here, and a false-eligible READ leaks nothing
+      // sensitive — only that a shift in your own department is available.
+      // The real boundary is claimTrade's independently-recomputed check;
+      // this only has to stop a DIFFERENT department from seeing it.
+      function mayReadTrade() {
+        return hasIdentity()
+          && (resource.data.fromEmployeeId == myEmployeeId()
+              || resource.data.postedBy == myEmployeeId()
+              || resource.data.toEmployeeId == myEmployeeId()
+              || resource.data.claimedBy == myEmployeeId()
+              || hasPerm('trades.approve')
+              // Pool-only, and open only: a direct offer stays private to its
+              // two named parties until (if ever) it needs a manager, and an
+              // already-claimed/decided pool trade has nothing left for a
+              // browsing non-party to do with it.
+              || (resource.data.type == 'pool'
+                  && resource.data.status == 'open'
+                  && myDepartment() == resource.data.department));
+      }
+
+      allow read: if mayReadTrade();
+      allow create: if mayCreate();
+      allow update: if hasIdentity() && isOwnCancel();
+      allow delete: if false;
+    }
+
     // ── default deny ─────────────────────────────────────────────────────────
-    // Collections for later phases (punches, trades, tipReports, tasks,
-    // taskInstances, policies, signatures, disciplinaryActions,
-    // disciplinaryLadder, payPeriods) are intentionally absent and therefore
-    // denied. Each phase adds its own
+    // Collections for later phases (tasks, taskInstances, policies,
+    // signatures, disciplinaryActions, disciplinaryLadder, payPeriods) are
+    // intentionally absent and therefore denied. Each phase adds its own
     // match block together with its rules tests. Do not add a permissive
     // catch-all here.
 
