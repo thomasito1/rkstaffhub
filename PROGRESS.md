@@ -2,11 +2,37 @@
 
 **Current phase: Phase 1 — Availability + Scheduling** (spec §19)
 Phase 0 complete and reviewed.
-Last updated: Aug 13, 2026 — Rafa's rulings applied (role colours, surnames,
-skill-coverage model, semimonthly pay period, Node 20 pin, compensation split
-approved).
+Last updated: Aug 14, 2026 — checkpoint fixes from Rafa's interactive review
+pass, plus staff schedule views, time off, and roles settings.
 
 Phases are sequential. Do not build later-phase features early, even scaffolding.
+
+---
+
+## Phase 1 status (spec §19's checklist)
+
+| Item | Status |
+| --- | --- |
+| Availability submission (recurring/temporary) | ✅ Done |
+| Requests + glance view | ✅ Done |
+| Deadlines & reminders | ✅ Done |
+| shiftRoles + role hierarchy settings | ✅ Done (Aug 14) — Settings → Roles & hierarchy, with cycle detection and a confirm-with-warning before a coverage removal strands a published shift |
+| shiftTemplates | ⚠️ **Data layer only** — `src/lib/db/shiftTemplates.ts` exists (seeded, 14 docs); no Settings UI to edit day-part headcount requirements, and the builder has no requirement-fulfillment (met/unmet) badge per shift-role band. Not part of Rafa's Aug 14 checkpoint ask; flagging as the one item on this checklist still unbuilt. |
+| Schedule builder (grid, conflicts engine, labor footer) | ✅ Done |
+| Publish/republish + notifications | ✅ Done (Aug 14) — republish now detects edits to already-published shifts, not just new draft ones; §17 audit write retries once and leaves a durable `auditPending` marker (surfaced on the builder) if it still fails |
+| Staff schedule views | ✅ Done (Aug 14) — `/schedule` splits by role: the builder, or the new My Schedule (week list + shift detail) for everyone else |
+| Time-off requests/calendar/blocked days | ✅ Done (Aug 14) — Settings → Time off (admin) + `/time-off` (staff self-service); "blocked days" reads as the existing approved-time-off-blocks-scheduling rule in the conflicts engine, already built |
+
+Also added, not on this checklist but spec §6's own text: Who's Working
+(`/schedule/whos-working`) — the day gantt, its own route rather than a tab
+on Home (Phase 6).
+
+**How to review Aug 14's work:** re-run `npm run seed` first — this session's
+interactive testing mutated seeded data (role coverage, a role created, a
+time-off approval, a shift assignment) that a fresh seed clears. Then sign in
+as Denise Lasarte (GM) for Settings → Roles & hierarchy and → Time off, and
+as any FOH/BOH staff member (e.g. Marisol Peña) for `/schedule` and
+`/schedule/whos-working`.
 
 ---
 
@@ -205,6 +231,23 @@ New during Phase 0. Ordered by when they block work:
 
 ## Known issues / cleanup backlog
 
+- **Deliberate scope cuts, Aug 14 checkpoint** — flagged for Rafa's awareness,
+  not treated as bugs:
+  - **Time off calendar** (Settings → Time off → Calendar) draws a day-cell
+    chip list, not mockup 36's date-spanning bars with lane assignment. The
+    lane-assignment algorithm is real layout work this secondary view (the
+    Requests tab is where approve/decline happens) doesn't need to justify.
+  - **Who's Working** has no labor $/% stat tile. Computing it needs every
+    scheduled employee's hourly rate, which `private/compensation` denies to
+    anyone but that employee or a manager with `employees.editPay` (spec
+    §17) — showing it on a screen "visible to all staff" would mean
+    partial-and-wrong numbers for most viewers or a real compensation leak.
+  - **My Schedule's shift detail** drops mockup 14b's "Manager on duty" (a
+    BOH viewer's rules deny reading an FOH MOD's shift), "Clock in opens"
+    (Phase 2 time clock), and "Added by" (shifts carry no `createdBy` field).
+  - **Roles & hierarchy** reorders with up/down buttons, not mockup 32's
+    drag handle — no drag-and-drop library is in the stack, and
+    `reorderShiftRoles()` just needs an ordered id list either way.
 - **RESOLVED — the "dirty denials" were never a defect.** Firestore evaluates a
   write rule **twice**: once before it has fetched anything (every `get()` in the
   expression reports "evaluation error"), then again after fetching, cleanly.
