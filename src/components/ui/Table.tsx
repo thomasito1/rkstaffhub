@@ -74,7 +74,11 @@ export function TableRow({
       onClick={onClick}
       onKeyDown={interactive ? handleKeyDown : undefined}
       className={[
-        'flex h-14 items-center gap-4 border-b border-line px-4 last:border-b-0',
+        // min-h, not h: a row whose content wraps (e.g. a status cell with a
+        // pill plus two action buttons, in a narrower column than
+        // Availability's) grows instead of clipping. py-2 keeps unwrapped
+        // rows visually identical to the old fixed 56px.
+        'flex min-h-14 items-center gap-4 border-b border-line px-4 py-2 last:border-b-0',
         'transition-colors duration-hover hover:bg-hover',
         interactive ? 'cursor-pointer' : '',
         className,

@@ -43,6 +43,18 @@ export function MorePage(): JSX.Element {
         >
           {t('more.myProfile')}
         </Link>
+        <Link
+          to="/availability"
+          className="block px-4 py-3 text-meta font-medium text-ink transition-colors duration-hover hover:bg-hover"
+        >
+          {t('availability.title')}
+        </Link>
+        <Link
+          to="/time-off"
+          className="block px-4 py-3 text-meta font-medium text-ink transition-colors duration-hover hover:bg-hover"
+        >
+          {t('timeOff.my.title')}
+        </Link>
         <button
           type="button"
           onClick={() => void signOut()}

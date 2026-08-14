@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
 import { Button, EmptyState, Pill, useToast } from '@/components/ui'
@@ -253,11 +254,19 @@ export function MyAvailabilityPage(): JSX.Element {
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-4 pb-4">
-      <div>
-        <h1 className="text-title font-semibold tracking-tight text-ink">
-          {t('availability.my.title')}
-        </h1>
-        <p className="mt-0.5 text-meta text-ink-muted">{t('availability.my.subtitle')}</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-title font-semibold tracking-tight text-ink">
+            {t('availability.my.title')}
+          </h1>
+          <p className="mt-0.5 text-meta text-ink-muted">{t('availability.my.subtitle')}</p>
+        </div>
+        <Link
+          to="/time-off"
+          className="shrink-0 rounded-control border border-line px-3 py-1.5 text-chip font-medium text-ink-muted transition-colors duration-hover hover:text-ink"
+        >
+          {t('availability.my.requestTimeOff')}
+        </Link>
       </div>
 
       {/* Deadline banner — amber while the week is open, neutral once shut. */}
