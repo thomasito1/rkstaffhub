@@ -46,6 +46,13 @@ interface Candidate {
   skill: number
   direct: boolean
   conflicts: Conflict[]
+  /**
+   * "{{their own role}} · L{{level}}", or "No roles assigned" — shown when
+   * `skill` is 0 (they cannot cover THIS shift at all). Falling back to the
+   * shift's own role name there read as "Bartender · Not eligible" on a
+   * Prep Cook, which looks like a data error, not an eligibility rule.
+   */
+  ownRoleLabel: string
 }
 
 export function ShiftModal({
@@ -114,6 +121,12 @@ export function ShiftModal({
   const role = data.rolesById.get(roleId)
   const roleName = role ? (lang.startsWith('es') && role.nameEs ? role.nameEs : role.name) : roleId
 
+  function roleDisplayName(id: string): string {
+    const r = data.rolesById.get(id)
+    if (!r) return id
+    return lang.startsWith('es') && r.nameEs ? r.nameEs : r.name
+  }
+
   const draftShift: ShiftLike = useMemo(
     () => ({
       id: shift?.id,
@@ -136,11 +149,20 @@ export function ShiftModal({
           roleId,
           data.canCoverRoleIds,
         )
+        const primaryRole =
+          employee.shiftRoles.find((r) => r.isPrimary) ?? employee.shiftRoles[0]
+        const ownRoleLabel = primaryRole
+          ? t('scheduleBuilder.modal.eligibleSkill', {
+              role: roleDisplayName(primaryRole.roleId),
+              level: primaryRole.skillLevel,
+            })
+          : t('people.list.noRoles')
         return {
           employee,
           skill,
           direct: employee.shiftRoles.some((r) => r.roleId === roleId),
           conflicts: data.conflictsFor(draftShift, employee.id),
+          ownRoleLabel,
         }
       })
       .sort(
@@ -149,7 +171,8 @@ export function ShiftModal({
           a.employee.lastName.localeCompare(b.employee.lastName) ||
           a.employee.firstName.localeCompare(b.employee.firstName),
       )
-  }, [data, roleId, draftShift])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, roleId, draftShift, lang])
 
   const selected = selectedEmployeeId
     ? candidates.find((c) => c.employee.id === selectedEmployeeId)
@@ -502,7 +525,7 @@ function CandidateRow({
   onSelect: () => void
 }): JSX.Element {
   const { t } = useTranslation()
-  const { employee, skill, direct, conflicts } = candidate
+  const { employee, skill, direct, conflicts, ownRoleLabel } = candidate
 
   const blocks = conflicts.filter((c) => c.severity === 'block')
   const warns = conflicts.filter((c) => c.severity === 'warn')
@@ -513,7 +536,7 @@ function CandidateRow({
   const rowDisabled = disabled || Boolean(nonOverridable)
 
   const skillLabel =
-    skill > 0 ? t('scheduleBuilder.modal.eligibleSkill', { role: roleName, level: skill }) : roleName
+    skill > 0 ? t('scheduleBuilder.modal.eligibleSkill', { role: roleName, level: skill }) : ownRoleLabel
 
   let badgeTone: 'success' | 'warning' | 'danger' | 'muted' = 'success'
   let badgeText: string
