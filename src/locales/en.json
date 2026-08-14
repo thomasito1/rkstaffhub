@@ -1083,5 +1083,163 @@
         "shiftPool": "Get notified the moment a shift opens up in the pool."
       }
     }
+  },
+  "shiftPool": {
+    "title": "Shift pool",
+    "subtitle": "Open shifts, trades and drops",
+    "nav": {
+      "poolRequests": "Shift pool requests",
+      "upForGrabs": "Up for grabs",
+      "tradeRequests": "Trade requests",
+      "myTrades": "My trades"
+    },
+    "howItWorks": {
+      "title": "How it works",
+      "body": "Shifts dropped to the pool are visible to eligible employees only. A manager approves every claim."
+    },
+    "awaitingApproval": {
+      "title": "Awaiting your approval",
+      "claimLine": "{{claimant}} claimed {{poster}}'s shift",
+      "claimLineOpenShift": "{{claimant}} claimed the open shift",
+      "approve": "Approve",
+      "decline": "Decline"
+    },
+    "upForGrabs": {
+      "title": "Up for grabs",
+      "count_one": "{{count}} shift available",
+      "count_other": "{{count}} shifts available",
+      "postOpenShift": "Post open shift",
+      "offerMyShift": "Offer my shift",
+      "offeredBy": "Offered by",
+      "offeringTo": "Offering to",
+      "shift": "Shift",
+      "department": "Department",
+      "role": "Role",
+      "takeShift": "Take shift",
+      "emptyTitle": "Nothing up for grabs",
+      "emptyBody": "No open shifts in the pool right now. Check back later or post one.",
+      "eligibleRole": "Eligible {{role}}s",
+      "postedBy": "posted by {{name}}"
+    },
+    "filters": {
+      "searchPlaceholder": "Search by name or role"
+    },
+    "approvalQueue": {
+      "claimedBy": "Claimed by",
+      "offeredTo": "Offered to",
+      "review": "Review",
+      "shiftChanged": "Shift changed"
+    },
+    "poolRequests": {
+      "emptyTitle": "No pool claims waiting",
+      "emptyBody": "Claimed shifts awaiting your approval will show up here."
+    },
+    "tradeRequests": {
+      "emptyTitle": "No trade requests waiting",
+      "emptyBody": "Accepted direct offers awaiting your approval will show up here."
+    },
+    "myTrades": {
+      "shift": "Shift",
+      "withWhom": "With",
+      "status": "Status",
+      "accept": "Accept",
+      "cancel": "Cancel",
+      "eligibleCoworkers": "Eligible coworkers",
+      "emptyTitle": "No trades yet",
+      "emptyBody": "Shifts you offer, drop or claim will show up here."
+    },
+    "status": {
+      "open": "Open",
+      "claimed": "Claimed",
+      "pending-approval": "Pending approval",
+      "approved": "Approved",
+      "declined": "Declined",
+      "cancelled": "Cancelled",
+      "expired": "Expired"
+    },
+    "postShift": {
+      "managerTitle": "Post open shift to the pool",
+      "staffTitle": "Offer or drop a shift",
+      "pickShift": "Shift",
+      "selectPlaceholder": "Select a shift…",
+      "noOpenShifts": "No open shifts this week.",
+      "noOwnShifts": "You have no shifts scheduled this week.",
+      "howToOffer": "How do you want to offer it?",
+      "dropToPool": "Drop to pool",
+      "dropToPoolHelp": "Any eligible coworker can claim it. A manager approves the claim.",
+      "offerDirect": "Offer to someone",
+      "offerDirectHelp": "Only the person you choose can accept it. A manager approves the trade.",
+      "pickCoworker": "Offer to",
+      "noEligibleCoworkers": "No eligible coworkers for this shift.",
+      "post": "Post to pool",
+      "submit": "Send offer"
+    },
+    "approvalModal": {
+      "title": "Approve shift trade",
+      "requestedAt": "Requested {{date}} at {{time}}",
+      "from": "From",
+      "to": "To",
+      "givingUp": "Giving up",
+      "taking": "Taking",
+      "notEligible": "Not eligible",
+      "openShift": "Open shift",
+      "unknownEmployee": "Unknown employee",
+      "shift": "Shift",
+      "role": "Role",
+      "roleRequired": "{{role}} · L{{level}} required",
+      "station": "Station",
+      "noStation": "—",
+      "viewSchedules": "View both schedules",
+      "decline": "Decline",
+      "approve": "Approve trade",
+      "overrideAndAssign": "Override and assign",
+      "cannotOverride": "This trade can't be approved as-is, and its block isn't one a manager can override.",
+      "loadError": "Couldn't load this trade's shift. Try again.",
+      "checklist": {
+        "allPassed": "All eligibility checks passed",
+        "someFailed_one": "{{count}} eligibility check failed",
+        "someFailed_other": "{{count}} eligibility checks failed",
+        "roleCovered": "Role covered",
+        "roleCoveredOk": "{{name}} is a {{role}}",
+        "skillLevel": "Skill level",
+        "skillLevelOk": "L{{level}} meets the L{{required}} requirement",
+        "noConflict": "No schedule conflict",
+        "noConflictOk": "No conflicts on {{date}}",
+        "noOvertimeRisk": "No overtime risk",
+        "noOvertimeRiskOk": "Projected {{hours}} hrs this week",
+        "departmentStatus": "Department & status"
+      },
+      "override": {
+        "title": "Manual assign (override)",
+        "help": "Managers may override eligibility. A reason is required and the override is recorded in the audit log.",
+        "reason": "Reason",
+        "reasonPlaceholder": "Explain why this override is necessary"
+      }
+    },
+    "errors": {
+      "generic": "That didn't go through. Try again.",
+      "notOpen": "This shift is no longer open — someone may have already claimed or cancelled it.",
+      "notPending": "This trade isn't waiting on a decision anymore.",
+      "notPool": "This isn't a pool trade.",
+      "notDirect": "This isn't a direct offer.",
+      "shiftChanged": "The shift changed since this trade was posted. Review it again before deciding.",
+      "wrongRecipient": "This offer isn't addressed to you.",
+      "wrongApprover": "You can't approve trades outside your department.",
+      "overrideReasonRequired": "A reason is required to override eligibility.",
+      "ineligibleRole": "That employee doesn't hold this role, and no role they hold covers it.",
+      "ineligibleSkill": "That employee's skill level doesn't meet this shift's requirement.",
+      "ineligibleDepartment": "That employee is in a different department.",
+      "ineligibleTimeOff": "That employee has approved time off that day.",
+      "ineligibleDoubleBooked": "That employee is already scheduled that day.",
+      "inactiveEmployee": "That employee is no longer active."
+    },
+    "toast": {
+      "claimed": "Shift claimed. A manager will review it.",
+      "accepted": "Offer accepted. A manager will review it.",
+      "cancelled": "Trade cancelled.",
+      "posted": "Posted.",
+      "tradeApproved": "Trade approved.",
+      "tradeDeclined": "Trade declined."
+    }
   }
 }

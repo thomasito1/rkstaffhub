@@ -27,3 +27,4 @@ export * from './timeOff'
 // Phase 2 — trades (spec §7, §17). Claim/accept/approve/decline are Cloud
 // Functions, not this module — see src/lib/scheduling/trades.ts.
 export * from './trades'
+export * from './tradeApprovals'

@@ -1083,5 +1083,163 @@
         "shiftPool": "Recibe un aviso en cuanto haya un turno disponible en la bolsa."
       }
     }
+  },
+  "shiftPool": {
+    "title": "Bolsa de turnos",
+    "subtitle": "Turnos abiertos, cambios y turnos soltados",
+    "nav": {
+      "poolRequests": "Solicitudes de la bolsa",
+      "upForGrabs": "Disponibles",
+      "tradeRequests": "Solicitudes de cambio",
+      "myTrades": "Mis cambios"
+    },
+    "howItWorks": {
+      "title": "Cómo funciona",
+      "body": "Los turnos soltados a la bolsa solo son visibles para empleados elegibles. Un gerente aprueba cada reclamo."
+    },
+    "awaitingApproval": {
+      "title": "Esperando tu aprobación",
+      "claimLine": "{{claimant}} reclamó el turno de {{poster}}",
+      "claimLineOpenShift": "{{claimant}} reclamó el turno abierto",
+      "approve": "Aprobar",
+      "decline": "Rechazar"
+    },
+    "upForGrabs": {
+      "title": "Disponibles",
+      "count_one": "{{count}} turno disponible",
+      "count_other": "{{count}} turnos disponibles",
+      "postOpenShift": "Publicar turno abierto",
+      "offerMyShift": "Ofrecer mi turno",
+      "offeredBy": "Ofrecido por",
+      "offeringTo": "Ofrecido a",
+      "shift": "Turno",
+      "department": "Departamento",
+      "role": "Puesto",
+      "takeShift": "Tomar turno",
+      "emptyTitle": "No hay nada disponible",
+      "emptyBody": "No hay turnos abiertos en la bolsa por ahora. Vuelve más tarde o publica uno.",
+      "eligibleRole": "{{role}}s elegibles",
+      "postedBy": "publicado por {{name}}"
+    },
+    "filters": {
+      "searchPlaceholder": "Buscar por nombre o puesto"
+    },
+    "approvalQueue": {
+      "claimedBy": "Reclamado por",
+      "offeredTo": "Ofrecido a",
+      "review": "Revisar",
+      "shiftChanged": "El turno cambió"
+    },
+    "poolRequests": {
+      "emptyTitle": "No hay reclamos pendientes",
+      "emptyBody": "Los turnos reclamados que esperan tu aprobación aparecerán aquí."
+    },
+    "tradeRequests": {
+      "emptyTitle": "No hay solicitudes de cambio pendientes",
+      "emptyBody": "Las ofertas directas aceptadas que esperan tu aprobación aparecerán aquí."
+    },
+    "myTrades": {
+      "shift": "Turno",
+      "withWhom": "Con",
+      "status": "Estado",
+      "accept": "Aceptar",
+      "cancel": "Cancelar",
+      "eligibleCoworkers": "Compañeros elegibles",
+      "emptyTitle": "Aún no hay cambios",
+      "emptyBody": "Los turnos que ofrezcas, sueltes o reclames aparecerán aquí."
+    },
+    "status": {
+      "open": "Abierto",
+      "claimed": "Reclamado",
+      "pending-approval": "Pendiente de aprobación",
+      "approved": "Aprobado",
+      "declined": "Rechazado",
+      "cancelled": "Cancelado",
+      "expired": "Vencido"
+    },
+    "postShift": {
+      "managerTitle": "Publicar turno abierto en la bolsa",
+      "staffTitle": "Ofrecer o soltar un turno",
+      "pickShift": "Turno",
+      "selectPlaceholder": "Selecciona un turno…",
+      "noOpenShifts": "No hay turnos abiertos esta semana.",
+      "noOwnShifts": "No tienes turnos programados esta semana.",
+      "howToOffer": "¿Cómo quieres ofrecerlo?",
+      "dropToPool": "Soltar a la bolsa",
+      "dropToPoolHelp": "Cualquier compañero elegible puede reclamarlo. Un gerente aprueba el reclamo.",
+      "offerDirect": "Ofrecer a alguien",
+      "offerDirectHelp": "Solo la persona que elijas puede aceptarlo. Un gerente aprueba el cambio.",
+      "pickCoworker": "Ofrecer a",
+      "noEligibleCoworkers": "No hay compañeros elegibles para este turno.",
+      "post": "Publicar en la bolsa",
+      "submit": "Enviar oferta"
+    },
+    "approvalModal": {
+      "title": "Aprobar cambio de turno",
+      "requestedAt": "Solicitado el {{date}} a las {{time}}",
+      "from": "De",
+      "to": "Para",
+      "givingUp": "Cede el turno",
+      "taking": "Toma el turno",
+      "notEligible": "No elegible",
+      "openShift": "Turno abierto",
+      "unknownEmployee": "Empleado desconocido",
+      "shift": "Turno",
+      "role": "Puesto",
+      "roleRequired": "{{role}} · L{{level}} requerido",
+      "station": "Estación",
+      "noStation": "—",
+      "viewSchedules": "Ver ambos horarios",
+      "decline": "Rechazar",
+      "approve": "Aprobar cambio",
+      "overrideAndAssign": "Anular y asignar",
+      "cannotOverride": "Este cambio no se puede aprobar así, y su bloqueo no es uno que un gerente pueda anular.",
+      "loadError": "No se pudo cargar el turno de este cambio. Intenta de nuevo.",
+      "checklist": {
+        "allPassed": "Se cumplieron todos los requisitos de elegibilidad",
+        "someFailed_one": "{{count}} requisito de elegibilidad no se cumplió",
+        "someFailed_other": "{{count}} requisitos de elegibilidad no se cumplieron",
+        "roleCovered": "Puesto cubierto",
+        "roleCoveredOk": "{{name}} es {{role}}",
+        "skillLevel": "Nivel de habilidad",
+        "skillLevelOk": "L{{level}} cumple con el requisito L{{required}}",
+        "noConflict": "Sin conflicto de horario",
+        "noConflictOk": "Sin conflictos el {{date}}",
+        "noOvertimeRisk": "Sin riesgo de horas extra",
+        "noOvertimeRiskOk": "Proyecta {{hours}} hrs esta semana",
+        "departmentStatus": "Departamento y estado"
+      },
+      "override": {
+        "title": "Asignación manual (anulación)",
+        "help": "Los gerentes pueden anular la elegibilidad. Se requiere un motivo y la anulación queda registrada en el historial de auditoría.",
+        "reason": "Motivo",
+        "reasonPlaceholder": "Explica por qué es necesaria esta anulación"
+      }
+    },
+    "errors": {
+      "generic": "Eso no se pudo procesar. Intenta de nuevo.",
+      "notOpen": "Este turno ya no está abierto — puede que alguien ya lo haya reclamado o cancelado.",
+      "notPending": "Este cambio ya no está esperando una decisión.",
+      "notPool": "Este no es un cambio de bolsa.",
+      "notDirect": "Esta no es una oferta directa.",
+      "shiftChanged": "El turno cambió desde que se publicó este cambio. Revísalo de nuevo antes de decidir.",
+      "wrongRecipient": "Esta oferta no está dirigida a ti.",
+      "wrongApprover": "No puedes aprobar cambios fuera de tu departamento.",
+      "overrideReasonRequired": "Se requiere un motivo para anular la elegibilidad.",
+      "ineligibleRole": "Ese empleado no tiene este puesto, y ningún puesto que tenga lo cubre.",
+      "ineligibleSkill": "El nivel de habilidad de ese empleado no cumple con el requisito de este turno.",
+      "ineligibleDepartment": "Ese empleado está en otro departamento.",
+      "ineligibleTimeOff": "Ese empleado tiene tiempo libre aprobado ese día.",
+      "ineligibleDoubleBooked": "Ese empleado ya está programado ese día.",
+      "inactiveEmployee": "Ese empleado ya no está activo."
+    },
+    "toast": {
+      "claimed": "Turno reclamado. Un gerente lo revisará.",
+      "accepted": "Oferta aceptada. Un gerente la revisará.",
+      "cancelled": "Cambio cancelado.",
+      "posted": "Publicado.",
+      "tradeApproved": "Cambio aprobado.",
+      "tradeDeclined": "Cambio rechazado."
+    }
   }
 }
