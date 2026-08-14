@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui'
 import { sendPasswordReset } from '@/lib/auth/authActions'
 import { toAuthError } from '@/lib/auth/authErrors'
+import { isFirebaseError } from '@/lib/firebaseError'
 import {
   ArrowLeftIcon,
   AuthField,
@@ -52,7 +53,7 @@ export function ForgotPasswordPage() {
           // `user-not-found` maps to the vague credentials message; showing it
           // here would still confirm the address is unknown. Only genuine
           // failures (network, rate limit, malformed address) surface.
-          if (info.code === 'auth/user-not-found') setSent(true)
+          if (isFirebaseError(info, 'user-not-found')) setSent(true)
           else setError(t(info.messageKey))
         } finally {
           setPending(false)

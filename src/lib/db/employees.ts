@@ -39,6 +39,7 @@ import {
 import Papa from 'papaparse'
 
 import { COLLECTIONS, PRIVATE_DOCS, db } from '@/lib/firebase'
+import { isPermissionDenied } from '@/lib/db/errors'
 import type {
   AccessRole,
   Department,
@@ -138,15 +139,6 @@ function pruneUndefined<T extends Record<string, unknown>>(obj: T): Record<strin
   const out: Record<string, unknown> = {}
   for (const [k, v] of Object.entries(obj)) if (v !== undefined) out[k] = v
   return out
-}
-
-function isPermissionDenied(err: unknown): boolean {
-  return (
-    typeof err === 'object' &&
-    err !== null &&
-    'code' in err &&
-    (err as { code?: unknown }).code === 'permission-denied'
-  )
 }
 
 function toProfile(snap: DocumentSnapshot<DocumentData>): EmployeeProfile {

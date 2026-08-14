@@ -8,19 +8,13 @@
  * a bad index, a malformed query must never reach the UI wearing the "you don't
  * have access" costume, because the user would go ask a manager for a
  * permission they already have while the real fault goes unreported.
- *
- * db/employees.ts predates this file and carries its own private copy of the
- * predicate; it is left alone deliberately (this phase does not touch it).
  */
+
+import { isFirebaseError } from '@/lib/firebaseError'
 
 /** True only for Firestore's `permission-denied` code. */
 export function isPermissionDenied(err: unknown): boolean {
-  return (
-    typeof err === 'object' &&
-    err !== null &&
-    'code' in err &&
-    (err as { code?: unknown }).code === 'permission-denied'
-  )
+  return isFirebaseError(err, 'permission-denied')
 }
 
 /**

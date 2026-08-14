@@ -140,7 +140,7 @@ Follows dependency, not screen number:
 | `09-availability-requests-desktop-en.html` | desktop 1440 | Admin approval table |
 | `10-availability-glance-view-desktop-en.html` | desktop 1440 | Signature teal/red/amber grid |
 | `11-schedule-builder-desktop-en.html` | desktop 1440 | **Centerpiece** — role bands, conflicts, labor footer. ⚠️ **Superseded by the seed, see below** |
-| `12-shift-modal-desktop-en.html` | desktop 1440 | Required skill level, eligible employees |
+| `12-shift-modal-desktop-en.html` | desktop 1440 | Required skill level, eligible employees. ⚠️ **Superseded by data, see below** |
 | `13-schedule-ai-draft-desktop-en.html` | desktop 1440 | Review-required state, rationale panel |
 | `14-my-schedule-mobile-en.html` | mobile 390×844 | Week list + mini calendar |
 | `14b-shift-detail-sheet-mobile-en.html` | mobile 390×844 | Bottom sheet: Offer trade / Drop to pool |
@@ -179,7 +179,7 @@ Follows dependency, not screen number:
 
 ---
 
-## Superseded — mockup 11's numbers, not its visual grammar
+## Superseded — mockup 11's numbers and mockup 12's eligibility example, not their visual grammar
 
 `11-schedule-builder-desktop-en.html`'s drawn shift cards (~84 hrs at
 $11–13.50/hr) and its own labor footer ($2,544.00 / 141.5 hrs, a blended
@@ -197,6 +197,17 @@ person's own submitted availability (Micah, Saturday). See PROGRESS.md
 "Known issues" for the full reasoning. If a future pass "corrects" the builder
 back toward the mockup's card numbers, it will be reintroducing arithmetic that
 never worked.
+
+`12-shift-modal-desktop-en.html`'s eligible-employees list shows a Server as
+able to cover a Bartender shift. Role coverage is asymmetric by design (spec
+§7.1, confirmed in the Aug 13, 2026 rulings): Bartender's `canCoverRoleIds`
+includes Server, but Server's does not include Bartender. The mockup's example
+pairing was invented at design time without that constraint in view — it is
+wrong on behavior, not just stale on numbers. **Keep from the mockup:** the
+list layout — person, effective skill level, conflict state, sorted by skill.
+**Do not** use its specific eligible/ineligible example as a behavioral
+reference; the real `shiftRoles.canCoverRoleIds` data is the only source of
+truth for who can cover what.
 
 ## Not designed
 

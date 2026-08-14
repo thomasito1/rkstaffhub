@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 import { Avatar, Button, Modal, useToast } from '@/components/ui'
 import { formatDate } from '@/lib/format'
+import { isFirebaseError } from '@/lib/firebaseError'
 import {
   effectiveSkillFor,
   type Conflict,
@@ -217,15 +218,13 @@ export function ShiftModal({
       onClose()
     } catch (err) {
       if (err instanceof ScheduleOverrideRejected) {
-        // firebase/functions' FunctionsErrorCode is always "functions/<core>"
-        // (see @firebase/functions's functions-public.d.ts) — never the bare
-        // core string override.ts's own header comment names ("failed-
-        // precondition", "aborted"). Match on suffix so this keeps working
-        // regardless of exactly how that prefix is spelled.
+        // See src/lib/firebaseError.ts: FunctionsErrorCode arrives prefixed
+        // ('functions/failed-precondition'), so a bare `===` against the short
+        // name never fires. isFirebaseError() matches on the code's tail.
         setSubmitError(
-          err.code.endsWith('failed-precondition')
+          isFirebaseError(err, 'failed-precondition')
             ? t('scheduleBuilder.modal.override.errorPrecondition')
-            : err.code.endsWith('aborted')
+            : isFirebaseError(err, 'aborted')
               ? t('scheduleBuilder.modal.override.errorAborted')
               : t('scheduleBuilder.modal.override.errorGeneric'),
         )

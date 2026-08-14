@@ -241,6 +241,17 @@ New during Phase 0. Ordered by when they block work:
   moves (OT chip → Oli Fonseca 44.0 hrs; availability conflict → Micah's
   Saturday) and why each was necessary.
 
+- **RESOLVED — mockup `12-shift-modal-desktop-en.html`'s eligibility example is
+  superseded by data**, for the same underlying reason: role coverage is
+  asymmetric (spec §7.1) — Bartender's `canCoverRoleIds` includes Server, Server's
+  does not include Bartender — and the mockup shows a Server as eligible to
+  cover a Bartender shift, which is wrong on behavior, not merely stale on
+  numbers. **Keep from the mockup:** the eligible-employees list layout (person,
+  effective skill, conflict state, sorted by skill). **Do not** use its specific
+  example pairing as a behavioral reference — `shiftRoles.canCoverRoleIds` is
+  the only source of truth for who can cover what. See
+  DESIGN-HANDOFF.md's "Superseded" section for the full note.
+
 ### Not enforced in rules — deliberate, moves to the Phase 2 callable
 
 - **The Thursday 23:59 ET availability deadline.** Rules have no tz database, so
