@@ -104,6 +104,15 @@ export function LaborFooter({
 
   const targetFraction = laborTargetPct / 100
 
+  // Mockup 11's day pills round to a whole percent ("44%", not "44.4%"). The
+  // over/under color must compare at that same rounded precision — comparing
+  // raw fractions let a day whose ROUNDED number equals the rounded target
+  // (e.g. 42.4% vs a 42% target, both display "42%") still flag amber, which
+  // reads as a contradiction next to the number on screen.
+  function isOverTarget(pct: number): boolean {
+    return Math.round(pct * 100) > Math.round(targetFraction * 100)
+  }
+
   return (
     <footer
       className="grid h-[74px] shrink-0 border-t border-line bg-page"
@@ -122,10 +131,10 @@ export function LaborFooter({
             <span
               className={[
                 'rounded-full px-2 py-0.5 text-[10px] font-bold',
-                day.pct <= targetFraction ? 'bg-success-tint text-success' : 'bg-warning-tint text-warning',
+                isOverTarget(day.pct) ? 'bg-warning-tint text-warning' : 'bg-success-tint text-success',
               ].join(' ')}
             >
-              {formatPercent(day.pct, lang)}
+              {formatPercent(day.pct, lang, 0)}
             </span>
           ) : null}
           <span className="tabular text-chip text-ink-muted">

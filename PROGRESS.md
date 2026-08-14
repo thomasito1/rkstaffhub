@@ -241,6 +241,21 @@ New during Phase 0. Ordered by when they block work:
   moves (OT chip → Oli Fonseca 44.0 hrs; availability conflict → Micah's
   Saturday) and why each was necessary.
 
+- **NOTED — mockup 11's own week-total percent (`42.0%`) is an arithmetic
+  slip, not a rounding choice.** Found during Rafa's interactive review pass
+  (Aug 14, 2026): the mockup's footer reads "$2,544 · 42.0%" against
+  `$2,544 / 141.5 hrs`, but $2,544 divided by the mockup's own projected sales
+  total ($6,117) is 41.59% — displayed as **42%** once the builder's day pills
+  were rounded to whole percents (see the labor-% rounding fix below), never
+  42.0%. Two separate things were true here: the app was showing an extra,
+  un-mockup'd decimal (`44.4%` instead of `44%`), AND the mockup's own printed
+  week-total figure doesn't follow from its own numbers. Fixed the former by
+  rounding `LaborFooter`'s day pills (and the over/under color threshold,
+  compared at the same rounded precision) to whole percents; left the latter
+  as this note — the week-total strip still shows one decimal
+  (`formatPercent`'s default), matching the mockup's own precision choice
+  there, just with the correct underlying math.
+
 - **RESOLVED — mockup `12-shift-modal-desktop-en.html`'s eligibility example is
   superseded by data**, for the same underlying reason: role coverage is
   asymmetric (spec §7.1) — Bartender's `canCoverRoleIds` includes Server, Server's

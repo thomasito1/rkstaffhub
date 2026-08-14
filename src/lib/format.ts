@@ -21,11 +21,12 @@ export function formatHours(hours: number, lang?: string): string {
   }).format(hours)
 }
 
-export function formatPercent(fraction: number, lang?: string): string {
+/** `fractionDigits` defaults to 1 (e.g. "42.4%"); pass 0 for a whole-percent pill. */
+export function formatPercent(fraction: number, lang?: string, fractionDigits = 1): string {
   return new Intl.NumberFormat(intlLocale(lang), {
     style: 'percent',
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
   }).format(fraction)
 }
 
