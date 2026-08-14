@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { RequirePermission } from '@/components/guards/RouteGuards'
+import { PushPermissionPrompt } from '@/components/push/PushPermissionPrompt'
 import { useAuth } from '@/lib/auth/AuthProvider'
+import { usePushForegroundRefresh } from '@/lib/push/registerForPush'
 import type { Trade } from '@/types/models'
 
 import { ApprovalQueueTab } from './components/ApprovalQueueTab'
@@ -11,6 +13,11 @@ import { PostShiftModal } from './components/PostShiftModal'
 import { TradeApprovalModal } from './components/TradeApprovalModal'
 import { UpForGrabsTab } from './components/UpForGrabsTab'
 import { useShiftPoolData } from './useShiftPoolData'
+
+/** One prompt per device per employee — CLAUDE.md: in context, never at login, and never repeatedly. */
+function pushPromptedKey(employeeId: string): string {
+  return `rk-staffhub:push-prompted:${employeeId}`
+}
 
 /**
  * Shift Pool — mockups 16 (board) and 17a/17b (approval modal), spec §7.
@@ -58,6 +65,19 @@ function ShiftPoolScreen(): JSX.Element {
   const [tab, setTab] = useState<TabKey>('grabs')
   const [reviewTrade, setReviewTrade] = useState<Trade | null>(null)
   const [postMode, setPostMode] = useState<'manager' | 'staff' | null>(null)
+  const [pushPromptOpen, setPushPromptOpen] = useState(false)
+
+  usePushForegroundRefresh(employee?.id)
+
+  // In-context permission prompt (CLAUDE.md: never at login) — first visit
+  // to Shift Pool only, once per employee per device.
+  useEffect(() => {
+    if (!employee?.id) return
+    const key = pushPromptedKey(employee.id)
+    if (window.localStorage.getItem(key)) return
+    window.localStorage.setItem(key, '1')
+    setPushPromptOpen(true)
+  }, [employee?.id])
 
   const tabs: { key: TabKey; label: string; badge?: number; visible: boolean }[] = [
     { key: 'poolRequests', label: t('shiftPool.nav.poolRequests'), badge: data.poolClaims.length, visible: canApprove },
@@ -169,6 +189,14 @@ function ShiftPoolScreen(): JSX.Element {
           rolesById={data.rolesById}
           canCoverRoleIds={data.canCoverRoleIds}
           onPosted={() => void data.reload()}
+        />
+      ) : null}
+
+      {employee ? (
+        <PushPermissionPrompt
+          open={pushPromptOpen}
+          onClose={() => setPushPromptOpen(false)}
+          employeeId={employee.id}
         />
       ) : null}
     </div>

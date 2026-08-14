@@ -22,6 +22,7 @@ import { AvailabilityRequestsPage } from '@/pages/availability/AvailabilityReque
 import { GlanceViewPage } from '@/pages/availability/GlanceViewPage'
 import { ScheduleEntryPage } from '@/pages/schedule/ScheduleEntryPage'
 import { WhosWorkingPage } from '@/pages/schedule/WhosWorkingPage'
+import { ShiftPoolPage } from '@/pages/shiftPool/ShiftPoolPage'
 
 /**
  * Phase 0 routing.
@@ -79,10 +80,7 @@ export default function App() {
           element={<GlanceViewPage requestsPath="/availability/requests" />}
         />
         <Route path="time-off" element={<MyTimeOffPage />} />
-        <Route
-          path="shift-pool"
-          element={<PlaceholderPage titleKey="nav.shiftPool" phase={2} />}
-        />
+        <Route path="shift-pool" element={<ShiftPoolPage />} />
         <Route path="tasks" element={<PlaceholderPage titleKey="nav.tasks" phase={3} />} />
         <Route path="hr" element={<PlaceholderPage titleKey="nav.hr" phase={4} />} />
         <Route

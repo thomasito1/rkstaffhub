@@ -3,8 +3,9 @@
 **Current phase: Phase 2 — Trades + Time Clock + Tips** (spec §19)
 Phase 0 and Phase 1 complete and reviewed.
 Last updated: Aug 14, 2026 — trade eligibility engine, claim/accept/approve/decline,
-and the FCM push + ZenZap stub infrastructure (server side; client registration
-and the Shift Pool UI are the next task).
+the FCM push + ZenZap stub infrastructure (server AND client), and the Shift
+Pool UI (mockups 16/17). "Open pool + notifications + ZenZap stub" is
+complete; the clock flow is next.
 
 Phases are sequential. Do not build later-phase features early, even scaffolding.
 
@@ -20,8 +21,8 @@ Phases are sequential. Do not build later-phase features early, even scaffolding
 | Push send infrastructure (server) | ✅ Done — `functions/src/push.ts`; retrofitted onto `schedulePublish.ts` (see below) |
 | ZenZap webhook stub | ✅ Done — `functions/src/zenzap.ts`, log-only, called from the pool-drop trigger |
 | Pool-drop eligibility-filtered notifications | ✅ Done — `functions/src/tradeTriggers.ts`'s `onTradeCreated` |
-| Push client registration (tokens, service worker, permission UX) | ⬜ Not started |
-| Shift Pool UI (mockups 16/17) | ⬜ Not started |
+| Push client registration (tokens, service worker, permission UX) | ✅ Done — `src/lib/push/registerForPush.ts`, `src/sw.ts` (see below) |
+| Shift Pool UI (mockups 16/17) | ✅ Done — `src/pages/shiftPool/*`, wired at `/shift-pool` |
 | Geofenced selfie clock in/out + offline queue | ⬜ Not started |
 | Tip report at clock-out | ⬜ Not started |
 | Shifts & Tips admin section | ⬜ Not started |
@@ -110,6 +111,58 @@ tests) was re-run after the trades-slice commit and holds unchanged; no new
 rules-relevant behavior was introduced (pushTokens is already self-editable,
 pushPending fields are server-only writes via the admin SDK, which bypasses
 rules by design).
+
+**Client push registration.** `src/lib/push/registerForPush.ts`:
+`requestAndRegisterPush(employeeId)` (the Allow-button path — requests
+Notification permission, registers the SW, `getToken()`, merges into
+`employees/{id}.pushTokens` keyed by token so a rotated token on the same
+device replaces its predecessor rather than accumulating), plus
+`refreshPushTokenIfGranted()` (silent, never prompts) wired to
+`usePushForegroundRefresh()` so a token rotating mid-session doesn't go
+quietly stale. `PushPermissionPrompt` (`src/components/push/`) is the
+in-context ask — mounted (only) from `ShiftPoolPage`, auto-opening once per
+employee per device (a `localStorage` gate) on first Shift Pool visit, never
+from `AuthProvider`/login.
+
+**`generateSW` → `injectManifest`.** `vite-plugin-pwa`'s `generateSW` mode
+can't have custom service-worker code injected, and Firebase Messaging needs
+a background handler (`onBackgroundMessage`) inside the SAME service worker
+Workbox controls — two SWs can't both cleanly own the root scope. Switched to
+`injectManifest` with a hand-written `src/sw.ts` (Workbox precaching +
+`firebase/messaging/sw`'s modern ESM API, not the older `importScripts`
+approach) — the standard, documented fix for this exact vite-plugin-pwa +
+FCM combination, not a novel pattern. Verified via Playwright against both
+`npm run dev` and the production build that the SW reaches `activated`
+cleanly and the app shell still loads with no console errors.
+
+**Shift Pool UI** (`src/pages/shiftPool/*`, wired at `/shift-pool` in
+`src/App.tsx`, replacing the Phase-2 placeholder): "Up for grabs" (pool board,
+`listOpenTradesForDepartment`), a manager approval queue split into two tabs
+by trade status ("Shift pool requests" = pool claims awaiting sign-off,
+"Trade requests" = accepted direct offers awaiting sign-off — mockup 16 draws
+four nav items where spec §7's own text describes three; this is the reading
+that matches the mockup's own badge counts), "My trades", and the mockup
+17a/17b approval modal driven by a LIVE `checkTradeEligibility()` call (never
+the trade's stored, possibly-stale `eligibilitySnapshot`) with the
+manager-override path (`trades.manualAssign`-gated, required reason,
+`approveTrade({overrideReason})`). `src/lib/db/tradeApprovals.ts` is a new
+sibling to `trades.ts` (not an edit to it) exposing the one read the existing
+layer didn't have: every trade currently awaiting a manager's decision,
+regardless of which of the four employee-id fields the reviewing manager is
+(none of them — they're not a party to the trade they're reviewing).
+`isTradeExpired()` trades render as a non-actionable "Expired" pill rather
+than looking live. Verified end-to-end against seeded emulator data via
+Playwright: post → claim → approve (clean); a real under-qualified pending
+trade correctly failed the live checklist, the override panel produced a
+`trade.override` auditLog entry with reason and before/after state; claim
+rejection, direct offer + accept, and Spanish rendering all checked.
+
+**Open item for Rafa — `VITE_FIREBASE_VAPID_KEY`.** `.env.example` has this
+blank; it's a real Web Push certificate key from the Firebase console
+(Project Settings → Cloud Messaging → Web Push certificates) that can't be
+fabricated. Push registration works up through obtaining a token in this
+environment, but no token can be minted for a real deployment until this key
+is filled in. Added to the open-questions list below.
 
 **Shared eligibility module, and the build-boundary question it resolved.**
 `scheduleOverride.ts` (Phase 1) duplicated `effectiveSkillFor` rather than
@@ -367,6 +420,11 @@ New during Phase 0. Ordered by when they block work:
 
 6. **Geofence coordinates are a best-effort geocode** (25.9773, -80.3225) of the
    Miramar address. Confirm on-site alongside §21 item 1.
+6b. **`VITE_FIREBASE_VAPID_KEY` is blank in `.env.example`.** A real Web Push
+    certificate key from the Firebase console (Project Settings → Cloud
+    Messaging → Web Push certificates) — can't be fabricated, and push
+    notifications cannot be minted for a real deployment without it. Everything
+    up to obtaining a token is built and verified (`src/lib/push/registerForPush.ts`).
 
 **Before Phase 3 (payroll):**
 
