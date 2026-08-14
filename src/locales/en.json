@@ -1074,6 +1074,14 @@
         "title": "Schedule updated",
         "body": "Your schedule for {{weekRange}} was updated."
       }
+    },
+    "prompt": {
+      "title": "Turn on notifications?",
+      "allow": "Allow notifications",
+      "notNow": "Not now",
+      "reason": {
+        "shiftPool": "Get notified the moment a shift opens up in the pool."
+      }
     }
   }
 }

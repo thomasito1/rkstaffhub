@@ -1,0 +1,19 @@
+{
+  // Optional, standalone type-check for src/sw.ts only — NOT wired into any
+  // npm script (the "build" script's `tsc -b` uses tsconfig.json, which
+  // excludes this file; see the comment there for why). Run manually with:
+  //   npx tsc -p tsconfig.sw.json --noEmit
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "WebWorker"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "strict": true,
+    "types": []
+  },
+  "include": ["src/sw.ts"]
+}

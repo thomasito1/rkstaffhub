@@ -1074,6 +1074,14 @@
         "title": "Horario actualizado",
         "body": "Tu horario para {{weekRange}} fue actualizado."
       }
+    },
+    "prompt": {
+      "title": "¿Activar notificaciones?",
+      "allow": "Activar notificaciones",
+      "notNow": "Ahora no",
+      "reason": {
+        "shiftPool": "Recibe un aviso en cuanto haya un turno disponible en la bolsa."
+      }
     }
   }
 }

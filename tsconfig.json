@@ -25,5 +25,11 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "scripts", "tests"]
+  "include": ["src", "scripts", "tests"],
+  // src/sw.ts runs in ServiceWorkerGlobalScope, whose ambient types (self,
+  // clients, registration) conflict with the DOM lib the rest of "src" types
+  // against in this same program. Vite/esbuild transpiles it fine regardless
+  // (injectManifest strategy, see vite.config.ts) — see tsconfig.sw.json for
+  // an optional standalone type-check of just that file.
+  "exclude": ["src/sw.ts"]
 }

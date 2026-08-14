@@ -11,6 +11,20 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt',
+      // injectManifest (not the default generateSW) — this is the standard
+      // fix for vite-plugin-pwa + firebase-messaging: a background push
+      // handler (onBackgroundMessage) must be custom SW code, and generateSW
+      // does not let you inject any. src/sw.ts is our own source; it both
+      // precaches the app shell (same file set this used to list under a
+      // `workbox.globPatterns` block, now `injectManifest.globPatterns`
+      // below) and registers Firebase Messaging's background handler. See
+      // src/sw.ts's header for the full rationale.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+      },
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: "Rosalia's Kitchen Staff Hub",
@@ -34,14 +48,12 @@ export default defineConfig({
           },
         ],
       },
-      workbox: {
-        // App-shell caching. The punch offline queue (spec §15) is implemented
-        // in app code via IndexedDB, not here — Workbox only caches the shell.
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        navigateFallback: 'index.html',
-        cleanupOutdatedCaches: true,
-      },
-      devOptions: { enabled: false },
+      // `injectManifest`'s dev-mode SW (module type) so background push can
+      // actually be exercised against `npm run dev`, not just a production
+      // build. vite-plugin-pwa's dev SW here is a thin pass-through — it does
+      // not precache anything in dev, so this does not risk serving stale
+      // bundles during development.
+      devOptions: { enabled: true, type: 'module' },
     }),
   ],
   server: { port: 5173, host: true },

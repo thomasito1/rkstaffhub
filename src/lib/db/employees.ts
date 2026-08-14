@@ -49,6 +49,8 @@ import type {
   EmploymentType,
   Language,
   PermissionKey,
+  PushPlatform,
+  PushToken,
 } from '@/types/models'
 
 // ── shapes ───────────────────────────────────────────────────────────────────
@@ -427,6 +429,49 @@ export async function setEmployeeOverrides(
   permissionOverrides: Partial<Record<PermissionKey, boolean>>,
 ): Promise<void> {
   await updateDoc(adminDoc(id), { permissionOverrides, updatedAt: serverTimestamp() })
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Push registration (Phase 2 — client half of functions/src/push.ts)
+// ═════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Merges one FCM registration into `employees/{id}.pushTokens`. This is a
+ * plain client write straight to the public profile doc — NOT routed through
+ * updateEmployee()/the private-subdoc split, because pushTokens lives on the
+ * profile itself and is deliberately self-editable: the `employees/{employeeId}`
+ * rule's `selfEditIsBenign()` freeze list (firestore.rules) does not name it.
+ *
+ * Collision key is the token string itself — an identical token showing up
+ * again just refreshes `updatedAt` in place rather than duplicating. For the
+ * "same install, rotated token" case (FCM tokens are not stable forever),
+ * pass `replaceToken` with the token this device/browser had on file before
+ * (src/lib/push/registerForPush.ts keeps that in localStorage) — its entry is
+ * removed in the same write. Two genuinely different devices never collide,
+ * since neither knows the other's previous token.
+ */
+export async function registerPushToken(
+  employeeId: string,
+  entry: { token: string; platform: PushPlatform; replaceToken?: string | null },
+): Promise<void> {
+  const snap = await getDoc(employeeDoc(employeeId))
+  if (!snap.exists()) {
+    throw new Error(`registerPushToken: employee ${employeeId} not found`)
+  }
+
+  const existing = (snap.data().pushTokens as PushToken[] | undefined) ?? []
+  const superseded = new Set(
+    [entry.token, entry.replaceToken].filter((v): v is string => Boolean(v)),
+  )
+  const next: PushToken[] = [
+    ...existing.filter((t) => !superseded.has(t.token)),
+    { token: entry.token, platform: entry.platform, updatedAt: serverTimestamp() },
+  ]
+
+  await updateDoc(employeeDoc(employeeId), {
+    pushTokens: next,
+    updatedAt: serverTimestamp(),
+  })
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
