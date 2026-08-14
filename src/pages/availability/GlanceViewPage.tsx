@@ -400,7 +400,7 @@ function GlanceScreen({ requestsPath }: { requestsPath: string }): JSX.Element {
         <>
           <div className="overflow-hidden rounded-card border border-line bg-page">
             <div className="glance-scroll overflow-x-auto">
-              <table className="w-full min-w-[980px] border-collapse text-left">
+              <table className="w-full min-w-[980px] table-fixed border-collapse text-left">
                 <caption className="sr-only">
                   {t('availability.glance.tableCaption', { week: weekRangeLabel })}
                 </caption>
@@ -512,20 +512,9 @@ function DayCell({
     return (
       <td className="p-1 align-middle">
         <div className="flex h-[52px] items-center justify-center rounded-lg bg-danger-tint">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={1.75}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-5 w-5 text-danger"
-            aria-hidden="true"
-          >
-            <circle cx="12" cy="12" r="9" />
-            <path d="m15 9-6 6M9 9l6 6" />
-          </svg>
-          <span className="sr-only">{t('availability.dayStatus.unavailable')}</span>
+          <span className="text-meta font-semibold text-danger">
+            {t('availability.dayStatus.unavailable')}
+          </span>
         </div>
       </td>
     )
