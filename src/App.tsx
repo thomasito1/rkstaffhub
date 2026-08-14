@@ -4,6 +4,7 @@ import { AppShell } from '@/components/shell/AppShell'
 import { RequireAuth, RequirePermission } from '@/components/guards/RouteGuards'
 import { ComponentGallery } from '@/pages/dev/ComponentGallery'
 import { PlaceholderPage } from '@/pages/PlaceholderPage'
+import { MorePage } from '@/pages/MorePage'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { InviteAcceptPage } from '@/pages/auth/InviteAcceptPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
@@ -82,7 +83,7 @@ export default function App() {
           path="settings"
           element={<PlaceholderPage titleKey="nav.settings" phase={0} />}
         />
-        <Route path="more" element={<PlaceholderPage titleKey="nav.more" phase={0} />} />
+        <Route path="more" element={<MorePage />} />
 
         {/* People — Phase 0. The roster and any other person's profile need
             employees.view; your own profile never does. */}

@@ -860,5 +860,8 @@
       "showShifts_other": "Mostrar {{count}} turnos afectados",
       "hideShifts": "Ocultar turnos"
     }
+  },
+  "more": {
+    "myProfile": "Mi perfil"
   }
 }

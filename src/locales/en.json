@@ -860,5 +860,8 @@
       "showShifts_other": "Show {{count}} affected shifts",
       "hideShifts": "Hide shifts"
     }
+  },
+  "more": {
+    "myProfile": "My profile"
   }
 }

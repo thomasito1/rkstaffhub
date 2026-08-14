@@ -5,16 +5,15 @@ import { TopBar } from './TopBar'
 import type { NavBadges } from './navItems'
 
 /**
- * Phase 0 demo badges. Mockup 05 draws a dot on Shift Pool and a "3" on Tasks.
- * Real counts arrive with their features (trades Phase 2, tasks Phase 3).
+ * Phase 0 demo badge. Mockup 05 also draws a "3" count on Tasks, but Tasks
+ * has no real data source until Phase 3 (spec §19) — showing no badge is
+ * honest; showing a fixed "3" forever is not. Shift Pool's dot stays: Phase 2
+ * trades will replace it with a real unclaimed-shift signal, and a dot
+ * carries no specific (and therefore no false) number.
  */
 const DEMO_BADGES: NavBadges = {
   shiftPool: { dot: true },
-  tasks: { count: 3 },
 }
-
-/** Mockup 05 draws "4" on the bell. */
-const DEMO_UNREAD = 4
 
 export interface DesktopShellProps {
   children: ReactNode
@@ -29,7 +28,7 @@ export function DesktopShell({ children }: DesktopShellProps): JSX.Element {
     <div className="flex h-[100dvh] overflow-hidden bg-page">
       <IconRail badges={DEMO_BADGES} />
       <div className="flex min-w-0 flex-1 flex-col">
-        <TopBar unreadCount={DEMO_UNREAD} />
+        <TopBar />
         <main className="min-h-0 flex-1 overflow-y-auto bg-page p-8">{children}</main>
       </div>
     </div>

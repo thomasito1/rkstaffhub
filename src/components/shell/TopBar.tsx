@@ -1,7 +1,9 @@
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Avatar } from '@/components/ui/Avatar'
 import { setLanguage, type Language } from '@/i18n'
+import { useAuth } from '@/lib/auth/AuthProvider'
 
 import { BellIcon, SearchIcon } from './navItems'
 
@@ -49,27 +51,112 @@ function LanguageToggle(): JSX.Element {
 }
 
 export interface TopBarProps {
-  /** Unread notification count for the bell badge. */
+  /** Unread notification count for the bell badge. Real counts arrive with
+   * the notifications feature; until then this stays 0 rather than a demo
+   * number. */
   unreadCount?: number
-  /** Signed-in user. Wired to auth in a later phase; demo values for now. */
-  userFirstName?: string
-  userLastName?: string
-  /** Already-translated permission level label shown under the name. */
-  userRoleLabel?: string
+}
+
+/**
+ * Profile block + sign-out menu. The trigger is the avatar/name/role block
+ * from mockup 05; the menu itself has no mockup (none of the 49 screens show
+ * one) — kept intentionally minimal: one item, same interaction shape as
+ * `KebabMenu` (click-outside + Escape to close).
+ */
+function ProfileMenu({
+  firstName,
+  lastName,
+  roleLabel,
+  photoUrl,
+  onSignOut,
+}: {
+  firstName: string
+  lastName: string
+  roleLabel: string
+  photoUrl?: string | null
+  onSignOut: () => void
+}): JSX.Element {
+  const { t } = useTranslation()
+  const [open, setOpen] = useState(false)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function onPointerDown(e: MouseEvent) {
+      const target = e.target as Node
+      if (menuRef.current?.contains(target)) return
+      if (triggerRef.current?.contains(target)) return
+      setOpen(false)
+    }
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setOpen(false)
+        triggerRef.current?.focus()
+      }
+    }
+    document.addEventListener('mousedown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [open])
+
+  return (
+    <div className="relative border-l border-line pl-2">
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-3 rounded-control p-1 transition-colors duration-hover hover:bg-app"
+      >
+        <div className="flex flex-col items-end">
+          <span className="text-meta font-semibold text-ink">{firstName}</span>
+          <span className="text-micro tracking-normal text-ink-muted">{roleLabel}</span>
+        </div>
+        <Avatar firstName={firstName} lastName={lastName} photoUrl={photoUrl} size={32} />
+      </button>
+
+      {open ? (
+        <div
+          ref={menuRef}
+          role="menu"
+          aria-label={`${firstName} ${lastName}`}
+          className="absolute right-0 z-20 mt-1 min-w-[11rem] rounded-card border border-line bg-page py-1 shadow-elevated"
+        >
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false)
+              onSignOut()
+            }}
+            className="block w-full px-3 py-2 text-left text-meta text-ink transition-colors duration-hover hover:bg-hover"
+          >
+            {t('nav.signOut')}
+          </button>
+        </div>
+      ) : null}
+    </div>
+  )
 }
 
 /**
  * Desktop top bar — 60px, white, 1px bottom border.
  * Mockup: `.superdesign/export/05-dashboard-overview-desktop-en.html`.
  */
-export function TopBar({
-  unreadCount = 0,
-  userFirstName = 'Rafa',
-  userLastName = 'Owner',
-  userRoleLabel,
-}: TopBarProps): JSX.Element {
+export function TopBar({ unreadCount = 0 }: TopBarProps): JSX.Element {
   const { t } = useTranslation()
-  const roleLabel = userRoleLabel ?? t('roles.owner')
+  const { employee, signOut } = useAuth()
+  // RequireAuth only renders the shell once status === 'ready', which the
+  // AuthProvider state machine guarantees means `employee` is set — this
+  // fallback only satisfies the nullable type, it is not a reachable state.
+  const firstName = employee?.firstName ?? ''
+  const lastName = employee?.lastName ?? ''
+  const roleLabel = employee ? t(`roles.${employee.accessRole}`) : ''
 
   return (
     <header className="flex h-topbar shrink-0 items-center justify-between border-b border-line bg-page px-8">
@@ -122,14 +209,13 @@ export function TopBar({
           ) : null}
         </button>
 
-        {/* Profile block. Not a link yet — no profile route exists in Phase 0. */}
-        <div className="flex items-center gap-3 border-l border-line pl-2">
-          <div className="flex flex-col items-end">
-            <span className="text-meta font-semibold text-ink">{userFirstName}</span>
-            <span className="text-micro tracking-normal text-ink-muted">{roleLabel}</span>
-          </div>
-          <Avatar firstName={userFirstName} lastName={userLastName} size={32} />
-        </div>
+        <ProfileMenu
+          firstName={firstName}
+          lastName={lastName}
+          roleLabel={roleLabel}
+          photoUrl={employee?.photoUrl}
+          onSignOut={() => void signOut()}
+        />
       </div>
     </header>
   )
