@@ -1075,6 +1075,12 @@
         "body": "Tu horario para {{weekRange}} fue actualizado."
       }
     },
+    "punch": {
+      "forgotten": {
+        "title": "Marcaje abierto señalado",
+        "body": "La entrada de {{employeeName}} del {{dateLabel}} sigue abierta después de 14 horas."
+      }
+    },
     "prompt": {
       "title": "¿Activar notificaciones?",
       "allow": "Activar notificaciones",

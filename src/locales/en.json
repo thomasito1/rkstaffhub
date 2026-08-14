@@ -1075,6 +1075,12 @@
         "body": "Your schedule for {{weekRange}} was updated."
       }
     },
+    "punch": {
+      "forgotten": {
+        "title": "Open punch flagged",
+        "body": "{{employeeName}}'s clock-in from {{dateLabel}} is still open after 14 hours."
+      }
+    },
     "prompt": {
       "title": "Turn on notifications?",
       "allow": "Allow notifications",

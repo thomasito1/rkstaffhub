@@ -146,6 +146,7 @@ export type PushCategory =
   | 'trade.approved'
   | 'schedule.published'
   | 'schedule.republished'
+  | 'punch.forgotten'
 
 // ── shiftRoles/{roleId} ──────────────────────────────────────────────────────
 
@@ -641,6 +642,26 @@ export interface Punch {
   /** True once auto-flagged for a 14h+ still-open punch (spec §8) or manually flagged for review — surfaced in the admin Shifts & Tips list, never hidden. */
   flagged?: boolean
   flagReason?: string | null
+  /**
+   * Only meaningful on a `type: 'in'` punch — whether the matching clock-out
+   * has happened yet. `clockOut` flips this to 'closed' in the same
+   * transaction that creates the 'out' punch; the forgotten-clockout sweep
+   * (spec §8, 14h) queries on `status === 'open'` to find what to flag. An
+   * auto-flag NEVER closes this itself — see that function's own comment for
+   * why fabricating an out-time would be worse than an honest open flag.
+   */
+  status?: 'open' | 'closed'
+  /**
+   * True when this punch reached the server via the offline queue (spec §15)
+   * rather than a live tap — surfaced as its own flag in Shifts & Tips (§9),
+   * distinct from `flagged`, since a synced punch isn't a problem to
+   * investigate, just a fact worth showing. `deviceTimestamp` still reflects
+   * the ORIGINAL tap time (captured atomically then, per the offline queue's
+   * own contract); `timestamp` is still the server's receipt of the SYNC,
+   * not backdated to the tap — the gap between the two is exactly what this
+   * flag explains to whoever reviews it.
+   */
+  syncedFromOfflineQueue?: boolean
   editedBy?: string | null
   editHistory: PunchEditHistoryEntry[]
   locationId?: string | null

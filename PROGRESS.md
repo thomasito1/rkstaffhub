@@ -3,9 +3,10 @@
 **Current phase: Phase 2 — Trades + Time Clock + Tips** (spec §19)
 Phase 0 and Phase 1 complete and reviewed.
 Last updated: Aug 14, 2026 — trade eligibility engine, claim/accept/approve/decline,
-the FCM push + ZenZap stub infrastructure (server AND client), and the Shift
-Pool UI (mockups 16/17). "Open pool + notifications + ZenZap stub" is
-complete; the clock flow is next.
+the FCM push + ZenZap stub infrastructure (server AND client), the Shift
+Pool UI (mockups 16/17), and the time-clock server layer (geofence,
+selfie verification, offline queue, forgotten-clockout sweep) — the clock
+screens themselves (mockups 19–23) are the one piece still to land.
 
 Phases are sequential. Do not build later-phase features early, even scaffolding.
 
@@ -23,9 +24,61 @@ Phases are sequential. Do not build later-phase features early, even scaffolding
 | Pool-drop eligibility-filtered notifications | ✅ Done — `functions/src/tradeTriggers.ts`'s `onTradeCreated` |
 | Push client registration (tokens, service worker, permission UX) | ✅ Done — `src/lib/push/registerForPush.ts`, `src/sw.ts` (see below) |
 | Shift Pool UI (mockups 16/17) | ✅ Done — `src/pages/shiftPool/*`, wired at `/shift-pool` |
-| Geofenced selfie clock in/out + offline queue | ⬜ Not started |
-| Tip report at clock-out | ⬜ Not started |
+| Geofenced selfie clock in/out + offline queue | 🟡 Server + offline queue done (see below); the 5 clock screens (mockups 19–23) are next |
+| Tip report at clock-out | 🟡 Server-side tip gate done (`clockOut` requires it when `tipsRequired`); the numpad/confirm/zero-tip screens (mockup 22) land with the clock UI |
 | Shifts & Tips admin section | ⬜ Not started |
+
+**Time clock — server layer.** `src/lib/geofence.ts` (haversine, pure, symlinked
+into `functions/src/geofence.ts` the same way as `tradeEligibility.ts`) is
+honest about what it proves: it validates the CLAIMED position, not presence
+— the selfie is the actual anti-buddy-punching control (`verifySelfieUpload`,
+`functions/src/punchHelpers.ts`, confirms a just-uploaded real JPEG sits at
+the expected Storage path, checking size, `image/jpeg` content-type, and a
+5-minute upload-freshness window — a client can't point at an old selfie).
+`insideFence` is computed server-side and is canonical; a GPS `accuracy`
+worse than 200m is rejected outright as implausible before the distance
+check even runs. `clockIn`/`clockOut`/`manualPunch`
+(`functions/src/punchActions.ts`) return typed `punch/*` error codes via
+`HttpsError.details.code`, same convention as trades' `TradeErrorCode`
+(`src/lib/punchErrors.ts`, symlinked). `manualPunch` is `punches.edit` +
+below-level (`canAccessSensitive`), bypasses geofence/selfie by design,
+and writes an auditLog entry (`punch.edit`, now added to both `AuditAction`
+mirrors).
+
+**Forgotten-clockout sweep** (`functions/src/punchScheduled.ts`,
+`checkForgottenClockOuts`, hourly `onSchedule` — the first real cron in this
+app) flags a 14h+ still-open punch and notifies managers in the employee's
+department (`punch.forgotten`, the newest `PushCategory`) — it NEVER closes
+the punch or invents an out-time; that stays a deliberate human decision via
+a manual edit once Shifts & Tips admin exists. Needed a new composite index
+(`firestore.indexes.json`: `punches` on `type`+`status`+`flagged`+`timestamp`)
+since this is an equality-filters-plus-range query, unlike every other punch
+query in this codebase, which stays single-collection-equality-only and
+therefore index-free.
+
+**Offline queue** (`src/lib/offlineQueue/punchQueue.ts`, using `idb` — the
+first IndexedDB code in this app, and a new dependency). The contract: the
+selfie blob, geo, accuracy, device timestamp, and (for a tipped clock-out)
+the tip amount are all captured ATOMICALLY at the tap, before this module is
+ever involved — queuing only ever replays what was captured then, never
+re-captures anything at sync time. `timestamp` (the server field) is always
+the server's receipt at whatever moment the Function actually runs — for a
+queued item that's the SYNC, not the original tap — while `deviceTimestamp`
+still reflects the real tap time; `syncedFromOfflineQueue: true` marks the
+gap between them so it reads as an explained fact in Shifts & Tips admin, not
+a mystery. A rejection that means the state already resolved another way
+(already clocked in from another device, geofence settings changed) is
+TERMINAL — dropped from the queue rather than retried forever; a genuine
+connectivity failure stays queued.
+
+**Verified**: `npm run build`, 145 unit tests (+7 for `geofence.ts`), i18n
+parity (955 keys), `functions/tsc --noEmit` + a clean `functions/tsc` build,
+119 rules tests (firestore.rules itself untouched this round — no new
+client-writable surface; punches/tipReports were already Cloud-Function-only).
+The clock UI itself (camera capture, geolocation permission flow, the 5
+mockup screens, and wiring the offline queue's `online`-event sync trigger)
+has NOT been built or browser-verified yet — that's explicitly the next step,
+not assumed done by the server layer being solid.
 
 **Push infrastructure — the whole vertical slice.** `Employee.pushTokens:
 PushToken[]` (`{ token, platform, updatedAt }`) is a new, already-self-editable

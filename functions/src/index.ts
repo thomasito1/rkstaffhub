@@ -24,6 +24,12 @@
  *                                            shift and recomputes eligibility
  *                                            server-side rather than trusting
  *                                            the client's claimed state
+ *   clockIn/clockOut/manualPunch  §8 time clock — server-verified geofence +
+ *                                            selfie upload, server timestamp;
+ *                                            manualPunch bypasses both by
+ *                                            design (punches.edit, below-level)
+ *   checkForgottenClockOuts  scheduled · flags (never closes) a 14h+ open
+ *                                            punch and notifies managers
  *
  * Region is the default us-central1, matching `getFunctions(app)` in
  * `src/lib/firebase.ts` — the client passes no region, so changing it here
@@ -45,3 +51,5 @@ export { recordScheduleOverride } from './scheduleOverride'
 export { recordSchedulePublish } from './schedulePublish'
 export { claimTrade, acceptTrade, approveTrade, declineTrade } from './tradeActions'
 export { onTradeCreated } from './tradeTriggers'
+export { clockIn, clockOut, manualPunch } from './punchActions'
+export { checkForgottenClockOuts } from './punchScheduled'

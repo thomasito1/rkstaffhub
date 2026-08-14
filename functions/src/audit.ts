@@ -26,7 +26,12 @@ import { logger } from 'firebase-functions'
 import { COLLECTIONS, db } from './firebase'
 
 /** Subset of `AuditAction` (src/types/models.ts) this package emits. */
-export type AuditAction = 'permission.change' | 'schedule.override' | 'schedule.publish' | 'trade.override'
+export type AuditAction =
+  | 'permission.change'
+  | 'schedule.override'
+  | 'schedule.publish'
+  | 'trade.override'
+  | 'punch.edit'
 
 export interface AuditInput {
   action: AuditAction

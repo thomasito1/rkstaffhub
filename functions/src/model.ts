@@ -52,6 +52,7 @@ export type PushCategory =
   | 'trade.approved'
   | 'schedule.published'
   | 'schedule.republished'
+  | 'punch.forgotten'
 
 /** Only the fields the server reads. The employee document has many more. */
 export interface EmployeeDoc {
@@ -66,6 +67,8 @@ export interface EmployeeDoc {
   authUids?: string[]
   shiftRoles?: { roleId: string; skillLevel: number; isPrimary?: boolean }[]
   pushTokens?: PushTokenDoc[]
+  clockRequired?: boolean
+  tipsRequired?: boolean
 }
 
 /** Only the fields the publish callable needs. */
@@ -142,4 +145,36 @@ export function displayName(employee: EmployeeDoc): string {
   const first = (employee.preferredName || employee.firstName || '').trim()
   const last = (employee.lastName ?? '').trim()
   return [first, last].filter(Boolean).join(' ')
+}
+
+/** Only the fields the punch/tip callables need. */
+export interface AppSettingsDoc {
+  geofence?: { lat: number; lng: number; radiusMeters: number }
+}
+
+export type PunchType = 'in' | 'out'
+
+export interface PunchGeoDoc {
+  lat: number
+  lng: number
+  accuracy: number
+  insideFence: boolean
+}
+
+/** Mirrors Punch (src/types/models.ts). */
+export interface PunchDoc {
+  employeeId?: string
+  shiftId?: string | null
+  type?: PunchType
+  status?: 'open' | 'closed'
+  flagged?: boolean
+  flagReason?: string | null
+}
+
+/** Mirrors TipReport (src/types/models.ts). */
+export interface TipReportDoc {
+  employeeId?: string
+  date?: string
+  shiftId?: string | null
+  amount?: number
 }

@@ -43,6 +43,8 @@ function messageFor(locale: PushLocale, category: PushCategory): { title: string
       return locale.push.schedule.published
     case 'schedule.republished':
       return locale.push.schedule.republished
+    case 'punch.forgotten':
+      return locale.push.punch.forgotten
   }
 }
 
