@@ -35,6 +35,8 @@ export type RoleDefaults = Record<string, Partial<Record<PermissionKey, boolean>
 
 export type EmployeeStatus = 'active' | 'pending' | 'inactive' | 'archived'
 
+export type Department = 'FOH' | 'BOH' | 'Admin'
+
 /** Only the fields the server reads. The employee document has many more. */
 export interface EmployeeDoc {
   firstName?: string
@@ -43,6 +45,7 @@ export interface EmployeeDoc {
   email?: string
   accessRole?: AccessRole
   status?: EmployeeStatus
+  department?: Department
   authUids?: string[]
   shiftRoles?: { roleId: string; skillLevel: number; isPrimary?: boolean }[]
 }
@@ -57,11 +60,39 @@ export interface ShiftRoleDoc {
   canCoverRoleIds?: string[]
 }
 
-/** Only the fields the override callable needs. */
+/** Only the fields the override/trade callables need. */
 export interface ShiftDoc {
   employeeId?: string | null
+  date?: string
+  startTime?: string
+  endTime?: string
   roleId?: string
   requiredSkillLevel?: number
+  department?: Department
+  status?: string
+}
+
+export type TradeType = 'direct' | 'pool'
+export type TradeStatus = 'open' | 'claimed' | 'pending-approval' | 'approved' | 'declined' | 'cancelled'
+
+/** Only the fields the trade action callables need. */
+export interface TradeDoc {
+  type?: TradeType
+  shiftId?: string
+  weekId?: string
+  fromEmployeeId?: string | null
+  postedBy?: string
+  toEmployeeId?: string | null
+  claimedBy?: string | null
+  status?: TradeStatus
+  approvedBy?: string | null
+  department?: Department
+}
+
+/** Only the fields the trade action callables need. */
+export interface TimeOffDoc {
+  startDate?: string
+  endDate?: string
   status?: string
 }
 

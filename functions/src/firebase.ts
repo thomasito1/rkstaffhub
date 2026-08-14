@@ -31,6 +31,8 @@ export const COLLECTIONS = {
   permissions: 'permissions',
   invites: 'invites',
   auditLog: 'auditLog',
+  trades: 'trades',
+  timeOff: 'timeOff',
 } as const
 
 /** Sensitive subdocuments — see the deviation note atop firestore.rules. */

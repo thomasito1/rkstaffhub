@@ -1,11 +1,91 @@
 # PROGRESS — RK StaffHub
 
-**Current phase: Phase 1 — Availability + Scheduling** (spec §19)
-Phase 0 complete and reviewed.
-Last updated: Aug 14, 2026 — checkpoint fixes from Rafa's interactive review
-pass, plus staff schedule views, time off, and roles settings.
+**Current phase: Phase 2 — Trades + Time Clock + Tips** (spec §19)
+Phase 0 and Phase 1 complete and reviewed.
+Last updated: Aug 14, 2026 — trade eligibility engine + claim/accept/approve/decline.
 
 Phases are sequential. Do not build later-phase features early, even scaffolding.
+
+---
+
+## Phase 2 status (spec §19's checklist)
+
+| Item | Status |
+| --- | --- |
+| Data model + rules (trades, punches, tipReports) | ✅ Done — `firestore.rules`, `src/types/models.ts`, 119 rules tests |
+| Trade eligibility engine | ✅ Done — `src/lib/scheduling/tradeEligibility.ts`, spec §7's four conditions, one shared implementation (see below) |
+| Direct trades, open pool, manager approvals | ✅ Done — `src/lib/db/trades.ts` (post/cancel, client writes) + `functions/src/tradeActions.ts` (claim/accept/approve/decline, Cloud Functions) |
+| Push + ZenZap webhook stub | ⬜ Not started |
+| Geofenced selfie clock in/out + offline queue | ⬜ Not started |
+| Tip report at clock-out | ⬜ Not started |
+| Shifts & Tips admin section | ⬜ Not started |
+
+**Shared eligibility module, and the build-boundary question it resolved.**
+`scheduleOverride.ts` (Phase 1) duplicated `effectiveSkillFor` rather than
+importing it, with a comment explaining why: `functions/` compiles as its own
+CommonJS package with its own `tsconfig.json` `rootDir: "src"` and cannot
+resolve `src/lib/*` across that boundary. Rafa's ruling for trade eligibility
+(Aug 14, 2026): that duplication convention does not extend to it — one
+implementation, shared. **Resolved cheaply**: `functions/src/tradeEligibility.ts`
+is a plain symlink to `../../src/lib/scheduling/tradeEligibility.ts`. `tsc`
+resolves a symlinked file as living physically under `rootDir`, so it type-checks
+and emits (to `functions/lib/tradeEligibility.js`) with **zero** config changes —
+no `rootDir`/`outDir`/`main` rewrites, confirmed by a forced type error inside
+the shared file surfacing correctly from `functions/`'s own `tsc` run. This same
+trick is available the next time Phase 2+ needs to share pure logic across the
+package boundary; `scheduleOverride.ts`'s existing duplicate was left as-is
+(out of scope for this task, not touched).
+
+`conflicts.ts` (the schedule builder's fuller engine — role/skill, time-off,
+double-booking, department, PLUS availability/overtime warns) now delegates to
+`tradeEligibility.ts` for every primitive it shares with trade eligibility,
+rather than the reverse — `checkTradeEligibility()` deliberately does NOT call
+`findConflicts()`, to keep the dependency one-directional and avoid a circular
+import between the two modules.
+
+**Typed trade error codes.** Per Rafa's ruling, the four callables return
+enumerated codes (`trade/not-open`, `trade/ineligible-skill`,
+`trade/shift-changed`, `trade/wrong-approver`, etc. — full list in
+`tradeEligibility.ts`'s `TradeErrorCode`) via `HttpsError`'s `details.code`,
+since a callable's own `code` field is locked to Firebase's fixed
+`FunctionsErrorCode` enum. `firebaseErrorCode()`
+(`src/lib/firebaseError.ts`) now prefers `details.code` when present, so
+`isFirebaseError(err, 'trade/ineligible-skill')` works exactly like every
+other Firebase error-code check in this codebase — one comparison helper,
+regardless of which layer produced the specific code.
+
+**Verified against a live emulator suite** (Auth + Firestore + Functions,
+matching how `scheduleOverride`/`schedulePublish` were verified — no
+committed test file for Cloud Functions in this codebase): 13 scenarios,
+all passing — eligible claim; ineligible claim (wrong role); stale-shift
+claim (shift reassigned after posting); direct accept by the right and wrong
+recipient; approve moving the shift + setting `dirtySincePublish`; department-
+scoped approval denial; Owner/GM department bypass; the three-way override
+branch (ineligible + no `trades.manualAssign` → ineligibility code; ineligible
++ `trades.manualAssign` + no reason → `trade/override-reason-required`;
+ineligible + reason → succeeds and writes a `trade.override` auditLog entry);
+pool decline reopening; direct decline staying terminal.
+
+**Open question for Rafa — `traded`/`dropped` `ShiftStatus` values.**
+`src/types/models.ts`'s `ShiftStatus` union has carried `'traded'` and
+`'dropped'` since Phase 0/1 scaffolding, but neither spec text nor any mockup
+defines what sets them or what they mean structurally (mockup copy uses
+"dropped" only as an English verb, e.g. "Isaac Boynton dropped a shift" —
+not necessarily the enum literal). `approveTrade` deliberately does NOT set
+either: it updates `shift.employeeId` + `dirtySincePublish: true`, the same
+mechanism `scheduleOverride.ts` already uses and the republish flow already
+reads, and leaves `status` (draft/published/etc.) untouched. Confirm whether
+`'traded'`/`'dropped'` should ever be written, and by what event, before they
+are used anywhere.
+
+**48h direct-trade expiry — informational only, confirmed.** No enforcement
+mechanism exists (matches the accepted pattern for the Thursday availability
+deadline). `isTradeExpired()` (`src/lib/db/trades.ts`) is display-only, for a
+future Shift Pool UI to render an expired offer as expired rather than still
+actionable. **TODO before Phase 3 ships**: add a Cloud Scheduler sweep that
+transitions expired open direct trades (`declined` or a dedicated `expired`
+status — not yet decided) once Phase 3's scheduled-function infrastructure
+exists for payroll period rollovers; track alongside that work, not before.
 
 ---
 

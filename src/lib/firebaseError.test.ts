@@ -53,4 +53,20 @@ describe('isFirebaseError — the fix for the schedule-override rejection bug', 
     expect(firebaseErrorCode(null)).toBeNull()
     expect(firebaseErrorCode({ notCode: 'x' })).toBeNull()
   })
+
+  it('prefers a callable-specific details.code over the wrapped functions/ code', () => {
+    const rejection = {
+      code: 'functions/failed-precondition',
+      details: { code: 'trade/ineligible-skill' },
+    }
+    expect(firebaseErrorCode(rejection)).toBe('trade/ineligible-skill')
+    expect(isFirebaseError(rejection, 'trade/ineligible-skill')).toBe(true)
+    expect(isFirebaseError(rejection, 'failed-precondition')).toBe(false)
+  })
+
+  it('falls back to the wrapped code when details carries no code', () => {
+    expect(firebaseErrorCode({ code: 'functions/aborted', details: { foo: 1 } })).toBe(
+      'functions/aborted',
+    )
+  })
 })

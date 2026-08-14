@@ -17,6 +17,13 @@
  *                                            trusted from the client), then
  *                                            logs the audit entry the client
  *                                            write path could never write
+ *   claimTrade/acceptTrade/
+ *   approveTrade/declineTrade  §7 trade transitions firestore.rules denies to
+ *                                            a plain client write — each
+ *                                            independently re-verifies the
+ *                                            shift and recomputes eligibility
+ *                                            server-side rather than trusting
+ *                                            the client's claimed state
  *
  * Region is the default us-central1, matching `getFunctions(app)` in
  * `src/lib/firebase.ts` — the client passes no region, so changing it here
@@ -36,3 +43,4 @@ export { getInvite, acceptInvite } from './invites'
 export { setEmployeeClaims, onEmployeeRoleChange } from './claims'
 export { recordScheduleOverride } from './scheduleOverride'
 export { recordSchedulePublish } from './schedulePublish'
+export { claimTrade, acceptTrade, approveTrade, declineTrade } from './tradeActions'

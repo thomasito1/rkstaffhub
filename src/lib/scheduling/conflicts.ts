@@ -2,8 +2,8 @@
  * Conflicts engine — spec §6.
  *
  * The single place that decides whether a shift assignment is legal. The
- * schedule builder, the AI-draft validator (Phase 5) and trade eligibility
- * (Phase 2, spec §7) all funnel through it, so its severities are load-bearing:
+ * schedule builder and the AI-draft validator (Phase 5) funnel through it, so
+ * its severities are load-bearing:
  *
  *   'block' — the assignment must not be saved.
  *   'warn'  — the assignment saves, with a visible flag on the shift card.
@@ -18,159 +18,44 @@
  *                                trades.manualAssign, with a REQUIRED reason
  *                                that is written to auditLog.
  *
+ * Trade eligibility (Phase 2, spec §7) does NOT go through this module — its
+ * narrower four-condition check lives in ./tradeEligibility, the one shared,
+ * Firebase-free implementation imported by both this file and Cloud
+ * Functions. This module re-exports its types and primitives so existing
+ * imports of ShiftLike/EmployeeLike/effectiveSkillFor/etc. from './conflicts'
+ * keep working unchanged.
+ *
  * This module is PURE. It takes plain data and returns findings; it performs no
  * reads, no writes and no permission checks. Callers supply the context and are
  * responsible for enforcing the result.
  */
 
-export type ConflictSeverity = 'block' | 'warn'
+import {
+  dateWithin,
+  isDepartmentMismatch,
+  minutesOf,
+  shiftHours,
+  shiftsOverlap,
+  effectiveSkillFor,
+  type Conflict,
+  type ConflictContext,
+  type ShiftLike,
+} from './tradeEligibility'
 
-export type ConflictCode =
-  | 'unavailable'
-  | 'partial-outside-hours'
-  | 'time-off'
-  | 'double-booked'
-  | 'overtime'
-  | 'skill-too-low'
-  | 'wrong-role'
-  | 'inactive-employee'
-  | 'wrong-department'
-
-export interface Conflict {
-  code: ConflictCode
-  severity: ConflictSeverity
-  /** i18n key under `conflicts.*`. Never a user-facing string — this is a lib. */
-  messageKey: string
-  /** Interpolation values for the message. */
-  params?: Record<string, string | number>
-  /**
-   * True only for `skill-too-low`. A manager with trades.manualAssign may
-   * override it, and the override is logged with a reason (spec §6, §7).
-   * Every other block is absolute.
-   */
-  overridable: boolean
-}
-
-// ── Inputs ───────────────────────────────────────────────────────────────────
-// Deliberately structural rather than importing the Firestore models: the
-// engine is also fed by the AI validator and by trade eligibility, which
-// assemble their inputs differently.
-
-export interface ShiftLike {
-  id?: string
-  date: string // "2026-08-14"
-  startTime: string // "15:30"
-  endTime: string // "22:00"
-  roleId: string
-  requiredSkillLevel: 1 | 2 | 3
-  employeeId?: string | null
-  /**
-   * Optional. Only trade eligibility (spec §7) supplies it — the schedule
-   * builder already scopes its candidate list to the shift's department, so
-   * the check below is a no-op there. Left off, the department check never
-   * fires.
-   */
-  department?: string
-}
-
-export interface EmployeeLike {
-  id: string
-  status: string
-  shiftRoles: { roleId: string; skillLevel: 1 | 2 | 3 }[]
-  /** Optional — see ShiftLike.department. */
-  department?: string
-}
-
-export interface AvailabilityDayLike {
-  status: 'available' | 'unavailable' | 'partial'
-  from?: string | null
-  to?: string | null
-}
-
-export interface TimeOffLike {
-  startDate: string
-  endDate: string
-  status: string
-}
-
-export interface ConflictContext {
-  employee: EmployeeLike
-  /** The candidate's availability for the shift's weekday, already resolved
-   *  (temporary overriding recurring). Undefined = nothing submitted. */
-  availability?: AvailabilityDayLike | undefined
-  /** All of the employee's approved/pending time off overlapping the week. */
-  timeOff: TimeOffLike[]
-  /** The employee's OTHER shifts that week, excluding the one being checked. */
-  otherShifts: ShiftLike[]
-  /** Coverage map: roleId → roles it may cover (spec §7.1, asymmetric). */
-  canCoverRoleIds?: Record<string, string[]>
-  /** Weekly overtime threshold in hours. Spec §6: >40. */
-  overtimeThreshold?: number
-}
-
-// ── Time helpers ─────────────────────────────────────────────────────────────
-
-/** "15:30" → 930. Returns NaN for malformed input so callers can spot it. */
-export function minutesOf(hhmm: string): number {
-  const parts = hhmm.split(':')
-  const h = Number(parts[0])
-  const m = Number(parts[1])
-  if (!Number.isFinite(h) || !Number.isFinite(m)) return Number.NaN
-  return h * 60 + m
-}
-
-/** Shift length in hours. Handles a shift crossing midnight (close at 02:00). */
-export function shiftHours(shift: ShiftLike): number {
-  const start = minutesOf(shift.startTime)
-  let end = minutesOf(shift.endTime)
-  if (!Number.isFinite(start) || !Number.isFinite(end)) return 0
-  if (end <= start) end += 24 * 60 // crossed midnight
-  return (end - start) / 60
-}
-
-/** Do two shifts on the same date overlap? Touching endpoints do NOT overlap. */
-export function shiftsOverlap(a: ShiftLike, b: ShiftLike): boolean {
-  if (a.date !== b.date) return false
-  const aStart = minutesOf(a.startTime)
-  const bStart = minutesOf(b.startTime)
-  let aEnd = minutesOf(a.endTime)
-  let bEnd = minutesOf(b.endTime)
-  if (aEnd <= aStart) aEnd += 24 * 60
-  if (bEnd <= bStart) bEnd += 24 * 60
-  return aStart < bEnd && bStart < aEnd
-}
-
-function dateWithin(date: string, start: string, end: string): boolean {
-  return date >= start && date <= end
-}
-
-// ── Individual checks ────────────────────────────────────────────────────────
-
-/**
- * Effective skill level for working `roleId`: the direct level if the employee
- * holds that role, otherwise the level of a role that can cover into it
- * (spec §7.1). Returns 0 when the employee cannot work the role at all.
- *
- * Coverage is asymmetric by design: Bartender lists Server, but a Server never
- * lists Bartender.
- */
-export function effectiveSkillFor(
-  employee: EmployeeLike,
-  roleId: string,
-  canCoverRoleIds: Record<string, string[]> = {},
-): number {
-  const direct = employee.shiftRoles.find((r) => r.roleId === roleId)
-  if (direct) return direct.skillLevel
-
-  let best = 0
-  for (const held of employee.shiftRoles) {
-    const covers = canCoverRoleIds[held.roleId] ?? []
-    if (covers.includes(roleId) && held.skillLevel > best) {
-      best = held.skillLevel
-    }
-  }
-  return best
-}
+export {
+  type ConflictSeverity,
+  type ConflictCode,
+  type Conflict,
+  type ShiftLike,
+  type EmployeeLike,
+  type AvailabilityDayLike,
+  type TimeOffLike,
+  type ConflictContext,
+  minutesOf,
+  shiftHours,
+  shiftsOverlap,
+  effectiveSkillFor,
+} from './tradeEligibility'
 
 // ── The engine ───────────────────────────────────────────────────────────────
 
@@ -204,12 +89,12 @@ export function findConflicts(shift: ShiftLike, context: ConflictContext): Confl
   //    Only fires when both sides carry a department — the schedule builder's
   //    own candidate list is already department-scoped, so this is a no-op
   //    there and only bites trade eligibility, which supplies both fields.
-  if (shift.department && employee.department && shift.department !== employee.department) {
+  if (isDepartmentMismatch(shift, employee)) {
     conflicts.push({
       code: 'wrong-department',
       severity: 'block',
       messageKey: 'conflicts.wrongDepartment',
-      params: { department: shift.department },
+      params: { department: shift.department ?? '' },
       overridable: false,
     })
   }

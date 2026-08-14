@@ -30,9 +30,27 @@ export function isFirebaseError(err: unknown, code: string): boolean {
   return actual !== null && (actual === code || actual.endsWith(`/${code}`))
 }
 
-/** The error's `code` field as a string, or `null` if it isn't Firebase-shaped. */
+/**
+ * The error's `code` field as a string, or `null` if it isn't Firebase-shaped.
+ *
+ * A callable's `HttpsError` code is always one of Firebase's fixed
+ * `FunctionsErrorCode` values (wrapped client-side as `functions/<code>`) —
+ * never an app-specific string. When a callable needs a more specific reason
+ * than that fixed enum offers (e.g. trade eligibility's `trade/ineligible-skill`),
+ * it puts the enumerated app code in `HttpsError`'s `details.code` instead
+ * (functions/src/tradeActions.ts). Preferring `details.code` here, when
+ * present, keeps this the one place every caller compares error codes —
+ * regardless of which layer produced the specific string.
+ */
 export function firebaseErrorCode(err: unknown): string | null {
   if (typeof err !== 'object' || err === null || !('code' in err)) return null
+
+  const details = (err as { details?: unknown }).details
+  if (details && typeof details === 'object' && 'code' in details) {
+    const detailCode = (details as { code?: unknown }).code
+    if (typeof detailCode === 'string') return detailCode
+  }
+
   const code = (err as { code?: unknown }).code
   return typeof code === 'string' ? code : null
 }
