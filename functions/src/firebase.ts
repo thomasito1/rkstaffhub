@@ -27,6 +27,7 @@ export const adminAuth: Auth = getAuth(app)
 export const COLLECTIONS = {
   employees: 'employees',
   shiftRoles: 'shiftRoles',
+  schedules: 'schedules',
   permissions: 'permissions',
   invites: 'invites',
   auditLog: 'auditLog',

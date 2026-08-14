@@ -6,10 +6,12 @@
  * who is not signed in yet. Anything a client could safely do itself belongs in
  * `src/lib/db/*` behind firestore.rules, not here.
  *
- *   getInvite            unauthenticated · invite preview for the accept screen
- *   acceptInvite         authenticated   · bind uid → employee, issue claims
- *   setEmployeeClaims    permissions.manage · re-sync claims after a role change
- *   onEmployeeRoleChange trigger         · demotions take effect without re-login
+ *   getInvite              unauthenticated · invite preview for the accept screen
+ *   acceptInvite           authenticated   · bind uid → employee, issue claims
+ *   setEmployeeClaims      permissions.manage · re-sync claims after a role change
+ *   onEmployeeRoleChange   trigger         · demotions take effect without re-login
+ *   recordScheduleOverride schedule.edit   · §6 skill-floor override, atomically
+ *                                            assigns the shift AND logs why
  *
  * Region is the default us-central1, matching `getFunctions(app)` in
  * `src/lib/firebase.ts` — the client passes no region, so changing it here
@@ -27,3 +29,4 @@ setGlobalOptions({
 
 export { getInvite, acceptInvite } from './invites'
 export { setEmployeeClaims, onEmployeeRoleChange } from './claims'
+export { recordScheduleOverride } from './scheduleOverride'

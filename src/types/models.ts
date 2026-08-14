@@ -248,12 +248,22 @@ export type AuditAction =
   | 'tip.edit'
   | 'permission.change'
   | 'schedule.publish'
+  | 'schedule.override'
   | 'trade.override'
   | 'period.lock'
   | 'period.unlock'
   | 'ai.keyChange'
   | 'discipline.issue'
   | 'employee.import'
+
+// 'schedule.override' vs 'trade.override': both are a manager overriding a
+// blocked assignment with a logged reason, but at different moments. §6's
+// skill-floor override happens while BUILDING the schedule (an admin assigns
+// someone below the shift's requiredSkillLevel). §7's trade override happens
+// later, when a shift already belongs to someone and a trade/claim would move
+// it to a person who fails eligibility. Same shape, different `targetType` and
+// different permission gate (`schedule.edit` vs `trades.manualAssign`), so
+// they get separate audit actions rather than one ambiguous entry type.
 
 export interface AuditEntry {
   id: string

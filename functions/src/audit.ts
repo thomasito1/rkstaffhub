@@ -10,13 +10,13 @@
  * writer and the (Phase 6) viewer cannot drift apart.
  *
  * ── ACTION VOCABULARY ───────────────────────────────────────────────────────
- * `AuditAction` in src/types/models.ts is a closed union taken verbatim from
- * spec §17, and it has no invite-specific member. Everything this package
- * records is a change to *who holds which claim*, so all of it is logged as
- * `permission.change`; `targetType` ('invite' | 'employee') and `reason`
- * ('invite.accept' | 'claims.resync' | 'role.change') say which. Adding
- * `invite.accept` to the union would mean editing models.ts, which this task
- * forbids — flagged for Rafa instead.
+ * `AuditAction` in src/types/models.ts is the closed union, spec §17 plus the
+ * §6/§7 override actions added alongside this file. Claim-related mutations
+ * (invite acceptance, manual re-sync, a role-change trigger) are all changes to
+ * *who holds which claim*, so they share `permission.change`, disambiguated by
+ * `targetType` ('invite' | 'employee') and `reason` ('invite.accept' |
+ * 'claims.resync' | 'role.change'). `schedule.override` is its own action,
+ * since it is not a claim change at all — see scheduleOverride.ts.
  */
 
 import { FieldValue } from 'firebase-admin/firestore'
@@ -25,7 +25,7 @@ import { logger } from 'firebase-functions'
 import { COLLECTIONS, db } from './firebase'
 
 /** Subset of `AuditAction` (src/types/models.ts) this package emits. */
-export type AuditAction = 'permission.change'
+export type AuditAction = 'permission.change' | 'schedule.override'
 
 export interface AuditInput {
   action: AuditAction

@@ -1049,6 +1049,34 @@ const CONFLICT_SHIFT_NOTE =
 const OT_SHIFT_NOTE =
   'Overtime projection — this shift puts Oli over 40 h for the week (44.0 h total).'
 
+// ── review-checkpoint OPEN shifts ────────────────────────────────────────────
+// Every §6 conflict class must be TRIGGERABLE live from the builder, not just
+// visible on an already-assigned card. These four open shifts are each built so
+// that ONE named candidate hits exactly one conflict class when assigned to it
+// — the seed does the isolating so the review session doesn't have to. They
+// carry no employeeNumber, so computeLabor() ignores them entirely (spec §6:
+// only assigned hours cost money) and assertLaborReconciles() is unaffected.
+//
+// The double-booking class needs no new shift: the existing open Wed 11–16
+// Server card already overlaps Allison Rodriguez's assigned Wed 15:30–19:30
+// Server shift by 30 minutes. Assigning her to it is the demo.
+//
+//   class              shift                                  candidate → result
+//   skill-too-low      Fri 21:00–23:30 Bartender L3, Main Bar  Kevin Andricain (Bartender L2) → BLOCK, overridable
+//                                                               Isaac Boynton  (Bartender L3) → clean
+//   availability warn  Mon 16:00–20:00 Server L1, Floor        Micah Lozon (unavailable all Monday) → WARN
+//   time-off block     Sun 12:00–17:00 Server L1, Floor        Robin Leyva (approved leave Aug 15–16) → BLOCK
+//
+// Each was checked against that candidate's OTHER seeded state so only the
+// named conflict fires: none of the three are double-booked, on undeclared
+// leave, or availability-flagged on these particular days/times.
+const SKILL_OVERRIDE_NOTE =
+  'Review checkpoint — Kevin Andricain (Bartender L2) is under this shift\'s required L3; Isaac Boynton (L3) qualifies cleanly. Assigning Kevin demonstrates the skill-floor block and its logged manager override.'
+const AVAILABILITY_WARN_NOTE =
+  'Review checkpoint — Micah Lozon is unavailable all day Monday. Assigning him demonstrates the availability warn (does not block).'
+const TIME_OFF_BLOCK_NOTE =
+  'Review checkpoint — Robin Leyva has approved time off Aug 15–16. Assigning her demonstrates the approved-time-off block (never overridable).'
+
 interface SeedShift {
   /** Omit for an OPEN shift — the unassigned row per role (§6). */
   employeeNumber?: string
@@ -1106,6 +1134,12 @@ const SEED_SHIFTS: SeedShift[] = [
   { employeeNumber: '1055', day: 'sun', startTime: '11:00', endTime: '17:00', roleId: 'shift-supervisor', requiredSkillLevel: 2, department: 'FOH', station: 'Floor' },
   { employeeNumber: '1047', day: 'sun', startTime: '12:00', endTime: '17:30', roleId: 'runner', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
   { employeeNumber: '1048', day: 'sun', startTime: '11:00', endTime: '17:30', roleId: 'kitchen-lead', requiredSkillLevel: 3, department: 'BOH', station: 'Hot Line' },
+
+  // ── Review-checkpoint OPEN shifts — see the block comment above SKILL_OVERRIDE_NOTE.
+  // Unassigned, so excluded from labor entirely; the reconciliation is unaffected.
+  { day: 'fri', startTime: '21:00', endTime: '23:30', roleId: 'bartender', requiredSkillLevel: 3, department: 'FOH', station: 'Main Bar', notes: SKILL_OVERRIDE_NOTE },
+  { day: 'mon', startTime: '16:00', endTime: '20:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor', notes: AVAILABILITY_WARN_NOTE },
+  { day: 'sun', startTime: '12:00', endTime: '17:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor', notes: TIME_OFF_BLOCK_NOTE },
 ]
 
 // ── shiftTemplates — day-part headcount + skill floors (spec §6) ─────────────

@@ -47,6 +47,19 @@ export interface EmployeeDoc {
   shiftRoles?: { roleId: string; skillLevel: number; isPrimary?: boolean }[]
 }
 
+/** Only the fields the override callable needs. */
+export interface ShiftRoleDoc {
+  canCoverRoleIds?: string[]
+}
+
+/** Only the fields the override callable needs. */
+export interface ShiftDoc {
+  employeeId?: string | null
+  roleId?: string
+  requiredSkillLevel?: number
+  status?: string
+}
+
 export interface InviteDoc {
   employeeId?: string
   email?: string
