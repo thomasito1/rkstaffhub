@@ -54,16 +54,53 @@ function timeLabel(date: Date | null, lang: string): string {
 }
 
 interface RowFlag {
-  kind: 'no-scheduled-shift' | 'forgotten-clockout' | 'manual' | 'missing-tip-report'
+  kind:
+    | 'no-scheduled-shift'
+    | 'forgotten-clockout'
+    | 'manual'
+    | 'backdated'
+    | 'offline-synced'
+    | 'edited'
+    | 'missing-tip-report'
   label: string
   tone: 'pending' | 'declined'
+}
+
+/** A manual punch whose own recorded time lands on a different restaurant-local day than when it was actually created — mockup 24's "add a shift the employee never punched at all" case, not a same-day correction. */
+function isBackdatedManualPunch(punch: Punch | null): boolean {
+  if (!punch?.manualBy) return false
+  const at = toDate(punch.timestamp)
+  const createdAt = toDate(punch.createdAt)
+  if (!at || !createdAt) return false
+  const localDate = (d: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: RESTAURANT_TZ }).format(d)
+  return localDate(at) !== localDate(createdAt)
+}
+
+function isEdited(punch: Punch | null): boolean {
+  return Boolean(punch && (punch.editHistory.length > 0 || punch.editedBy))
+}
+
+function isOfflineSynced(punch: Punch | null): boolean {
+  return Boolean(punch?.syncedFromOfflineQueue)
 }
 
 function rowHasFlag(row: PunchRow): boolean {
   const noScheduledShift = Boolean(row.inPunch?.flagged && row.inPunch.flagReason === 'no-scheduled-shift')
   const forgottenClockout = row.inPunch?.flagReason === 'forgotten-clockout' && !row.outPunch
   const manual = Boolean(row.inPunch?.manualBy || row.outPunch?.manualBy)
-  return Boolean(noScheduledShift || forgottenClockout || manual || row.missingTipReport)
+  const backdated = isBackdatedManualPunch(row.inPunch) || isBackdatedManualPunch(row.outPunch)
+  const offlineSynced = isOfflineSynced(row.inPunch) || isOfflineSynced(row.outPunch)
+  const edited =
+    isEdited(row.inPunch) || isEdited(row.outPunch) || Boolean(row.tipReport?.editHistory.length)
+  return Boolean(
+    noScheduledShift ||
+      forgottenClockout ||
+      manual ||
+      backdated ||
+      offlineSynced ||
+      edited ||
+      row.missingTipReport,
+  )
 }
 
 function rowFlagBadges(row: PunchRow, employeesById: Map<string, Employee>, t: TFunction): RowFlag[] {
@@ -82,6 +119,15 @@ function rowFlagBadges(row: PunchRow, employeesById: Map<string, Employee>, t: T
       label: t('shiftsAndTips.flags.manualBy', { name: manager ? displayName(manager) : manualBy }),
       tone: 'pending',
     })
+  }
+  if (isBackdatedManualPunch(row.inPunch) || isBackdatedManualPunch(row.outPunch)) {
+    flags.push({ kind: 'backdated', label: t('shiftsAndTips.flags.backdated'), tone: 'pending' })
+  }
+  if (isOfflineSynced(row.inPunch) || isOfflineSynced(row.outPunch)) {
+    flags.push({ kind: 'offline-synced', label: t('shiftsAndTips.flags.offlineSynced'), tone: 'pending' })
+  }
+  if (isEdited(row.inPunch) || isEdited(row.outPunch) || row.tipReport?.editHistory.length) {
+    flags.push({ kind: 'edited', label: t('shiftsAndTips.flags.edited'), tone: 'pending' })
   }
   if (row.missingTipReport) {
     flags.push({ kind: 'missing-tip-report', label: t('shiftsAndTips.flags.missingTipReport'), tone: 'pending' })

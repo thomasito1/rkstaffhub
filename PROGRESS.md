@@ -73,6 +73,26 @@ keys, en/es), 118 rules tests, `test:rules:clean` (0 dirty denials, 14
 pre-existing first-pass artifacts — same count as every prior checkpoint
 this phase, none new).
 
+---
+
+## Deploy checklist (real Firebase project, not emulators)
+
+Steps required before push notifications work against a real deployment —
+not needed for emulator-based dev/review, only for the first real deploy:
+
+1. **`VITE_FIREBASE_VAPID_KEY`** (`.env.example` currently blank). Firebase
+   console → Project Settings → Cloud Messaging tab → Web Push certificates
+   → generate a key pair (or copy the existing one). Paste the public key
+   into `.env.local` for that project. Without this, `getToken()`
+   (`src/lib/push/registerForPush.ts`) cannot mint a real FCM token — the
+   whole push pipeline (server send, ZenZap stub, offline queue) is built
+   and verified against the emulator, but a token can't be issued for a
+   real deployment until this one credential is filled in.
+
+Other confirm-on-site items (geofence radius/coordinates, selfie retention)
+are tracked in "Open questions for Rafa" below, not duplicated here — this
+section is specifically for what BLOCKS push from working post-deploy.
+
 **Time clock — server layer.** `src/lib/geofence.ts` (haversine, pure, symlinked
 into `functions/src/geofence.ts` the same way as `tradeEligibility.ts`) is
 honest about what it proves: it validates the CLAIMED position, not presence
@@ -758,6 +778,46 @@ New during Phase 0. Ordered by when they block work:
   example pairing as a behavioral reference — `shiftRoles.canCoverRoleIds` is
   the only source of truth for who can cover what. See
   DESIGN-HANDOFF.md's "Superseded" section for the full note.
+
+- **RESOLVED — mockup `25-punches-and-tips-desktop-en.html`'s "Auto-closed"
+  and "Outside fence" example flags are superseded by this app's own ruled
+  behavior**, confirmed by Rafa (Aug 14, 2026) rather than left as an
+  unreconciled visual reference. Neither can occur here on purpose:
+  `checkForgottenClockOuts` (`functions/src/punchScheduled.ts`) flags a 14h+
+  open punch and notifies managers but NEVER closes it or invents an
+  out-time (Rafa's ruling during the clock-flow build — an open punch is
+  resolved by a deliberate human edit, not a guess), and a live self-punch
+  outside the geofence is REJECTED by `clockIn`/`clockOut` outright and
+  never becomes a Firestore document at all (`verifyGeofence`,
+  `functions/src/punchHelpers.ts`). **Keep from the mockup:** the table
+  layout (date/employee/in/out/hours/tips/flags), the summary stat tiles,
+  the flagged-only filter, "Add manual punch"/"Export CSV". **Do not** use
+  its two example flag labels as a behavioral reference — the real
+  `flagReason` vocabulary is `no-scheduled-shift` and `forgotten-clockout`
+  (still open), plus `manualBy`, and the client-derived `missing-tip-report`,
+  `backdated` and `offline-synced`/`edited` flags below.
+
+  **Flag-coverage audit, same date.** Checked the admin table's actual flag
+  set against the full anomaly surface the `Punch`/`TipReport` model can
+  represent: `no-scheduled-shift`, `forgotten-clockout`, and `manualBy`
+  (with reason) were already both rendered AND part of the flagged-only
+  filter; `missingTipReport` likewise (`shiftsAndTipsShared.ts`'s
+  `buildPunchRows`). Three were in the model but NOT surfaced anywhere in
+  the UI, a real gap now fixed in `ShiftsAndTipsPage.tsx`:
+  `syncedFromOfflineQueue` (task 8's own note had promised this — "surfaced
+  as a flag in Shifts & Tips admin" — and it simply wasn't built); any
+  edited punch or tip report (`editHistory.length > 0` / `editedBy` set) —
+  spec §9's own text calls for "an 'edited' badge," and none existed at the
+  table level (only inside the edit modal once already opened); and a new
+  derived `backdated` flag for a manual punch whose own recorded time falls
+  on a different restaurant-local day than when it was actually created —
+  distinct from a same-day manual correction, and not derivable from any
+  single stored field, so it's computed client-side by comparing
+  `timestamp` against `createdAt`. All three now render as their own badge
+  AND count toward the existing single flagged-only toggle, matching the
+  other four rather than introducing a separate per-category filter UI —
+  if per-flag-type filtering (not just "any flag") turns out to be wanted,
+  that's a follow-up, not assumed here.
 
 - **RESOLVED — publish/republish now write their §17 audit entry.** Promoted
   from a tracked gap to the first task of this work block per Rafa's ruling

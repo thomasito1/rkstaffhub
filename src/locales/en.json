@@ -1214,6 +1214,9 @@
       "noScheduledShift": "No scheduled shift",
       "forgottenClockout": "Still open — forgotten clock-out?",
       "manualBy": "Manual punch by {{name}}",
+      "backdated": "Backdated entry",
+      "offlineSynced": "Synced from offline",
+      "edited": "Edited",
       "missingTipReport": "Missing tip report"
     },
     "rowMenu": {

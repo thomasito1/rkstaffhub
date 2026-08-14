@@ -1214,6 +1214,9 @@
       "noScheduledShift": "Sin turno programado",
       "forgottenClockout": "Sigue abierto — ¿olvidó marcar salida?",
       "manualBy": "Marcaje manual por {{name}}",
+      "backdated": "Entrada con fecha anterior",
+      "offlineSynced": "Sincronizado sin conexión",
+      "edited": "Editado",
       "missingTipReport": "Falta reporte de propinas"
     },
     "rowMenu": {
