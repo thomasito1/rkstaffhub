@@ -41,6 +41,7 @@ const IDENTICAL_OK = new Set([
   'settings.nav.general', // "General" is identical in Spanish.
   'settings.roles.newRoleModal.color', // "Color" is identical in Spanish.
   'shiftPool.approvalModal.noStation', // An em dash placeholder, not a word.
+  'clock.home.dateTime', // "{{date}} · {{time}}" — punctuation only, no words.
 ])
 
 const en = flatten(load('en.json'))

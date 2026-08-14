@@ -28,3 +28,7 @@ export * from './timeOff'
 // Functions, not this module — see src/lib/scheduling/trades.ts.
 export * from './trades'
 export * from './tradeApprovals'
+
+// Phase 2 — time clock (spec §8). Reads only — clockIn/clockOut/manualPunch
+// are Cloud Functions, not this module — see src/lib/timeClock/punchActions.ts.
+export * from './punches'
