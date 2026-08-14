@@ -9,6 +9,7 @@ import { SettingsShell } from '@/pages/settings/SettingsShell'
 import { RolesHierarchyPage } from '@/pages/settings/RolesHierarchyPage'
 import { TimeOffAdminPage } from '@/pages/settings/TimeOffAdminPage'
 import { TimeOffCalendarPage } from '@/pages/settings/TimeOffCalendarPage'
+import { ShiftsAndTipsPage } from '@/pages/settings/ShiftsAndTipsPage'
 import { MyTimeOffPage } from '@/pages/availability/MyTimeOffPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { InviteAcceptPage } from '@/pages/auth/InviteAcceptPage'
@@ -101,6 +102,7 @@ export default function App() {
           />
           <Route path="time-off" element={<TimeOffAdminPage />} />
           <Route path="time-off/calendar" element={<TimeOffCalendarPage />} />
+          <Route path="shifts-and-tips" element={<ShiftsAndTipsPage />} />
         </Route>
         <Route path="more" element={<MorePage />} />
 

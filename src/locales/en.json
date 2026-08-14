@@ -957,7 +957,8 @@
       "general": "General",
       "roles": "Roles & hierarchy",
       "permissions": "Permissions",
-      "timeOff": "Time off"
+      "timeOff": "Time off",
+      "shiftsAndTips": "Shifts & tips"
     },
     "roles": {
       "title": "Roles & hierarchy",

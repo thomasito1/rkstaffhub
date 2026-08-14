@@ -4,10 +4,11 @@
 Phase 0 and Phase 1 complete and reviewed.
 Last updated: Aug 14, 2026 — trade eligibility engine, claim/accept/approve/decline,
 the FCM push + ZenZap stub infrastructure (server AND client), the Shift
-Pool UI (mockups 16/17), and the full time-clock feature (server layer +
-mockups 19–23, wired at `/clock`). "Geofenced selfie clock flow with
-offline queue" and "Tip gate at clock-out" are both complete. Shifts & Tips
-admin is next.
+Pool UI (mockups 16/17), the full time-clock feature (server layer +
+mockups 19–23, wired at `/clock`), and the Shifts & Tips admin screen
+(mockups 24/25/25b, wired at `/settings/shifts-and-tips`). Every Phase 2
+checklist item is now done except the Thursday-deadline callable; that's
+next, then the Phase 2 checkpoint.
 
 Phases are sequential. Do not build later-phase features early, even scaffolding.
 
@@ -27,7 +28,7 @@ Phases are sequential. Do not build later-phase features early, even scaffolding
 | Shift Pool UI (mockups 16/17) | ✅ Done — `src/pages/shiftPool/*`, wired at `/shift-pool` |
 | Geofenced selfie clock in/out + offline queue | ✅ Done — `src/pages/clock/*`, wired at `/clock` |
 | Tip report at clock-out | ✅ Done — mockup 22's numpad/confirm/$0-confirm flow, gated on `Employee.tipsRequired` |
-| Shifts & Tips admin section | 🟡 Server layer done (see below) — `editPunch`/`editTipReport`, `manualPunch` reworked for mockup 24; the admin table UI (mockups 25/25b) is next |
+| Shifts & Tips admin section | ✅ Done — `src/pages/settings/ShiftsAndTipsPage.tsx`, wired at `/settings/shifts-and-tips` |
 
 **Time clock — server layer.** `src/lib/geofence.ts` (haversine, pure, symlinked
 into `functions/src/geofence.ts` the same way as `tradeEligibility.ts`) is
@@ -161,6 +162,47 @@ paths (edit existing, create fresh with `oldAmount: 0`) — 9/9 scenarios.
 Also: `npm run build` (client + functions), 145 unit tests, i18n parity
 (1064 keys), 119 rules tests (firestore.rules untouched — no new
 client-writable surface).
+
+**Shifts & Tips admin — the screen** (`src/pages/settings/ShiftsAndTipsPage.tsx`,
+wired at `/settings/shifts-and-tips`, its own Settings sub-nav tab).
+Filters (employee/date range/department/search/flagged-only), summary
+stats, a table pairing 'in'/'out' punch docs per employee per day (a still-open
+punch shows as such, no fabricated hours), CSV export, pagination. Flag
+badges render the flag reasons that actually occur under this app's real
+behavior (`no-scheduled-shift`, `forgotten-clockout` on a still-open punch,
+`manualBy`, and a client-derived `missing-tip-report` case) rather than
+mockup 25's superseded "Auto-closed"/"Outside fence" example labels — see
+the server-layer note above for why those two specifically can't happen
+here. `ManualPunchModal` (mockup 24) has no "notify employee" checkbox —
+`manualPunch`'s real contract has no notify parameter and sends no push, so
+a control with no backing behavior was left out rather than built as a
+no-op. `PunchEditModal` (mockup 25b) shows an HOURS-ONLY net change, not the
+mockup's wage delta — `hourlyRate` lives in the separately-gated
+`private/compensation` subdoc (spec's own deviation A1) this admin scope
+doesn't fetch, so a real wage number wasn't available; showing a fabricated
+one would be worse than omitting it.
+
+**A real bug, found by building this screen against the already-shipped
+server layer, now fixed**: `manualPunch` was using `todayIsoInRestaurantTz()`
+unconditionally for both its shift lookup and its auto-created tip report's
+date, even though it legitimately backdates (mockup 24's whole point — a
+shift the employee never punched at all, added after the fact). A backdated
+pair against a REAL scheduled shift was therefore always wrongly flagged
+`no-scheduled-shift`, and its tip report landed on today instead of the
+punch's actual date. Fixed: `findTodaysShift` → `findShiftForDate(employeeId, date)`,
+and a new `isoDateOf(instant)` helper derives the lookup/tip-report date from
+the punch's own `clockIn`/`clockOut` instead. `clockIn`/`clockOut` themselves
+were never affected (always live, same-day, correctly still use
+"today"). Verified against a live emulator: the exact backdated scenario now
+links the real shift (`flagged: false`) and dates the tip report correctly;
+confirmed no regression to live `clockIn`'s own same-day shift lookup.
+
+Also verified live against the Auth+Firestore+Functions emulator: manual
+punch creates a real pair via the Cloud Function, "add manual clock-out"
+completes an open punch, `editPunch`/`editTipReport` actually change a
+punch/report and show in `editHistory`, CSV export downloads real correct
+content. Full gate re-run after wiring the route: `npm run build`, 145 unit
+tests, i18n parity (1168 keys), 119 rules tests.
 
 **Push infrastructure — the whole vertical slice.** `Employee.pushTokens:
 PushToken[]` (`{ token, platform, updatedAt }`) is a new, already-self-editable

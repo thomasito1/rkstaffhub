@@ -957,7 +957,8 @@
       "general": "General",
       "roles": "Puestos y jerarquía",
       "permissions": "Permisos",
-      "timeOff": "Tiempo libre"
+      "timeOff": "Tiempo libre",
+      "shiftsAndTips": "Turnos y propinas"
     },
     "roles": {
       "title": "Puestos y jerarquía",
