@@ -5,10 +5,11 @@ Phase 0 and Phase 1 complete and reviewed.
 Last updated: Aug 14, 2026 — trade eligibility engine, claim/accept/approve/decline,
 the FCM push + ZenZap stub infrastructure (server AND client), the Shift
 Pool UI (mockups 16/17), the full time-clock feature (server layer +
-mockups 19–23, wired at `/clock`), and the Shifts & Tips admin screen
-(mockups 24/25/25b, wired at `/settings/shifts-and-tips`). Every Phase 2
-checklist item is now done except the Thursday-deadline callable; that's
-next, then the Phase 2 checkpoint.
+mockups 19–23, wired at `/clock`), the Shifts & Tips admin screen
+(mockups 24/25/25b, wired at `/settings/shifts-and-tips`), and the
+Thursday-deadline callable closing the one gap Phase 1 had deliberately
+left open. **Every Phase 2 checklist item is done.** Phase 2 checkpoint
+below — stopped for Rafa's review before Phase 3.
 
 Phases are sequential. Do not build later-phase features early, even scaffolding.
 
@@ -742,17 +743,55 @@ New during Phase 0. Ordered by when they block work:
   in that set. Catching those needs a per-shift change log, which remains a
   separate, not-yet-built gap.
 
-### Not enforced in rules — deliberate, moves to the Phase 2 callable
+### RESOLVED — the Thursday 23:59 ET availability deadline (was: "Not enforced in rules")
 
-- **The Thursday 23:59 ET availability deadline.** Rules have no tz database, so
-  "Thursday 23:59 ET" is 03:59Z or 04:59Z depending on the week. Deriving it from
-  the `weekId` string needs `int()` over client-controlled substrings, which
-  throws on a malformed id; comparing against a deadline field on the document
-  would mean the submitting client picks its own lock. **Approved as designed**
-  (Aug 13, 2026): rules enforce the expressible half — own availability only,
-  never review your own — and the deadline itself is computed server-side (real
-  tzdata, via `src/lib/deadlines.ts`'s approach) inside the Phase 2 callable that
-  will own `submitAvailability`'s enforcement.
+Rules have no tz database, so "Thursday 23:59 ET" is 03:59Z or 04:59Z depending
+on the week — expressible neither by deriving it from the `weekId` string
+(`int()` over a client-controlled substring throws on a malformed id) nor by
+comparing against a deadline field on the document (the submitting client
+would pick its own lock). **Approved as designed (Aug 13, 2026), landed
+(Aug 14, 2026)**: `submitAvailability` (`functions/src/availabilityActions.ts`)
+is now the ONLY way a submission (or a resubmit while still pending) reaches
+Firestore — `firestore.rules`' `availability/{docId}` write grant for a fresh
+self-submission is gone entirely (`selfSubmission()`/`idMatchesPayload()`/
+`isUnreviewed()` all removed; only `selfWithdrawal()` — deleting a still-open
+temporary override, no deadline question — and `mayReview()` remain direct
+client writes). The deadline math itself (`isAvailabilityLocked`/
+`availabilityDeadlineFor`, real tzdata via `Intl`) is a deliberate small
+duplicate in `functions/src/availabilityHelpers.ts`, not a `src/lib/deadlines.ts`
+symlink — that file imports `src/lib/format.ts` for `RESTAURANT_TZ`/`weekIdFor`,
+which itself imports `src/i18n` (react-i18next bootstrap) at module top level,
+which has no business running at a Cloud Function's cold start. Verified
+byte-for-byte identical output against `deadlines.test.ts`'s own known values
+across both 2026 DST transitions before trusting it.
+
+On-behalf submission (spec §5: "managers with `availability.approve` can
+still edit/enter on their behalf" past the deadline) is derived from
+IDENTITY — `employeeId !== actor.id` plus holding `availability.approve` —
+never from a client-asserted flag; the old client-side `submitAvailability()`
+had an `allowAfterDeadline` boolean opt that meant nothing once the deadline
+check is server-side (a client can't assert its way past a check it no
+longer performs), so it's gone from the client wrapper's signature along
+with the equally-meaningless `now` override. `src/lib/db/availability.ts`'s
+`submitAvailability()` keeps its name/return type — `MyAvailabilityPage.tsx`,
+its one caller, needed zero changes — but is now a thin `httpsCallable`
+wrapper translating the Function's `availability/locked` rejection back into
+the same `AvailabilityLockedError` the page already catches.
+
+`tests/rules/scheduling.rules.test.ts`'s availability describe block flipped
+from proving direct self-submission succeeds to proving it's denied (118
+rules tests now, was 119 — one test specifically exercising the now-deleted
+`idMatchesPayload()` id/payload-mismatch check was removed rather than left
+with a stale comment about a mechanism that no longer exists; its
+assertion was already redundant with the flipped tests). Verified against a
+live Auth+Firestore+Functions emulator: self-submit before/after the
+deadline, recurring's never-locked behavior, manager on-behalf bypassing a
+past deadline, a non-manager's on-behalf attempt denied, AND a direct
+client `setDoc` attempt denied by rules (confirming the lockdown itself
+took effect, not just that the Function works) — 6/6. Also: `npm run build`
+(client + functions), 145 unit tests, i18n parity (1168 keys), 118 rules
+tests, 0 dirty denials (same 14 pre-existing first-pass artifacts as before —
+none new).
 
 ### RESOLVED — staff shift reads (was: "breaks listShifts() for staff")
 

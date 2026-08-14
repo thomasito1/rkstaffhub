@@ -24,10 +24,15 @@
  * accumulating a document per person per week forever.
  *
  * DEADLINE. §5 locks submissions for the following week at Thursday 23:59 ET.
- * submitAvailability() refuses a late write by default, which is a UX guard, not
- * security — the rules are the enforcement point and are a separate job.
- * Managers holding `availability.approve` submit on someone's behalf with
- * `{ allowAfterDeadline: true }`.
+ * firestore.rules cannot express this (no tz database), so a client-side-only
+ * guard would be trivially bypassed — submitAvailability() is a Cloud Function
+ * (functions/src/availabilityActions.ts) and is the ONLY way a submission (or a
+ * resubmit while still pending) reaches Firestore; the rules' own write grant
+ * for a fresh self-submission was removed. Withdrawing a still-open temporary
+ * override (clearTemporaryAvailability, a delete) stays a plain client write —
+ * it carries no deadline question. Managers holding `availability.approve`
+ * submit on someone's behalf and bypass the lock automatically — the Function
+ * derives that from `employeeId !== caller`, never from a client-asserted flag.
  *
  * DENIED READS. Staff can read their own availability; `availability.viewAll`
  * reads everyone's. A denied read returns null/[] per the layer-wide rule in
@@ -42,7 +47,6 @@ import {
   getDocs,
   query,
   serverTimestamp,
-  setDoc,
   updateDoc,
   where,
   type DocumentData,
@@ -50,9 +54,10 @@ import {
   type QueryConstraint,
   type QueryDocumentSnapshot,
 } from 'firebase/firestore'
+import { httpsCallable, type FunctionsError } from 'firebase/functions'
 
-import { isAvailabilityLocked } from '@/lib/deadlines'
-import { COLLECTIONS, db } from '@/lib/firebase'
+import { COLLECTIONS, db, functions } from '@/lib/firebase'
+import { isFirebaseError } from '@/lib/firebaseError'
 import {
   WEEKDAY_KEYS,
   type Availability,
@@ -311,30 +316,51 @@ export async function effectiveAvailabilityFor(
 /**
  * Create or replace a submission, returning it to `pending` review (§5).
  *
- * Whole-document write: a re-submission replaces the previous week's answers
- * rather than merging into them, so a day the employee cleared actually clears.
- * `status` resets to pending on every submit — an approved week that is edited
- * is a new thing for a manager to look at.
+ * A Cloud Function call (functions/src/availabilityActions.ts), not a plain
+ * client write — that Function is the actual Thursday 23:59 ET deadline
+ * enforcement (firestore.rules cannot express it). Throws
+ * AvailabilityLockedError past the deadline; a manager holding
+ * `availability.approve` submitting on someone else's behalf bypasses it
+ * automatically (the Function derives that from identity, not a client flag).
+ * Recurring baselines are never week-locked.
  *
- * Throws AvailabilityLockedError past the Thursday 23:59 ET deadline unless
- * `allowAfterDeadline` is set (the manager-on-behalf path, §5). Recurring
- * baselines are never week-locked.
+ * Whole-submission write: a re-submission replaces the previous week's
+ * answers rather than merging into them, so a day the employee cleared
+ * actually clears. `status` resets to pending on every submit — an approved
+ * week that is edited is a new thing for a manager to look at.
  */
-export async function submitAvailability(
-  input: AvailabilityInput,
-  opts?: { now?: Date; allowAfterDeadline?: boolean },
-): Promise<Availability> {
+export async function submitAvailability(input: AvailabilityInput): Promise<Availability> {
   const isRecurring = input.type === 'recurring'
   const weekId = isRecurring ? RECURRING_WEEK_ID : input.weekId
 
-  if (!isRecurring && !opts?.allowAfterDeadline) {
-    if (isAvailabilityLocked(weekId, opts?.now ?? new Date())) {
-      throw new AvailabilityLockedError(weekId)
-    }
-  }
-
   const days = {} as Record<WeekdayKey, AvailabilityDay>
   for (const key of WEEKDAY_KEYS) days[key] = toDay(input.days[key])
+
+  const call = httpsCallable<
+    {
+      employeeId: string
+      weekId: string
+      type: AvailabilityType
+      days: Record<WeekdayKey, AvailabilityDay>
+      locationId?: string | null
+    },
+    { id: string; weekId: string }
+  >(functions, 'submitAvailability')
+
+  try {
+    await call({
+      employeeId: input.employeeId,
+      weekId,
+      type: input.type,
+      days,
+      locationId: input.locationId ?? null,
+    })
+  } catch (err) {
+    if (isFirebaseError(err, 'availability/locked')) {
+      throw new AvailabilityLockedError(weekId)
+    }
+    throw err as FunctionsError
+  }
 
   const payload = {
     employeeId: input.employeeId,
@@ -349,8 +375,6 @@ export async function submitAvailability(
     locationId: input.locationId ?? null,
     updatedAt: serverTimestamp(),
   }
-
-  await setDoc(availabilityDoc(weekId, input.employeeId), payload)
 
   return { id: availabilityId(weekId, input.employeeId), ...payload }
 }

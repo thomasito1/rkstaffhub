@@ -459,36 +459,6 @@ service cloud.firestore {
         return resource != null ? existingEmployeeId() : incomingEmployeeId();
       }
 
-      // Document id and payload must agree — `{weekId}_{employeeId}`, spec §3.
-      // Holds for the baseline too, whose weekId field is the sentinel
-      // 'recurring'. Keeps a staff member from parking their own submission
-      // under a colleague's key.
-      function idMatchesPayload() {
-        return request.resource != null
-          && 'weekId' in request.resource.data
-          && 'employeeId' in request.resource.data
-          && docId == request.resource.data.weekId + '_' + request.resource.data.employeeId;
-      }
-
-      // A submission arrives unreviewed. Staff may write this shape and no
-      // other, so "approve my own availability" is not a reachable state.
-      function isUnreviewed() {
-        return request.resource != null
-          && 'status' in request.resource.data
-          && request.resource.data.status == 'pending'
-          && (!('reviewedBy' in request.resource.data)
-              || request.resource.data.reviewedBy == null)
-          && (!('reviewedAt' in request.resource.data)
-              || request.resource.data.reviewedAt == null);
-      }
-
-      function selfSubmission() {
-        return isSelf(incomingEmployeeId())
-          && isSelf(subjectEmployeeId())
-          && idMatchesPayload()
-          && isUnreviewed();
-      }
-
       // Withdrawing a temporary override (clearTemporaryAvailability) is a
       // delete, so `request.resource` is null and none of the payload guards
       // above can run — ownership of the STORED document is the whole test.
@@ -505,9 +475,16 @@ service cloud.firestore {
       allow read: if hasIdentity()
                   && (isSelf(existingEmployeeId()) || hasPerm('availability.viewAll'));
 
+      // Submitting (create OR update to a fresh pending state) is
+      // Cloud-Function-only (functions/src/availabilityActions.ts) — the
+      // Thursday 23:59 ET deadline (spec §5) needs a real tz database, which
+      // rules do not have, and a client-side-only check is trivially
+      // bypassed. A plain client write can still WITHDRAW their own
+      // still-open temporary override, or REVIEW someone else's (both of
+      // which carry no deadline question), but can no longer submit or
+      // resubmit availability directly.
       allow write: if hasIdentity()
-                   && (selfSubmission()
-                       || selfWithdrawal()
+                   && (selfWithdrawal()
                        || mayReview(myOverrides(), roleDefaults(), myRole()));
     }
 

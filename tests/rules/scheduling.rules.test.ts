@@ -234,10 +234,18 @@ beforeEach(async () => {
 
 // ── availability ─────────────────────────────────────────────────────────────
 
-describe('availability — staff write only their OWN (spec §5)', () => {
-  it('lets a staff member submit their own recurring baseline', async () => {
+describe('availability — submission is Cloud-Function-only (spec §5, Aug 14 2026 ruling)', () => {
+  // The Thursday 23:59 ET deadline needs real tzdata, which rules cannot
+  // express (no tz database) — a client-side-only guard would be trivially
+  // bypassed, so submitAvailability (functions/src/availabilityActions.ts) is
+  // now the ONLY way a submission reaches Firestore. These prove the direct
+  // write is gone entirely, not merely narrowed — see
+  // "DENIES a staff member writing someone ELSE's availability" below for the
+  // pre-existing cross-employee case, which stays denied for the same reason
+  // now, just doubly so.
+  it("DENIES a staff member submitting their own recurring baseline directly (must go through submitAvailability)", async () => {
     const staff = ctx('uid-emp-staff-foh', 'emp-staff-foh', 'staff')
-    await assertSucceeds(
+    await assertFails(
       setDoc(
         doc(staff, 'availability/recurring_emp-staff-foh'),
         availabilityPayload('emp-staff-foh', 'recurring', 'recurring'),
@@ -245,9 +253,9 @@ describe('availability — staff write only their OWN (spec §5)', () => {
     )
   })
 
-  it('lets a staff member submit their own week-specific override', async () => {
+  it("DENIES a staff member submitting their own week-specific override directly (must go through submitAvailability)", async () => {
     const staff = ctx('uid-emp-staff-foh', 'emp-staff-foh', 'staff')
-    await assertSucceeds(
+    await assertFails(
       setDoc(
         doc(staff, `availability/${PUBLISHED_WEEK}_emp-staff-foh`),
         availabilityPayload('emp-staff-foh', PUBLISHED_WEEK, 'temporary'),
@@ -261,18 +269,6 @@ describe('availability — staff write only their OWN (spec §5)', () => {
       setDoc(
         doc(staff, 'availability/recurring_emp-staff-foh2'),
         availabilityPayload('emp-staff-foh2', 'recurring', 'recurring'),
-      ),
-    )
-  })
-
-  it("DENIES parking your own submission under a colleague's document id", async () => {
-    // Payload says "me", document key says "them". The id/payload agreement
-    // check is what stops this from polluting the colleague's slot.
-    const staff = ctx('uid-emp-staff-foh', 'emp-staff-foh', 'staff')
-    await assertFails(
-      setDoc(
-        doc(staff, 'availability/recurring_emp-staff-foh2'),
-        availabilityPayload('emp-staff-foh', 'recurring', 'recurring'),
       ),
     )
   })
