@@ -12,6 +12,11 @@
  *   onEmployeeRoleChange   trigger         · demotions take effect without re-login
  *   recordScheduleOverride schedule.edit   · §6 skill-floor override, atomically
  *                                            assigns the shift AND logs why
+ *   recordSchedulePublish  schedule.publish · §6/§17 publish/republish, mode
+ *                                            derived from stored state (never
+ *                                            trusted from the client), then
+ *                                            logs the audit entry the client
+ *                                            write path could never write
  *
  * Region is the default us-central1, matching `getFunctions(app)` in
  * `src/lib/firebase.ts` — the client passes no region, so changing it here
@@ -30,3 +35,4 @@ setGlobalOptions({
 export { getInvite, acceptInvite } from './invites'
 export { setEmployeeClaims, onEmployeeRoleChange } from './claims'
 export { recordScheduleOverride } from './scheduleOverride'
+export { recordSchedulePublish } from './schedulePublish'

@@ -9,12 +9,16 @@
  *
  * PUBLISH IS A SENSITIVE MUTATION. §17 requires an `auditLog` entry for every
  * schedule publish, and firestore.rules denies auditLog writes to all clients
- * unconditionally — a log a client can write is a log a client can forge. So
- * publishSchedule()/republishSchedule() BUILD the entry with the shared
- * buildAuditEntry() and hand it back to the caller; the write itself belongs to
- * the Cloud Function that will own the whole publish transaction. See the TODOs
- * on those two functions. Do not "fix" this by calling addDoc on auditLog — it
- * will be denied, and correctly so.
+ * unconditionally — a log a client can write is a log a client can forge.
+ * RESOLVED (Aug 13, 2026 ruling — promoted from tracked gap to first task):
+ * publishSchedule()/republishSchedule() now call the `recordSchedulePublish`
+ * Cloud Function (functions/src/schedulePublish.ts), pattern-matched to
+ * `recordScheduleOverride`. The Function independently derives publish-vs-
+ * republish from the week's CURRENTLY STORED status — it does not trust a
+ * client-asserted mode — flips the shifts and the week atomically in one
+ * transaction, and then writes the auditLog entry the client could never
+ * write. Do not revert this to a client-side batch write; that is exactly the
+ * gap this closed.
  *
  * NOT IN THIS MODULE: the §6 conflicts engine (double-booking, approved time
  * off, skill floor, overtime) and labor cost math. Those are computed views
@@ -40,10 +44,10 @@ import {
 } from 'firebase/firestore'
 
 import { addDaysToIsoDate, datesForWeekId } from '@/lib/deadlines'
-import { COLLECTIONS, db } from '@/lib/firebase'
+import { COLLECTIONS, db, functions } from '@/lib/firebase'
+import { httpsCallable } from 'firebase/functions'
 import type {
   AiDraftMeta,
-  AuditEntry,
   Department,
   Schedule,
   ScheduleStatus,
@@ -52,7 +56,6 @@ import type {
   SkillLevel,
 } from '@/types/models'
 
-import { buildAuditEntry } from './audit'
 import { isPermissionDenied, readOrNullIfDenied } from './errors'
 
 // ── shapes ───────────────────────────────────────────────────────────────────
@@ -75,12 +78,6 @@ export interface NewShiftInput {
   locationId?: string | null
 }
 
-/** Who performed a sensitive mutation. The db layer never reads auth itself. */
-export interface Actor {
-  employeeId: string
-  uid: string
-}
-
 export interface PublishResult {
   weekId: string
   status: ScheduleStatus
@@ -92,8 +89,6 @@ export interface PublishResult {
    * "targeted notifications only to affected employees".
    */
   notifyEmployeeIds: string[]
-  /** Built, NOT written — see the file header. Hand to the callable. */
-  auditEntry: Omit<AuditEntry, 'id'>
 }
 
 /** Firestore rejects `undefined`; a patch of optional fields is full of it. */
@@ -172,10 +167,6 @@ function byStartTime(a: Shift, b: Shift): number {
   return a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime)
 }
 
-/** Distinct assigned employees, open shifts excluded. */
-function assignedEmployeeIds(shifts: Shift[]): string[] {
-  return [...new Set(shifts.map((s) => s.employeeId).filter((id): id is string => id !== null))]
-}
 
 // ── reads ────────────────────────────────────────────────────────────────────
 
@@ -410,96 +401,52 @@ export async function deleteShift(weekId: string, shiftId: string): Promise<void
 
 // ── publish ──────────────────────────────────────────────────────────────────
 
-async function publishInternal(
-  weekId: string,
-  actor: Actor,
-  mode: 'publish' | 'republish',
-): Promise<PublishResult> {
-  const shifts = await listShifts(weekId)
-  const draftShifts = shifts.filter((s) => s.status === 'draft')
-
-  const batch = writeBatch(db)
-  for (const s of draftShifts) {
-    batch.update(shiftDoc(weekId, s.id), { status: 'published', updatedAt: serverTimestamp() })
-  }
-
-  const status: ScheduleStatus = mode === 'publish' ? 'published' : 'republished'
-  batch.set(
-    scheduleDoc(weekId),
+/**
+ * Both publish and republish call the SAME Cloud Function: the server derives
+ * which one this is from the week's currently stored status, not from a
+ * client-asserted mode (see file header). A client "publishing" an
+ * already-live week is corrected to a republish, not obeyed.
+ */
+async function callRecordSchedulePublish(weekId: string): Promise<PublishResult> {
+  const call = httpsCallable<
+    { weekId: string },
     {
-      weekId,
-      status,
-      publishedAt: serverTimestamp(),
-      publishedBy: actor.employeeId,
-      updatedAt: serverTimestamp(),
-    },
-    { merge: true },
-  )
-  await batch.commit()
+      weekId: string
+      status: 'published' | 'republished'
+      publishedShiftIds: string[]
+      notifyEmployeeIds: string[]
+    }
+  >(functions, 'recordSchedulePublish')
 
-  // §6: first publish notifies everyone scheduled; a republish notifies only
-  // the employees whose shifts this call actually changed.
-  const notifyEmployeeIds =
-    mode === 'publish' ? assignedEmployeeIds(shifts) : assignedEmployeeIds(draftShifts)
-
-  // §17 requires an auditLog entry for every schedule publish. Built here so
-  // the payload shape lives with the mutation; NOT written, because
-  // firestore.rules denies auditLog writes to every client (see file header).
-  //
-  // TODO(Phase 2 — Cloud Function): move this whole function server-side as a
-  // callable `publishSchedule({ weekId, mode })` that flips the shifts, stamps
-  // the week, appends this exact entry to auditLog, and fans out the
-  // notifications. Until then the audit trail for publishes is INCOMPLETE —
-  // the client cannot close that gap on its own, and faking it here would be
-  // worse than the gap.
-  const auditEntry = buildAuditEntry({
-    action: 'schedule.publish',
-    actorEmployeeId: actor.employeeId,
-    actorUid: actor.uid,
-    targetType: 'schedule',
-    targetId: weekId,
-    reason: null,
-    before: { status: mode === 'publish' ? 'draft' : 'published' },
-    after: {
-      status,
-      mode,
-      shiftsPublished: draftShifts.length,
-      notifiedEmployeeIds: notifyEmployeeIds,
-    },
-  })
-
+  const res = await call({ weekId })
   return {
-    weekId,
-    status,
-    publishedShiftIds: draftShifts.map((s) => s.id),
-    notifyEmployeeIds,
-    auditEntry,
+    weekId: res.data.weekId,
+    status: res.data.status,
+    publishedShiftIds: res.data.publishedShiftIds,
+    notifyEmployeeIds: res.data.notifyEmployeeIds,
   }
 }
 
 /**
- * Draft → Published (§6). Flips every draft shift in the week to 'published'
- * and stamps the week document.
- *
- * Returns the audit entry to write and the employees to notify; see the TODO
- * inside publishInternal for why neither happens here.
+ * Draft → Published (§6). Flips every draft shift in the week to 'published',
+ * stamps the week document, and writes the §17 auditLog entry — all inside
+ * `recordSchedulePublish` (functions/src/schedulePublish.ts), atomically for
+ * the state change and as a best-effort follow-up write for the audit entry,
+ * matching `recordScheduleOverride`'s shape.
  */
-export async function publishSchedule(weekId: string, actor: Actor): Promise<PublishResult> {
-  return publishInternal(weekId, actor, 'publish')
+export async function publishSchedule(weekId: string): Promise<PublishResult> {
+  return callRecordSchedulePublish(weekId)
 }
 
 /**
  * Published → Republished (§6): edits made after a publish go live, and only
- * the affected employees are notified.
- *
- * "Affected" is approximated as the owners of the shifts this call flipped from
- * draft — which is exactly the set of shifts added since the last publish. Edits
- * to an ALREADY-published shift (a time change, a reassignment) do not currently
- * appear in that set; catching those needs a per-shift change log, which is part
- * of the same Cloud Function job as the audit write.
+ * the affected employees are notified — the owners of shifts THIS call
+ * flipped from draft. Edits to an ALREADY-published shift (a time change, a
+ * reassignment) do not currently appear in that set; catching those needs a
+ * per-shift change log, which remains a separate, not-yet-built gap.
  */
-export async function republishSchedule(weekId: string, actor: Actor): Promise<PublishResult> {
-  return publishInternal(weekId, actor, 'republish')
+export async function republishSchedule(weekId: string): Promise<PublishResult> {
+  return callRecordSchedulePublish(weekId)
 }
 
 // ── copy week ────────────────────────────────────────────────────────────────

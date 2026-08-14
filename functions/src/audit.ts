@@ -15,8 +15,9 @@
  * (invite acceptance, manual re-sync, a role-change trigger) are all changes to
  * *who holds which claim*, so they share `permission.change`, disambiguated by
  * `targetType` ('invite' | 'employee') and `reason` ('invite.accept' |
- * 'claims.resync' | 'role.change'). `schedule.override` is its own action,
- * since it is not a claim change at all — see scheduleOverride.ts.
+ * 'claims.resync' | 'role.change'). `schedule.override` and `schedule.publish`
+ * are their own actions, since neither is a claim change — see
+ * scheduleOverride.ts and schedulePublish.ts.
  */
 
 import { FieldValue } from 'firebase-admin/firestore'
@@ -25,7 +26,7 @@ import { logger } from 'firebase-functions'
 import { COLLECTIONS, db } from './firebase'
 
 /** Subset of `AuditAction` (src/types/models.ts) this package emits. */
-export type AuditAction = 'permission.change' | 'schedule.override'
+export type AuditAction = 'permission.change' | 'schedule.override' | 'schedule.publish'
 
 export interface AuditInput {
   action: AuditAction

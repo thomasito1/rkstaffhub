@@ -47,6 +47,11 @@ export interface EmployeeDoc {
   shiftRoles?: { roleId: string; skillLevel: number; isPrimary?: boolean }[]
 }
 
+/** Only the fields the publish callable needs. */
+export interface ScheduleDoc {
+  status?: string
+}
+
 /** Only the fields the override callable needs. */
 export interface ShiftRoleDoc {
   canCoverRoleIds?: string[]

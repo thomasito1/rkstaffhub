@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Avatar, Button, Modal, useToast } from '@/components/ui'
-import { useAuth } from '@/lib/auth/AuthProvider'
 import { formatCurrency, formatDate, formatHours, formatPercent } from '@/lib/format'
 import type { ScheduleData } from '../useScheduleData'
 import { computeWeekLabor } from './LaborFooter'
@@ -13,7 +12,7 @@ import { computeWeekLabor } from './LaborFooter'
  * "Changes since last publish" is real data, not mockup 15's fabricated
  * per-field diffs (drafted from field-level history nothing in this app
  * currently records): a shift still in `status: 'draft'` is exactly the set
- * `republishSchedule()` itself notifies (see schedules.ts's publishInternal),
+ * `republishSchedule()` itself notifies (see functions/src/schedulePublish.ts),
  * so the affected-employees list here is that same set, honestly computed —
  * not invented "time changed 4p→11p" copy this data can't support yet.
  */
@@ -38,7 +37,6 @@ export function PublishModal({
   const { t, i18n } = useTranslation()
   const lang = i18n.language
   const toast = useToast()
-  const { employee, user } = useAuth()
   const [submitting, setSubmitting] = useState(false)
 
   const isRepublish =
@@ -70,13 +68,12 @@ export function PublishModal({
   const publishedAt = toDateSafe(data.schedule?.publishedAt)
 
   async function handleConfirm() {
-    if (!employee || !user) return
     setSubmitting(true)
     try {
       if (isRepublish) {
-        await data.republish({ employeeId: employee.id, uid: user.uid })
+        await data.republish()
       } else {
-        await data.publish({ employeeId: employee.id, uid: user.uid })
+        await data.publish()
       }
       toast.show({
         tone: 'success',

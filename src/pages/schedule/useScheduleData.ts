@@ -15,7 +15,6 @@ import {
   listTimeOff,
   publishSchedule as dbPublishSchedule,
   republishSchedule as dbRepublishSchedule,
-  type Actor,
   type EmployeeCompensation,
   type NewShiftInput,
   type PublishResult,
@@ -94,8 +93,8 @@ export interface ScheduleData {
     patch: Partial<Omit<Shift, 'id' | 'weekId' | 'createdAt' | 'updatedAt'>>,
   ) => Promise<void>
   deleteShift: (shiftId: string) => Promise<void>
-  publish: (actor: Actor) => Promise<PublishResult>
-  republish: (actor: Actor) => Promise<PublishResult>
+  publish: () => Promise<PublishResult>
+  republish: () => Promise<PublishResult>
 }
 
 function toShiftLike(shift: Shift): ShiftLike {
@@ -308,23 +307,17 @@ export function useScheduleData(initialWeekId: string): ScheduleData {
     [weekId, load],
   )
 
-  const publish = useCallback(
-    async (actor: Actor) => {
-      const result = await dbPublishSchedule(weekId, actor)
-      await load()
-      return result
-    },
-    [weekId, load],
-  )
+  const publish = useCallback(async () => {
+    const result = await dbPublishSchedule(weekId)
+    await load()
+    return result
+  }, [weekId, load])
 
-  const republish = useCallback(
-    async (actor: Actor) => {
-      const result = await dbRepublishSchedule(weekId, actor)
-      await load()
-      return result
-    },
-    [weekId, load],
-  )
+  const republish = useCallback(async () => {
+    const result = await dbRepublishSchedule(weekId)
+    await load()
+    return result
+  }, [weekId, load])
 
   return {
     weekId,

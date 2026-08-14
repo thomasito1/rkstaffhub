@@ -252,6 +252,32 @@ New during Phase 0. Ordered by when they block work:
   the only source of truth for who can cover what. See
   DESIGN-HANDOFF.md's "Superseded" section for the full note.
 
+- **RESOLVED — publish/republish now write their §17 audit entry.** Promoted
+  from a tracked gap to the first task of this work block per Rafa's ruling
+  (Aug 13, 2026): **publish must not be used against real data until the audit
+  entry lands**, and it now has. `recordSchedulePublish`
+  (`functions/src/schedulePublish.ts`) is pattern-matched to
+  `recordScheduleOverride`: it independently derives publish-vs-republish from
+  the week's CURRENTLY STORED status inside a transaction — a client claiming
+  "publish" on an already-live week is corrected to a republish, not obeyed —
+  flips the week and its draft shifts atomically, then writes the audit entry
+  as a best-effort follow-up (same two-step shape as the override function, so
+  a logging hiccup can't roll back a publish that already succeeded).
+  `src/lib/db/schedules.ts`'s `publishSchedule()`/`republishSchedule()` now
+  call it instead of writing directly; both dropped their `actor` parameter
+  since the Function resolves the actor from the ID token, not a client claim.
+  Verified against the live emulator: a republish of the seeded (already
+  published) week correctly comes back `republished`; a first publish of a
+  brand-new draft week flips its one draft shift and returns the right
+  `notifyEmployeeIds`; exactly 2 `auditLog` entries land with accurate
+  before/after state; a staff caller is denied outright.
+
+  **Still open, not part of this fix:** republish's "affected employees" is
+  still approximated as owners of shifts flipped from draft this call — edits
+  to an *already-published* shift (a time change, a reassignment) don't appear
+  in that set. Catching those needs a per-shift change log, which remains a
+  separate, not-yet-built gap.
+
 ### Not enforced in rules — deliberate, moves to the Phase 2 callable
 
 - **The Thursday 23:59 ET availability deadline.** Rules have no tz database, so
