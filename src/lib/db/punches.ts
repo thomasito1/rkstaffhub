@@ -9,7 +9,9 @@
 import {
   collection,
   getDocs,
+  orderBy,
   query,
+  Timestamp,
   where,
   type DocumentData,
   type QueryDocumentSnapshot,
@@ -59,6 +61,52 @@ export async function getOpenPunch(employeeId: string): Promise<Punch | null> {
     return snap.docs[0] ? toPunch(snap.docs[0]) : null
   } catch (err) {
     if (isPermissionDenied(err)) return null
+    throw err
+  }
+}
+
+/** Restaurant-local "YYYY-MM-DD" for a punch's server timestamp — the admin view's grouping key. */
+export function punchLocalDate(p: Punch): string | null {
+  const ts = p.timestamp
+  if (!ts || typeof ts !== 'object' || !('toDate' in ts)) return null
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(
+    (ts as { toDate(): Date }).toDate(),
+  )
+}
+
+/**
+ * Every punch whose restaurant-local date falls within [startDate, endDate]
+ * (both inclusive) — Shifts & Tips admin (§9). The Firestore query itself
+ * only narrows to a generously widened UTC window (±1 day, so no timezone
+ * boundary math has to be exact there); the precise inclusion check is the
+ * same local-date string comparison `listPunchesForEmployeeOnDate` already
+ * uses. Client-side filters (employee/flagged/department) narrow further —
+ * a two-week admin window is a few hundred documents at most, cheap to
+ * filter in memory rather than needing a matching composite index per
+ * filter combination.
+ */
+export async function listPunchesInRange(startDate: string, endDate: string): Promise<Punch[]> {
+  const DAY_MS = 24 * 60 * 60 * 1000
+  const widenedStart = Timestamp.fromMillis(new Date(`${startDate}T00:00:00Z`).getTime() - DAY_MS)
+  const widenedEnd = Timestamp.fromMillis(new Date(`${endDate}T23:59:59Z`).getTime() + DAY_MS)
+
+  try {
+    const snap = await getDocs(
+      query(
+        collection(db, COLLECTIONS.punches),
+        where('timestamp', '>=', widenedStart),
+        where('timestamp', '<=', widenedEnd),
+        orderBy('timestamp', 'asc'),
+      ),
+    )
+    return snap.docs
+      .map(toPunch)
+      .filter((p) => {
+        const localDate = punchLocalDate(p)
+        return localDate !== null && localDate >= startDate && localDate <= endDate
+      })
+  } catch (err) {
+    if (isPermissionDenied(err)) return []
     throw err
   }
 }

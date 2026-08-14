@@ -73,16 +73,52 @@ export function clockOut(input: ClockOutInput): Promise<ClockOutResult> {
 
 export interface ManualPunchInput {
   employeeId: string
-  type: 'in' | 'out'
   reason: string
+  /** ISO 8601. At least one of clockIn/clockOut is required; both together creates a complete pair in one call. */
+  clockIn?: string
+  clockOut?: string
   tipsAmount?: number
 }
 
 export interface ManualPunchResult {
-  punchId: string
+  punchIds: string[]
 }
 
 /** Manager-only (`punches.edit`, below-level) — bypasses geofence + selfie by design (spec §8). */
 export function manualPunch(input: ManualPunchInput): Promise<ManualPunchResult> {
   return callPunchAction('manualPunch', input)
+}
+
+export interface EditPunchInput {
+  punchId: string
+  /** ISO 8601. */
+  newTimestamp: string
+  reason: string
+}
+
+export interface EditPunchResult {
+  punchId: string
+}
+
+/** Corrects a punch's recorded time (`punches.edit`, below-level) — spec §9. */
+export function editPunch(input: EditPunchInput): Promise<EditPunchResult> {
+  return callPunchAction('editPunch', input)
+}
+
+export interface EditTipReportInput {
+  tipReportId?: string
+  employeeId?: string
+  date?: string
+  shiftId?: string | null
+  newAmount: number
+  reason: string
+}
+
+export interface EditTipReportResult {
+  tipReportId: string
+}
+
+/** Edits an existing tip report, or creates one where none exists (`tips.edit`, below-level) — spec §9. */
+export function editTipReport(input: EditTipReportInput): Promise<EditTipReportResult> {
+  return callPunchAction('editTipReport', input)
 }

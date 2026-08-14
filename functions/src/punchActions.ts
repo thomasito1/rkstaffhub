@@ -23,7 +23,7 @@
  * function only ever flags + notifies, never fabricates a close.
  */
 
-import { FieldValue } from 'firebase-admin/firestore'
+import { FieldValue, Timestamp } from 'firebase-admin/firestore'
 import { HttpsError, onCall } from 'firebase-functions/v2/https'
 
 import { COLLECTIONS, db } from './firebase'
@@ -240,14 +240,37 @@ export const clockOut = onCall<ClockOutRequest>(async (request): Promise<ClockOu
 
 export interface ManualPunchRequest {
   employeeId: string
-  type: 'in' | 'out'
   reason: string
-  /** Optional — a manager may know the tip total for an 'out' punch; otherwise it's left for a later correction (Shifts & Tips admin). */
+  /**
+   * ISO 8601. At least one of clockIn/clockOut is required. Both together
+   * creates a complete pair in one call (mockup 24 — "add a manual punch"
+   * for a shift the employee never punched at all); either alone behaves
+   * like the single-sided open/close it names.
+   */
+  clockIn?: string
+  clockOut?: string
+  /** Optional — a manager may know the tip total already; otherwise it's left for a later correction via editTipReport. */
   tipsAmount?: number
 }
 
 export interface ManualPunchResponse {
-  punchId: string
+  punchIds: string[]
+}
+
+async function requireBelowLevelTarget(
+  actor: Awaited<ReturnType<typeof requirePermission>>,
+  employeeId: string,
+): Promise<void> {
+  const targetSnap = await db.collection(COLLECTIONS.employees).doc(employeeId).get()
+  if (!targetSnap.exists) throw new HttpsError('not-found', 'That employee does not exist.')
+  const target = targetSnap.data() as EmployeeDoc
+  if (!target.accessRole || !canAccessSensitive(actor, { id: employeeId, accessRole: target.accessRole })) {
+    throwPunchError(
+      'permission-denied',
+      'punch/below-level-required',
+      'You may only act on a punch for someone below your access level.',
+    )
+  }
 }
 
 export const manualPunch = onCall<ManualPunchRequest>(
@@ -255,57 +278,78 @@ export const manualPunch = onCall<ManualPunchRequest>(
     const uid = request.auth?.uid
     if (!uid) throw new HttpsError('unauthenticated', 'Sign in required.')
 
-    const { employeeId, type } = request.data
+    const { employeeId, clockIn, clockOut } = request.data
     const reason = request.data.reason?.trim()
-    if (!employeeId || (type !== 'in' && type !== 'out')) {
-      throw new HttpsError('invalid-argument', 'employeeId and a valid type are required.')
+    if (!employeeId || (!clockIn && !clockOut)) {
+      throw new HttpsError('invalid-argument', 'employeeId and at least one of clockIn/clockOut are required.')
     }
     if (!reason) {
       throwPunchError('invalid-argument', 'punch/reason-required', 'A reason is required for a manual punch.')
     }
 
     const actor = await requirePermission(uid, 'punches.edit')
+    await requireBelowLevelTarget(actor, employeeId)
 
-    const targetSnap = await db.collection(COLLECTIONS.employees).doc(employeeId).get()
-    if (!targetSnap.exists) throw new HttpsError('not-found', 'That employee does not exist.')
-    const target = targetSnap.data() as EmployeeDoc
-    if (
-      !target.accessRole ||
-      !canAccessSensitive(actor, { id: employeeId, accessRole: target.accessRole })
-    ) {
-      throwPunchError(
-        'permission-denied',
-        'punch/below-level-required',
-        'You may only create a manual punch for someone below your access level.',
-      )
-    }
-
-    const punchRefNew = db.collection(COLLECTIONS.punches).doc()
     const todaysShift = await findTodaysShift(employeeId)
     const shiftId = todaysShift?.shiftId ?? null
+    const punchIds: string[] = []
 
-    if (type === 'in') {
+    const basePunch = (type: 'in' | 'out', at: string, status?: 'open' | 'closed') => ({
+      employeeId,
+      shiftId,
+      type,
+      ...(status ? { status } : {}),
+      timestamp: Timestamp.fromDate(new Date(at)),
+      deviceTimestamp: Timestamp.fromDate(new Date(at)),
+      geo: null,
+      selfieStoragePath: null,
+      manualBy: actor.id,
+      manualReason: reason,
+      flagged: shiftId === null,
+      flagReason: shiftId === null ? 'no-scheduled-shift' : null,
+      editHistory: [],
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    })
+
+    if (clockIn && clockOut) {
+      // A complete pair, e.g. an employee who never punched at all that day.
+      const existingOpen = await findOpenPunch(employeeId)
+      if (existingOpen) {
+        throwPunchError(
+          'failed-precondition',
+          'punch/already-open',
+          'This employee already has an open punch — resolve that first.',
+        )
+      }
+      const inRef = db.collection(COLLECTIONS.punches).doc()
+      const outRef = db.collection(COLLECTIONS.punches).doc()
+      await db.runTransaction(async (tx) => {
+        tx.create(inRef, basePunch('in', clockIn, 'closed'))
+        tx.create(outRef, basePunch('out', clockOut))
+        if (typeof request.data.tipsAmount === 'number' && request.data.tipsAmount >= 0) {
+          tx.create(db.collection(COLLECTIONS.tipReports).doc(), {
+            employeeId,
+            date: todayIsoInRestaurantTz(),
+            shiftId,
+            amount: request.data.tipsAmount,
+            reportedAt: FieldValue.serverTimestamp(),
+            editedBy: actor.id,
+            editHistory: [],
+            createdAt: FieldValue.serverTimestamp(),
+            updatedAt: FieldValue.serverTimestamp(),
+          })
+        }
+      })
+      punchIds.push(inRef.id, outRef.id)
+    } else if (clockIn) {
       const existingOpen = await findOpenPunch(employeeId)
       if (existingOpen) {
         throwPunchError('failed-precondition', 'punch/already-open', 'This employee is already clocked in.')
       }
-      await punchRefNew.create({
-        employeeId,
-        shiftId,
-        type: 'in',
-        status: 'open',
-        timestamp: FieldValue.serverTimestamp(),
-        deviceTimestamp: FieldValue.serverTimestamp(),
-        geo: null,
-        selfieStoragePath: null,
-        manualBy: actor.id,
-        manualReason: reason,
-        flagged: shiftId === null,
-        flagReason: shiftId === null ? 'no-scheduled-shift' : null,
-        editHistory: [],
-        createdAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
-      })
+      const inRef = db.collection(COLLECTIONS.punches).doc()
+      await inRef.create(basePunch('in', clockIn, 'open'))
+      punchIds.push(inRef.id)
     } else {
       const openDoc = await findOpenPunch(employeeId)
       if (!openDoc) {
@@ -313,6 +357,7 @@ export const manualPunch = onCall<ManualPunchRequest>(
       }
       const openPunch = openDoc.data() as PunchDoc
       const outShiftId = openPunch.shiftId ?? shiftId
+      const outRef = db.collection(COLLECTIONS.punches).doc()
 
       await db.runTransaction(async (tx) => {
         const fresh = await tx.get(openDoc.ref)
@@ -320,26 +365,9 @@ export const manualPunch = onCall<ManualPunchRequest>(
           throwPunchError('failed-precondition', 'punch/no-open-punch', 'This employee is not currently clocked in.')
         }
         tx.update(openDoc.ref, { status: 'closed', updatedAt: FieldValue.serverTimestamp() })
-        tx.create(punchRefNew, {
-          employeeId,
-          shiftId: outShiftId,
-          type: 'out',
-          timestamp: FieldValue.serverTimestamp(),
-          deviceTimestamp: FieldValue.serverTimestamp(),
-          geo: null,
-          selfieStoragePath: null,
-          manualBy: actor.id,
-          manualReason: reason,
-          flagged: false,
-          flagReason: null,
-          editHistory: [],
-          createdAt: FieldValue.serverTimestamp(),
-          updatedAt: FieldValue.serverTimestamp(),
-        })
-
+        tx.create(outRef, { ...basePunch('out', clockOut as string), shiftId: outShiftId })
         if (typeof request.data.tipsAmount === 'number' && request.data.tipsAmount >= 0) {
-          const tipRef = db.collection(COLLECTIONS.tipReports).doc()
-          tx.create(tipRef, {
+          tx.create(db.collection(COLLECTIONS.tipReports).doc(), {
             employeeId,
             date: todayIsoInRestaurantTz(),
             shiftId: outShiftId,
@@ -352,6 +380,7 @@ export const manualPunch = onCall<ManualPunchRequest>(
           })
         }
       })
+      punchIds.push(outRef.id)
     }
 
     const audited = await writeAudit({
@@ -359,13 +388,173 @@ export const manualPunch = onCall<ManualPunchRequest>(
       actorEmployeeId: actor.id,
       actorUid: uid,
       targetType: 'punch',
-      targetId: punchRefNew.id,
+      targetId: punchIds.join(','),
       reason,
       before: null,
-      after: { employeeId, type, manual: true },
+      after: { employeeId, clockIn: clockIn ?? null, clockOut: clockOut ?? null, manual: true },
     })
-    if (!audited) await markAuditPending(punchRefNew, 'punch.edit')
+    if (!audited) {
+      for (const id of punchIds) await markAuditPending(punchRef(id), 'punch.edit')
+    }
 
-    return { punchId: punchRefNew.id }
+    return { punchIds }
+  },
+)
+
+// ── editPunch ────────────────────────────────────────────────────────────────
+
+export interface EditPunchRequest {
+  punchId: string
+  /** ISO 8601. */
+  newTimestamp: string
+  reason: string
+}
+
+export interface EditPunchResponse {
+  punchId: string
+}
+
+/** Corrects a punch's recorded time — spec §9. Never touches type/employeeId/shiftId; those are facts, not the clock reading. */
+export const editPunch = onCall<EditPunchRequest>(async (request): Promise<EditPunchResponse> => {
+  const uid = request.auth?.uid
+  if (!uid) throw new HttpsError('unauthenticated', 'Sign in required.')
+
+  const { punchId, newTimestamp } = request.data
+  const reason = request.data.reason?.trim()
+  if (!punchId || !newTimestamp) {
+    throw new HttpsError('invalid-argument', 'punchId and newTimestamp are required.')
+  }
+  if (!reason) {
+    throwPunchError('invalid-argument', 'punch/reason-required', 'A reason is required to edit a punch.')
+  }
+
+  const actor = await requirePermission(uid, 'punches.edit')
+
+  const snap = await punchRef(punchId).get()
+  if (!snap.exists) throw new HttpsError('not-found', 'That punch no longer exists.')
+  const punch = snap.data() as PunchDoc & { employeeId: string; timestamp: FirebaseFirestore.Timestamp }
+  await requireBelowLevelTarget(actor, punch.employeeId)
+
+  const oldTimestamp = punch.timestamp
+  const newTs = Timestamp.fromDate(new Date(newTimestamp))
+  const historyEntry = { by: actor.id, at: Timestamp.now(), oldTimestamp, newTimestamp: newTs, reason }
+
+  await punchRef(punchId).update({
+    timestamp: newTs,
+    editedBy: actor.id,
+    editHistory: FieldValue.arrayUnion(historyEntry),
+    updatedAt: FieldValue.serverTimestamp(),
+  })
+
+  const audited = await writeAudit({
+    action: 'punch.edit',
+    actorEmployeeId: actor.id,
+    actorUid: uid,
+    targetType: 'punch',
+    targetId: punchId,
+    reason,
+    before: { timestamp: oldTimestamp.toDate().toISOString() },
+    after: { timestamp: newTimestamp },
+  })
+  if (!audited) await markAuditPending(punchRef(punchId), 'punch.edit')
+
+  return { punchId }
+})
+
+// ── editTipReport ────────────────────────────────────────────────────────────
+
+export interface EditTipReportRequest {
+  /** Provide to edit an existing report. */
+  tipReportId?: string
+  /** Provide employeeId + date instead to CREATE one where none exists yet (the "missing tip report" flag's resolution). */
+  employeeId?: string
+  date?: string
+  shiftId?: string | null
+  newAmount: number
+  reason: string
+}
+
+export interface EditTipReportResponse {
+  tipReportId: string
+}
+
+export const editTipReport = onCall<EditTipReportRequest>(
+  async (request): Promise<EditTipReportResponse> => {
+    const uid = request.auth?.uid
+    if (!uid) throw new HttpsError('unauthenticated', 'Sign in required.')
+
+    const { tipReportId, employeeId, date, shiftId, newAmount } = request.data
+    const reason = request.data.reason?.trim()
+    if (typeof newAmount !== 'number' || newAmount < 0) {
+      throw new HttpsError('invalid-argument', 'newAmount must be a non-negative number.')
+    }
+    if (!reason) {
+      throwPunchError('invalid-argument', 'punch/reason-required', 'A reason is required to edit a tip report.')
+    }
+    if (!tipReportId && !(employeeId && date)) {
+      throw new HttpsError('invalid-argument', 'Provide tipReportId, or employeeId + date to create one.')
+    }
+
+    const actor = await requirePermission(uid, 'tips.edit')
+
+    if (tipReportId) {
+      const ref = db.collection(COLLECTIONS.tipReports).doc(tipReportId)
+      const snap = await ref.get()
+      if (!snap.exists) throw new HttpsError('not-found', 'That tip report no longer exists.')
+      const report = snap.data() as { employeeId: string; amount: number }
+      await requireBelowLevelTarget(actor, report.employeeId)
+
+      const oldAmount = report.amount
+      const historyEntry = { by: actor.id, at: Timestamp.now(), oldAmount, newAmount, reason }
+      await ref.update({
+        amount: newAmount,
+        editedBy: actor.id,
+        editHistory: FieldValue.arrayUnion(historyEntry),
+        updatedAt: FieldValue.serverTimestamp(),
+      })
+
+      const audited = await writeAudit({
+        action: 'tip.edit',
+        actorEmployeeId: actor.id,
+        actorUid: uid,
+        targetType: 'tipReport',
+        targetId: tipReportId,
+        reason,
+        before: { amount: oldAmount },
+        after: { amount: newAmount },
+      })
+      if (!audited) await markAuditPending(ref, 'tip.edit')
+
+      return { tipReportId }
+    }
+
+    await requireBelowLevelTarget(actor, employeeId as string)
+    const ref = db.collection(COLLECTIONS.tipReports).doc()
+    const historyEntry = { by: actor.id, at: Timestamp.now(), oldAmount: 0, newAmount, reason }
+    await ref.set({
+      employeeId,
+      date,
+      shiftId: shiftId ?? null,
+      amount: newAmount,
+      reportedAt: FieldValue.serverTimestamp(),
+      editedBy: actor.id,
+      editHistory: [historyEntry],
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    })
+
+    const audited = await writeAudit({
+      action: 'tip.edit',
+      actorEmployeeId: actor.id,
+      actorUid: uid,
+      targetType: 'tipReport',
+      targetId: ref.id,
+      reason,
+      before: { amount: 0 },
+      after: { amount: newAmount },
+    })
+    if (!audited) await markAuditPending(ref, 'tip.edit')
+
+    return { tipReportId: ref.id }
   },
 )

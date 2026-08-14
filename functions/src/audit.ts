@@ -32,6 +32,7 @@ export type AuditAction =
   | 'schedule.publish'
   | 'trade.override'
   | 'punch.edit'
+  | 'tip.edit'
 
 export interface AuditInput {
   action: AuditAction

@@ -27,7 +27,7 @@ Phases are sequential. Do not build later-phase features early, even scaffolding
 | Shift Pool UI (mockups 16/17) | ✅ Done — `src/pages/shiftPool/*`, wired at `/shift-pool` |
 | Geofenced selfie clock in/out + offline queue | ✅ Done — `src/pages/clock/*`, wired at `/clock` |
 | Tip report at clock-out | ✅ Done — mockup 22's numpad/confirm/$0-confirm flow, gated on `Employee.tipsRequired` |
-| Shifts & Tips admin section | ⬜ Not started |
+| Shifts & Tips admin section | 🟡 Server layer done (see below) — `editPunch`/`editTipReport`, `manualPunch` reworked for mockup 24; the admin table UI (mockups 25/25b) is next |
 
 **Time clock — server layer.** `src/lib/geofence.ts` (haversine, pure, symlinked
 into `functions/src/geofence.ts` the same way as `tradeEligibility.ts`) is
@@ -107,6 +107,60 @@ on-duty-manager list is `manualPunch`'s UI (Shifts & Tips admin territory,
 not built here) — kept the mockup's own explanatory copy, dropped the
 button; the geofence-blocked distance reads in meters, not the mockup's
 miles, matching this app's own native geofence unit throughout.
+
+**Shifts & Tips admin — server layer** (`functions/src/punchActions.ts`).
+Reviewing mockup 24 ("Add manual punch") while starting this task surfaced a
+real gap in `manualPunch` as task 8 shipped it: it only ever used
+`serverTimestamp()` ("now"), but the mockup clearly shows a manager entering
+SPECIFIC clock-in/clock-out times for a shift the employee never punched at
+all — a genuinely backdated pair, not "punch them in right now." Reworked
+`manualPunch` to accept `clockIn`/`clockOut` as ISO timestamps (at least one
+required); supplying both creates a complete pair — the 'in' punch immediately
+`status: 'closed'` — in one call, matching the mockup's single "Add punch"
+action exactly rather than requiring two separate calls. `ManualPunchResponse`
+is now `{ punchIds: string[] }` (was `{ punchId }`) since a pair-creation call
+returns two ids; nothing in the already-shipped clock UI called the old shape
+(checked — only comments referenced it), so this was a clean rename, not a
+compatibility shim.
+
+Two new callables, both `punches.edit`/`tips.edit` + below-level
+(`canAccessSensitive`), both requiring a non-empty reason, both writing an
+auditLog entry (`punch.edit`/`tip.edit` — `tip.edit` newly added to the
+Functions-side `AuditAction` mirror) and appending to the doc's own
+`editHistory`:
+- **`editPunch`** — corrects one punch's `timestamp` only; never touches
+  `type`/`employeeId`/`shiftId`, matching spec §9's "edit any punch TIME."
+  Mockup 25b edits a pair's clock-in and clock-out together in one modal
+  with one shared reason — the server stays single-document-per-call
+  (matching `editHistory`'s per-document shape); the admin UI calls it twice
+  when both sides of a pair changed.
+- **`editTipReport`** — edits an existing report's `amount`, OR (passing
+  `employeeId`+`date` instead of a `tipReportId`) creates one where none
+  exists at all — the resolution for the "missing tip report" flag mockup 25
+  shows, which is real now that `manualPunch`'s tip amount was already
+  deliberately left optional (task 8's own scoping note, vindicated here).
+
+**Mockup 25 shows two flag states this app's actual behavior can't
+produce as designed, both already-approved deviations from task 8, not new
+ones**: "Auto-closed" (task 8's `checkForgottenClockOuts` explicitly never
+closes a punch, by Rafa's own ruling) and "Outside fence" on a punch that
+exists at all (a live self-punch outside the geofence is REJECTED outright,
+never created — `verifyGeofence`'s design). The admin UI (next) should
+render `flagReason` values that actually occur (`no-scheduled-shift`,
+`forgotten-clockout`, plus `manualBy != null` for a manual punch) rather than
+the mockup's specific example flag labels — same "mockup is visual
+reference, behavior follows spec/rulings" resolution as every other
+superseded-mockup note in this file.
+
+**Verified against a live Auth+Firestore+Functions emulator** (real
+`httpsCallable`, not admin-SDK shortcuts): all three `manualPunch` shapes
+(clock-in only, clock-out only, complete pair), the already-open rejection,
+below-level gating, `editPunch`'s timestamp/editHistory/audit-entry
+correctness plus its reason-required guard, and `editTipReport`'s both
+paths (edit existing, create fresh with `oldAmount: 0`) — 9/9 scenarios.
+Also: `npm run build` (client + functions), 145 unit tests, i18n parity
+(1064 keys), 119 rules tests (firestore.rules untouched — no new
+client-writable surface).
 
 **Push infrastructure — the whole vertical slice.** `Employee.pushTokens:
 PushToken[]` (`{ token, platform, updatedAt }`) is a new, already-self-editable
