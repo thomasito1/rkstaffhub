@@ -4,9 +4,10 @@
 Phase 0 and Phase 1 complete and reviewed.
 Last updated: Aug 14, 2026 — trade eligibility engine, claim/accept/approve/decline,
 the FCM push + ZenZap stub infrastructure (server AND client), the Shift
-Pool UI (mockups 16/17), and the time-clock server layer (geofence,
-selfie verification, offline queue, forgotten-clockout sweep) — the clock
-screens themselves (mockups 19–23) are the one piece still to land.
+Pool UI (mockups 16/17), and the full time-clock feature (server layer +
+mockups 19–23, wired at `/clock`). "Geofenced selfie clock flow with
+offline queue" and "Tip gate at clock-out" are both complete. Shifts & Tips
+admin is next.
 
 Phases are sequential. Do not build later-phase features early, even scaffolding.
 
@@ -24,8 +25,8 @@ Phases are sequential. Do not build later-phase features early, even scaffolding
 | Pool-drop eligibility-filtered notifications | ✅ Done — `functions/src/tradeTriggers.ts`'s `onTradeCreated` |
 | Push client registration (tokens, service worker, permission UX) | ✅ Done — `src/lib/push/registerForPush.ts`, `src/sw.ts` (see below) |
 | Shift Pool UI (mockups 16/17) | ✅ Done — `src/pages/shiftPool/*`, wired at `/shift-pool` |
-| Geofenced selfie clock in/out + offline queue | 🟡 Server + offline queue done (see below); the 5 clock screens (mockups 19–23) are next |
-| Tip report at clock-out | 🟡 Server-side tip gate done (`clockOut` requires it when `tipsRequired`); the numpad/confirm/zero-tip screens (mockup 22) land with the clock UI |
+| Geofenced selfie clock in/out + offline queue | ✅ Done — `src/pages/clock/*`, wired at `/clock` |
+| Tip report at clock-out | ✅ Done — mockup 22's numpad/confirm/$0-confirm flow, gated on `Employee.tipsRequired` |
 | Shifts & Tips admin section | ⬜ Not started |
 
 **Time clock — server layer.** `src/lib/geofence.ts` (haversine, pure, symlinked
@@ -75,10 +76,37 @@ connectivity failure stays queued.
 parity (955 keys), `functions/tsc --noEmit` + a clean `functions/tsc` build,
 119 rules tests (firestore.rules itself untouched this round — no new
 client-writable surface; punches/tipReports were already Cloud-Function-only).
-The clock UI itself (camera capture, geolocation permission flow, the 5
-mockup screens, and wiring the offline queue's `online`-event sync trigger)
-has NOT been built or browser-verified yet — that's explicitly the next step,
-not assumed done by the server layer being solid.
+
+**Time clock — the screens** (`src/pages/clock/*`, mockups 19–23, wired at
+`/clock`). One component per mockup, orchestrated by `ClockPage.tsx`'s step
+machine: home → geofence pre-check (client-side, display-only, per
+`geofence.ts`'s own honesty note — the server call still re-verifies
+independently either way) → selfie capture (`getUserMedia`, front camera
+only, canvas `toBlob` for compression, no gallery fallback) → for a tipped
+clock-out, tip numpad → confirm (or the distinct $0-confirm variant,
+mockup 22d, not just 22b with "0" typed in) → the FINAL atomic step, where
+the complete bundle (selfie blob, geo captured at the pre-check, device
+timestamp taken right here, tip amount if applicable) is gathered together
+and either submitted live or hipped to `queuePunch()` if offline — matching
+the offline queue's own "atomic at the moment the flow actually completes,
+never re-captured later" contract exactly. An `online`-event listener drains
+the queue and surfaces synced/dropped/still-queued outcomes.
+
+Verified end-to-end against the live emulator suite via Playwright at the
+mobile **390×844 viewport**: clock in → clock out with tips → clock out with
+$0 tips (checkbox-gated, per mockup 22d) → geofence-blocked (mocked
+out-of-range position, with a working "Try again" once back in range) →
+offline queue (forced `navigator.onLine = false`, punch queued to
+IndexedDB with a "Pending sync" badge, then synced with a toast once back
+online). Camera tested via a monkey-patched `getUserMedia` returning a
+`canvas.captureStream()` — this environment has no `--use-fake-device`
+Playwright flag available.
+
+Two judgment calls worth flagging: mockup 23's "ask a manager" button and
+on-duty-manager list is `manualPunch`'s UI (Shifts & Tips admin territory,
+not built here) — kept the mockup's own explanatory copy, dropped the
+button; the geofence-blocked distance reads in meters, not the mockup's
+miles, matching this app's own native geofence unit throughout.
 
 **Push infrastructure — the whole vertical slice.** `Employee.pushTokens:
 PushToken[]` (`{ token, platform, updatedAt }`) is a new, already-self-editable

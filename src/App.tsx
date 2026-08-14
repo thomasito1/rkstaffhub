@@ -23,6 +23,7 @@ import { GlanceViewPage } from '@/pages/availability/GlanceViewPage'
 import { ScheduleEntryPage } from '@/pages/schedule/ScheduleEntryPage'
 import { WhosWorkingPage } from '@/pages/schedule/WhosWorkingPage'
 import { ShiftPoolPage } from '@/pages/shiftPool/ShiftPoolPage'
+import { ClockPage } from '@/pages/clock/ClockPage'
 
 /**
  * Phase 0 routing.
@@ -60,7 +61,7 @@ export default function App() {
             "My Shifts" view (ScheduleEntryPage). */}
         <Route path="schedule" element={<ScheduleEntryPage />} />
         <Route path="schedule/whos-working" element={<WhosWorkingPage />} />
-        <Route path="clock" element={<PlaceholderPage titleKey="nav.clock" phase={2} />} />
+        <Route path="clock" element={<ClockPage />} />
 
         {/* Availability — Phase 1 (spec §5). Each page self-guards its own
             permission; the routes below only need to match each page's
