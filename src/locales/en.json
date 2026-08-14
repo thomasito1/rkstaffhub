@@ -1015,5 +1015,34 @@
         "roleCreateFailed": "Couldn't create the role. Try again."
       }
     }
+  },
+  "mySchedule": {
+    "title": "My schedule",
+    "today": "Today",
+    "weekSummary_one": "{{hours}} hrs · {{count}} shift",
+    "weekSummary_other": "{{hours}} hrs · {{count}} shifts",
+    "dayOff": "Day off",
+    "withCoworkers": "With {{names}}",
+    "errorTitle": "Couldn't load your schedule",
+    "errorBody": "Something went wrong. Try again.",
+    "detail": {
+      "hours": "{{hours}} hrs scheduled",
+      "station": "Station",
+      "workingWithYou": "Working with you"
+    }
+  },
+  "whosWorking": {
+    "title": "Who's working",
+    "employee": "Employee",
+    "onNow": "On now",
+    "done": "Done",
+    "emptyTitle": "No one scheduled",
+    "emptyBody": "No published shifts for this day yet.",
+    "errorTitle": "Couldn't load the schedule",
+    "errorBody": "Something went wrong. Try again.",
+    "stats": {
+      "onNow": "On now",
+      "scheduled": "Scheduled today"
+    }
   }
 }

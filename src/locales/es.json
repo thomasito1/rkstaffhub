@@ -1015,5 +1015,34 @@
         "roleCreateFailed": "No se pudo crear el puesto. Inténtalo de nuevo."
       }
     }
+  },
+  "mySchedule": {
+    "title": "Mi horario",
+    "today": "Hoy",
+    "weekSummary_one": "{{hours}} h · {{count}} turno",
+    "weekSummary_other": "{{hours}} h · {{count}} turnos",
+    "dayOff": "Día libre",
+    "withCoworkers": "Con {{names}}",
+    "errorTitle": "No se pudo cargar tu horario",
+    "errorBody": "Algo salió mal. Inténtalo de nuevo.",
+    "detail": {
+      "hours": "{{hours}} h programadas",
+      "station": "Estación",
+      "workingWithYou": "Trabajando contigo"
+    }
+  },
+  "whosWorking": {
+    "title": "Quién trabaja",
+    "employee": "Empleado/a",
+    "onNow": "En turno",
+    "done": "Terminado/a",
+    "emptyTitle": "Nadie programado",
+    "emptyBody": "Aún no hay turnos publicados para este día.",
+    "errorTitle": "No se pudo cargar el horario",
+    "errorBody": "Algo salió mal. Inténtalo de nuevo.",
+    "stats": {
+      "onNow": "En turno ahora",
+      "scheduled": "Programados hoy"
+    }
   }
 }

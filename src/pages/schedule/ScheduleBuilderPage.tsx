@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
 import { Button, EmptyState, FilterSelect } from '@/components/ui'
@@ -145,6 +146,12 @@ function ScheduleBuilderScreen(): JSX.Element {
         </div>
 
         <div className="flex items-center gap-3">
+          <Link
+            to="/schedule/whos-working"
+            className="rounded-control border border-line px-4 py-2 text-meta font-medium text-ink-muted transition-colors hover:text-ink"
+          >
+            {t('whosWorking.title')}
+          </Link>
           {warningCount > 0 ? (
             <button
               type="button"
