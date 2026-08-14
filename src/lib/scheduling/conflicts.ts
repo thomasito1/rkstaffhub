@@ -34,6 +34,7 @@ export type ConflictCode =
   | 'skill-too-low'
   | 'wrong-role'
   | 'inactive-employee'
+  | 'wrong-department'
 
 export interface Conflict {
   code: ConflictCode
@@ -63,12 +64,21 @@ export interface ShiftLike {
   roleId: string
   requiredSkillLevel: 1 | 2 | 3
   employeeId?: string | null
+  /**
+   * Optional. Only trade eligibility (spec §7) supplies it — the schedule
+   * builder already scopes its candidate list to the shift's department, so
+   * the check below is a no-op there. Left off, the department check never
+   * fires.
+   */
+  department?: string
 }
 
 export interface EmployeeLike {
   id: string
   status: string
   shiftRoles: { roleId: string; skillLevel: 1 | 2 | 3 }[]
+  /** Optional — see ShiftLike.department. */
+  department?: string
 }
 
 export interface AvailabilityDayLike {
@@ -186,6 +196,20 @@ export function findConflicts(shift: ShiftLike, context: ConflictContext): Confl
       severity: 'block',
       messageKey: 'conflicts.inactiveEmployee',
       params: { status: employee.status },
+      overridable: false,
+    })
+  }
+
+  // ── BLOCK: wrong department (spec §7's 4th trade-eligibility condition).
+  //    Only fires when both sides carry a department — the schedule builder's
+  //    own candidate list is already department-scoped, so this is a no-op
+  //    there and only bites trade eligibility, which supplies both fields.
+  if (shift.department && employee.department && shift.department !== employee.department) {
+    conflicts.push({
+      code: 'wrong-department',
+      severity: 'block',
+      messageKey: 'conflicts.wrongDepartment',
+      params: { department: shift.department },
       overridable: false,
     })
   }

@@ -617,6 +617,7 @@
   },
   "conflicts": {
     "inactiveEmployee": "Este empleado está {{status}} y no se puede programar.",
+    "wrongDepartment": "Está en otro departamento (se necesita {{department}}).",
     "wrongRole": "No tiene este puesto ni ninguno que lo pueda cubrir.",
     "skillTooLow": "Nivel {{has}} — este turno requiere Nivel {{needs}}.",
     "timeOff": "Tiene tiempo libre aprobado ese día.",

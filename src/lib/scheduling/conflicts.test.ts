@@ -217,6 +217,43 @@ describe('BLOCK: inactive employees are excluded from scheduling (spec §18)', (
   })
 })
 
+describe('BLOCK: wrong department — trade eligibility only (spec §7)', () => {
+  it('blocks when the shift and employee departments both are set and differ', () => {
+    const found = findConflicts(
+      shift({ department: 'FOH' }),
+      ctx({ employee: emp({ department: 'BOH' }) }),
+    )
+    expect(found.some((c) => c.code === 'wrong-department' && c.severity === 'block')).toBe(true)
+  })
+
+  it('is never overridable', () => {
+    const found = findConflicts(
+      shift({ department: 'FOH' }),
+      ctx({ employee: emp({ department: 'BOH' }) }),
+    )
+    const c = found.find((x) => x.code === 'wrong-department')
+    expect(c?.overridable).toBe(false)
+  })
+
+  it('is quiet when departments match', () => {
+    const found = findConflicts(
+      shift({ department: 'FOH' }),
+      ctx({ employee: emp({ department: 'FOH' }) }),
+    )
+    expect(found.some((c) => c.code === 'wrong-department')).toBe(false)
+  })
+
+  it('is quiet when the shift carries no department — the schedule builder never sets it', () => {
+    const found = findConflicts(shift(), ctx({ employee: emp({ department: 'BOH' }) }))
+    expect(found.some((c) => c.code === 'wrong-department')).toBe(false)
+  })
+
+  it('is quiet when the employee carries no department', () => {
+    const found = findConflicts(shift({ department: 'FOH' }), ctx({ employee: emp() }))
+    expect(found.some((c) => c.code === 'wrong-department')).toBe(false)
+  })
+})
+
 describe('WARN: availability', () => {
   it('warns rather than blocks on an unavailable day', () => {
     const found = findConflicts(shift(), ctx({ availability: { status: 'unavailable' } }))
