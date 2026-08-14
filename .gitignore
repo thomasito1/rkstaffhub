@@ -26,3 +26,4 @@ coverage/
 .superdesign/tmp/
 tsconfig.tsbuildinfo
 *.tsbuildinfo
+.playwright-mcp/
