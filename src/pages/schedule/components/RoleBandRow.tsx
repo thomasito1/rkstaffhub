@@ -17,7 +17,8 @@ import { hexToRgba, ShiftCard } from './ShiftCard'
  * Tailwind class (tailwind.config.js's role.* palette is seed-default only).
  */
 
-const GRID_COLS = '220px repeat(7, minmax(0, 1fr))'
+/** Shared with the sticky day header above the bands (ScheduleBuilderPage). */
+export const GRID_COLS = '220px repeat(7, minmax(0, 1fr))'
 
 export function RoleBandRow({
   role,

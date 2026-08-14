@@ -859,6 +859,10 @@
       "showShifts_one": "Mostrar {{count}} turno afectado",
       "showShifts_other": "Mostrar {{count}} turnos afectados",
       "hideShifts": "Ocultar turnos"
+    },
+    "header": {
+      "employee": "Empleado/a",
+      "forecast": "Prev. {{amount}}"
     }
   },
   "more": {

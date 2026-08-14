@@ -859,6 +859,10 @@
       "showShifts_one": "Show {{count}} affected shift",
       "showShifts_other": "Show {{count}} affected shifts",
       "hideShifts": "Hide shifts"
+    },
+    "header": {
+      "employee": "Employee",
+      "forecast": "Fcst {{amount}}"
     }
   },
   "more": {

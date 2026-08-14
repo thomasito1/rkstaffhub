@@ -11,6 +11,7 @@ import type { Department, Shift } from '@/types/models'
 import { LaborFooter } from './components/LaborFooter'
 import { PublishModal } from './components/PublishModal'
 import { RoleBandRow } from './components/RoleBandRow'
+import { ScheduleHeaderRow } from './components/ScheduleHeaderRow'
 import { ShiftModal } from './components/ShiftModal'
 import { WarningsPanel, type WarningGroup } from './components/WarningsPanel'
 import { useScheduleData } from './useScheduleData'
@@ -217,6 +218,11 @@ function ScheduleBuilderScreen(): JSX.Element {
         </div>
       ) : (
         <div className="flex-1 overflow-auto">
+          <ScheduleHeaderRow
+            weekDates={data.weekDates}
+            weekdayKeyFor={data.weekdayKeyFor}
+            projectedSalesByDate={data.projectedSalesByDate}
+          />
           {visibleRoles.map((role) => (
             <RoleBandRow
               key={role.id}
