@@ -1,0 +1,261 @@
+import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+
+import { Button, EmptyState, FilterSelect } from '@/components/ui'
+import { RequirePermission } from '@/components/guards/RouteGuards'
+import { useAuth } from '@/lib/auth/AuthProvider'
+import { addDaysToIsoDate } from '@/lib/deadlines'
+import { formatDate, weekIdFor } from '@/lib/format'
+import type { Department, Shift } from '@/types/models'
+
+import { LaborFooter } from './components/LaborFooter'
+import { PublishModal } from './components/PublishModal'
+import { RoleBandRow } from './components/RoleBandRow'
+import { ShiftModal } from './components/ShiftModal'
+import { useScheduleData } from './useScheduleData'
+
+/**
+ * Schedule Builder — mockup 11's grid layout, wired to the real §6 conflicts
+ * engine and the real seeded data (see PROGRESS.md: mockup 11's own numbers
+ * are superseded by the seed, its LAYOUT is what survives here).
+ */
+
+const ALL = 'all'
+const DEPARTMENTS: readonly Department[] = ['FOH', 'BOH', 'Admin'] as const
+
+function dateFromIso(isoDate: string): Date {
+  return new Date(`${isoDate}T12:00:00Z`)
+}
+
+interface ModalTarget {
+  shift: Shift | null
+  date?: string
+  roleId?: string
+  employeeId?: string | null
+}
+
+export function ScheduleBuilderPage(): JSX.Element {
+  return (
+    <RequirePermission permission="schedule.view">
+      <ScheduleBuilderScreen />
+    </RequirePermission>
+  )
+}
+
+function ScheduleBuilderScreen(): JSX.Element {
+  const { t, i18n } = useTranslation()
+  const lang = i18n.language
+  const { can } = useAuth()
+
+  const [now] = useState(() => new Date())
+  const thisWeekId = useMemo(() => weekIdFor(now), [now])
+  const data = useScheduleData(thisWeekId)
+
+  const [department, setDepartment] = useState<string>(ALL)
+  const [modal, setModal] = useState<ModalTarget | null>(null)
+  const [publishOpen, setPublishOpen] = useState(false)
+
+  const canCreate = can('schedule.create')
+  const canEditExisting = can('schedule.edit')
+  const canPublish = can('schedule.publish')
+
+  const weekRangeLabel = useMemo(() => {
+    const first = data.weekDates[0]
+    const last = data.weekDates[6]
+    if (first === undefined || last === undefined) return data.weekId
+    return `${formatDate(dateFromIso(first), { month: 'short', day: 'numeric' }, lang)} – ${formatDate(
+      dateFromIso(last),
+      { month: 'short', day: 'numeric', year: 'numeric' },
+      lang,
+    )}`
+  }, [data.weekDates, data.weekId, lang])
+
+  const visibleRoles = useMemo(
+    () =>
+      data.roles.filter(
+        (r) =>
+          (department === ALL || r.department === department) &&
+          (r.active || data.shifts.some((s) => s.roleId === r.id)),
+      ),
+    [data.roles, department, data.shifts],
+  )
+
+  const warningCount = useMemo(() => {
+    let count = 0
+    for (const shift of data.shifts) {
+      if (!shift.employeeId) continue
+      const conflicts = data.conflictsFor(shift, shift.employeeId)
+      if (conflicts.some((c) => c.severity === 'warn')) count += 1
+    }
+    return count
+  }, [data])
+
+  const modalCanEdit = modal?.shift ? canEditExisting : canCreate
+
+  return (
+    <div className="flex h-full flex-col">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-4 border-b border-line px-8 py-5">
+        <div className="flex items-center gap-6">
+          <h1 className="text-title-lg font-semibold tracking-tight text-ink">
+            {t('scheduleBuilder.title')}
+          </h1>
+          <FilterSelect
+            label={t('filters.department')}
+            value={department}
+            onChange={setDepartment}
+            options={[
+              { value: ALL, label: t('filters.allDepartments') },
+              ...DEPARTMENTS.map((d) => ({ value: d, label: t(`departments.${d}`) })),
+            ]}
+          />
+        </div>
+
+        <div className="flex items-center gap-3">
+          {warningCount > 0 ? (
+            <span className="flex items-center gap-2 rounded-control border border-warning bg-warning-tint px-4 py-2 text-meta font-semibold text-warning">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="h-4 w-4" aria-hidden="true">
+                <path d="M10.3 3.4 2.6 17a1.5 1.5 0 0 0 1.3 2.2h16.2a1.5 1.5 0 0 0 1.3-2.2L13.7 3.4a1.5 1.5 0 0 0-3.4 0Z" />
+                <path d="M12 9v4M12 16.3h.01" />
+              </svg>
+              {t('scheduleBuilder.warningCount', { count: warningCount })}
+            </span>
+          ) : null}
+          {canPublish ? (
+            <Button variant="primary" onClick={() => setPublishOpen(true)}>
+              {t('scheduleBuilder.publishButton')}
+            </Button>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="flex shrink-0 items-center justify-between border-b border-line bg-app px-8 py-3">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label={t('availability.previousWeek')}
+            onClick={() => data.setWeekId(addDaysToIsoDate(data.weekId, -7))}
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-page text-ink-muted transition-colors duration-hover hover:text-ink"
+          >
+            <Chevron dir="left" />
+          </button>
+          <span className="tabular px-2 text-meta font-semibold text-ink">{weekRangeLabel}</span>
+          <button
+            type="button"
+            aria-label={t('availability.nextWeek')}
+            onClick={() => data.setWeekId(addDaysToIsoDate(data.weekId, 7))}
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-page text-ink-muted transition-colors duration-hover hover:text-ink"
+          >
+            <Chevron dir="right" />
+          </button>
+          <button
+            type="button"
+            onClick={() => data.setWeekId(thisWeekId)}
+            className="px-3 py-1.5 text-meta font-medium text-ink-muted transition-colors duration-hover hover:text-ink"
+          >
+            {t('availability.thisWeek')}
+          </button>
+        </div>
+      </div>
+
+      {data.loading ? (
+        <div className="flex-1 overflow-auto p-6">
+          <p className="sr-only" role="status">
+            {t('app.loading')}
+          </p>
+          <div className="flex flex-col gap-1 rounded-card border border-line bg-page p-1">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-[52px] animate-skeleton rounded-lg bg-app" />
+            ))}
+          </div>
+        </div>
+      ) : data.loadError ? (
+        <div className="flex-1 overflow-auto p-6">
+          <EmptyState
+            illustration="search"
+            title={t('scheduleBuilder.errorTitle')}
+            body={t('scheduleBuilder.errorBody')}
+            action={<Button onClick={() => void data.reload()}>{t('common.retry')}</Button>}
+          />
+        </div>
+      ) : visibleRoles.length === 0 ? (
+        <div className="flex-1 overflow-auto p-6">
+          <EmptyState
+            illustration="calendar"
+            title={t('scheduleBuilder.emptyTitle')}
+            body={t('scheduleBuilder.emptyBody')}
+          />
+        </div>
+      ) : (
+        <div className="flex-1 overflow-auto">
+          {visibleRoles.map((role) => (
+            <RoleBandRow
+              key={role.id}
+              role={role}
+              weekDates={data.weekDates}
+              shifts={data.shifts.filter((s) => s.roleId === role.id)}
+              employeesById={data.employeesById}
+              conflictsFor={data.conflictsFor}
+              canCreate={canCreate}
+              onCreateShift={({ date, employeeId }) =>
+                setModal({ shift: null, date, roleId: role.id, employeeId })
+              }
+              onEditShift={(shift) => setModal({ shift })}
+              onAddEmployee={() => setModal({ shift: null, roleId: role.id })}
+            />
+          ))}
+        </div>
+      )}
+
+      {!data.loading && !data.loadError ? (
+        <LaborFooter
+          weekDates={data.weekDates}
+          shifts={data.shifts}
+          employeesById={data.employeesById}
+          compensationByEmployee={data.compensationByEmployee}
+          laborTargetPct={data.laborTargetPct}
+          projectedSalesByDate={data.projectedSalesByDate}
+          projectedSalesTotal={data.projectedSalesTotal}
+        />
+      ) : null}
+
+      {modal ? (
+        <ShiftModal
+          open
+          onClose={() => setModal(null)}
+          data={data}
+          shift={modal.shift}
+          defaultDate={modal.date}
+          defaultRoleId={modal.roleId}
+          defaultEmployeeId={modal.employeeId}
+          canEdit={modalCanEdit}
+        />
+      ) : null}
+
+      <PublishModal
+        open={publishOpen}
+        onClose={() => setPublishOpen(false)}
+        data={data}
+        weekRangeLabel={weekRangeLabel}
+      />
+    </div>
+  )
+}
+
+function Chevron({ dir }: { dir: 'left' | 'right' }): JSX.Element {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-4 w-4"
+      aria-hidden="true"
+    >
+      <path d={dir === 'left' ? 'm15 6-6 6 6 6' : 'm9 6 6 6-6 6'} />
+    </svg>
+  )
+}
+
+export default ScheduleBuilderPage

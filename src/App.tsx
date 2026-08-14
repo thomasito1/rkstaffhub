@@ -14,6 +14,7 @@ import { ImportWizardPage } from '@/pages/people/ImportWizardPage'
 import { MyAvailabilityPage } from '@/pages/availability/MyAvailabilityPage'
 import { AvailabilityRequestsPage } from '@/pages/availability/AvailabilityRequestsPage'
 import { GlanceViewPage } from '@/pages/availability/GlanceViewPage'
+import { ScheduleBuilderPage } from '@/pages/schedule/ScheduleBuilderPage'
 
 /**
  * Phase 0 routing.
@@ -46,10 +47,8 @@ export default function App() {
         }
       >
         <Route index element={<PlaceholderPage titleKey="nav.home" phase={6} />} />
-        <Route
-          path="schedule"
-          element={<PlaceholderPage titleKey="nav.schedule" phase={1} />}
-        />
+        {/* Schedule builder — Phase 1 (spec §6). Self-guards on schedule.view. */}
+        <Route path="schedule" element={<ScheduleBuilderPage />} />
         <Route path="clock" element={<PlaceholderPage titleKey="nav.clock" phase={2} />} />
 
         {/* Availability — Phase 1 (spec §5). Each page self-guards its own

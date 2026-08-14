@@ -760,5 +760,96 @@
       "errorTitle": "We couldn't load the grid",
       "errorBody": "Check your connection and try again."
     }
+  },
+  "scheduleBuilder": {
+    "title": "Schedule",
+    "warningCount_one": "{{count}} warning",
+    "warningCount_other": "{{count}} warnings",
+    "publishButton": "Publish schedule",
+    "errorTitle": "We couldn't load the schedule",
+    "errorBody": "Check your connection and try again.",
+    "emptyTitle": "No roles to show",
+    "emptyBody": "Nothing matches this department filter yet.",
+    "band": {
+      "total": "Total: {{hours}} hrs",
+      "rowHours": "{{hours}} hrs",
+      "openShifts": "Open shifts",
+      "addEmployee": "Add employee"
+    },
+    "card": {
+      "ariaLabel": "{{role}} shift, {{start}} to {{end}}",
+      "onCall": "On-call shift",
+      "open": "Unassigned"
+    },
+    "footer": {
+      "labor": "Labor",
+      "dayHours": "{{hours}} hrs",
+      "weekTotal": "Week total {{hours}} hrs"
+    },
+    "modal": {
+      "createTitle": "Add shift",
+      "editTitle": "Edit shift",
+      "deleteShift": "Delete shift",
+      "saveShift": "Save shift",
+      "role": "Shift role",
+      "station": "Station",
+      "stationPlaceholder": "Floor, Bar, Patio…",
+      "start": "Start",
+      "end": "End",
+      "requiredSkill": "Required skill level",
+      "requiredSkillHelp": "Only employees at or above this level can take or cover this shift.",
+      "onCall": "On-call shift",
+      "onCallHelp": "On-call staff are notified but not scheduled to arrive.",
+      "notes": "Notes",
+      "eligibleTitle": "Eligible employees",
+      "eligibleSorted": "Sorted by skill level",
+      "eligibleSkill": "{{role}} · L{{level}}",
+      "leaveOpen": "Leave shift open",
+      "available": "Available",
+      "canCover": "Can cover",
+      "notEligible": "Not eligible",
+      "toast": {
+        "saved": "Shift saved",
+        "saveFailed": "We couldn't save that shift. Try again.",
+        "overrideSaved": "Assigned, with the override logged",
+        "deleted": "Shift deleted",
+        "deleteFailed": "We couldn't delete that shift. Try again."
+      },
+      "override": {
+        "errorPrecondition": "That conflict no longer applies — close and reopen the shift, then try again.",
+        "errorAborted": "The shift changed while you were editing it. Reopen it and try again.",
+        "errorGeneric": "We couldn't record that override. Try again."
+      }
+    },
+    "publish": {
+      "publishTitle": "Publish schedule",
+      "republishTitle": "Republish schedule",
+      "confirmPublish": "Publish schedule",
+      "confirmRepublish_one": "Republish and notify {{count}}",
+      "confirmRepublish_other": "Republish and notify {{count}}",
+      "alreadyPublished": "This schedule was already published on {{date}}. Republishing will notify affected employees of the changes.",
+      "alreadyPublishedUnknown": "This schedule was already published. Republishing will notify affected employees of the changes.",
+      "shiftCount_one": "{{count}} shift",
+      "shiftCount_other": "{{count}} shifts",
+      "changesTitle": "Changes since last publish",
+      "noChanges": "No shifts have changed since the last publish.",
+      "shiftsChanged_one": "{{count}} shift changed",
+      "shiftsChanged_other": "{{count}} shifts changed",
+      "updatedBadge": "Updated",
+      "affectedCount_one": "{{count}} employee affected",
+      "affectedCount_other": "{{count}} employees affected",
+      "unchangedCount_one": "{{count}} unchanged and will not be notified",
+      "unchangedCount_other": "{{count}} unchanged and will not be notified",
+      "nextStepsTitle": "What happens next",
+      "stepNotify_one": "{{count}} employee will be notified",
+      "stepNotify_other": "{{count}} employees will be notified",
+      "stepVisible": "Shifts become visible in the staff app immediately",
+      "stepTrades": "Employees can request trades once published",
+      "toast": {
+        "published": "Schedule published",
+        "republished": "Schedule republished",
+        "failed": "We couldn't publish the schedule. Try again."
+      }
+    }
   }
 }

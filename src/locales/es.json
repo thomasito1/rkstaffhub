@@ -760,5 +760,96 @@
       "errorTitle": "No pudimos cargar la cuadrícula",
       "errorBody": "Revisa tu conexión e inténtalo de nuevo."
     }
+  },
+  "scheduleBuilder": {
+    "title": "Horario",
+    "warningCount_one": "{{count}} advertencia",
+    "warningCount_other": "{{count}} advertencias",
+    "publishButton": "Publicar horario",
+    "errorTitle": "No pudimos cargar el horario",
+    "errorBody": "Revisa tu conexión e inténtalo de nuevo.",
+    "emptyTitle": "No hay puestos que mostrar",
+    "emptyBody": "Nada coincide todavía con este filtro de departamento.",
+    "band": {
+      "total": "Total: {{hours}} h",
+      "rowHours": "{{hours}} h",
+      "openShifts": "Turnos abiertos",
+      "addEmployee": "Agregar empleado/a"
+    },
+    "card": {
+      "ariaLabel": "Turno de {{role}}, de {{start}} a {{end}}",
+      "onCall": "Turno de guardia",
+      "open": "Sin asignar"
+    },
+    "footer": {
+      "labor": "Mano de obra",
+      "dayHours": "{{hours}} h",
+      "weekTotal": "Total semanal {{hours}} h"
+    },
+    "modal": {
+      "createTitle": "Agregar turno",
+      "editTitle": "Editar turno",
+      "deleteShift": "Eliminar turno",
+      "saveShift": "Guardar turno",
+      "role": "Puesto del turno",
+      "station": "Estación",
+      "stationPlaceholder": "Piso, Barra, Patio…",
+      "start": "Inicio",
+      "end": "Fin",
+      "requiredSkill": "Nivel de habilidad requerido",
+      "requiredSkillHelp": "Solo el personal en este nivel o superior puede tomar o cubrir este turno.",
+      "onCall": "Turno de guardia",
+      "onCallHelp": "El personal de guardia recibe una notificación pero no está programado para llegar.",
+      "notes": "Notas",
+      "eligibleTitle": "Empleados elegibles",
+      "eligibleSorted": "Ordenado por nivel de habilidad",
+      "eligibleSkill": "{{role}} · N{{level}}",
+      "leaveOpen": "Dejar el turno abierto",
+      "available": "Disponible",
+      "canCover": "Puede cubrir",
+      "notEligible": "No elegible",
+      "toast": {
+        "saved": "Turno guardado",
+        "saveFailed": "No pudimos guardar ese turno. Inténtalo de nuevo.",
+        "overrideSaved": "Asignado, con la excepción registrada",
+        "deleted": "Turno eliminado",
+        "deleteFailed": "No pudimos eliminar ese turno. Inténtalo de nuevo."
+      },
+      "override": {
+        "errorPrecondition": "Ese conflicto ya no aplica — cierra y vuelve a abrir el turno, luego inténtalo de nuevo.",
+        "errorAborted": "El turno cambió mientras lo editabas. Vuelve a abrirlo e inténtalo de nuevo.",
+        "errorGeneric": "No pudimos registrar esa excepción. Inténtalo de nuevo."
+      }
+    },
+    "publish": {
+      "publishTitle": "Publicar horario",
+      "republishTitle": "Volver a publicar el horario",
+      "confirmPublish": "Publicar horario",
+      "confirmRepublish_one": "Volver a publicar y notificar a {{count}}",
+      "confirmRepublish_other": "Volver a publicar y notificar a {{count}}",
+      "alreadyPublished": "Este horario ya se publicó el {{date}}. Volver a publicarlo notificará a los empleados afectados por los cambios.",
+      "alreadyPublishedUnknown": "Este horario ya se publicó. Volver a publicarlo notificará a los empleados afectados por los cambios.",
+      "shiftCount_one": "{{count}} turno",
+      "shiftCount_other": "{{count}} turnos",
+      "changesTitle": "Cambios desde la última publicación",
+      "noChanges": "Ningún turno ha cambiado desde la última publicación.",
+      "shiftsChanged_one": "{{count}} turno cambiado",
+      "shiftsChanged_other": "{{count}} turnos cambiados",
+      "updatedBadge": "Actualizado",
+      "affectedCount_one": "{{count}} empleado/a afectado/a",
+      "affectedCount_other": "{{count}} empleados/as afectados/as",
+      "unchangedCount_one": "{{count}} sin cambios y no será notificado/a",
+      "unchangedCount_other": "{{count}} sin cambios y no serán notificados/as",
+      "nextStepsTitle": "Qué sucede después",
+      "stepNotify_one": "Se notificará a {{count}} empleado/a",
+      "stepNotify_other": "Se notificará a {{count}} empleados/as",
+      "stepVisible": "Los turnos serán visibles de inmediato en la app del personal",
+      "stepTrades": "El personal podrá solicitar intercambios una vez publicado",
+      "toast": {
+        "published": "Horario publicado",
+        "republished": "Horario vuelto a publicar",
+        "failed": "No pudimos publicar el horario. Inténtalo de nuevo."
+      }
+    }
   }
 }
