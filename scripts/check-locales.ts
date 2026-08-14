@@ -42,6 +42,9 @@ const IDENTICAL_OK = new Set([
   'settings.roles.newRoleModal.color', // "Color" is identical in Spanish.
   'shiftPool.approvalModal.noStation', // An em dash placeholder, not a word.
   'clock.home.dateTime', // "{{date}} · {{time}}" — punctuation only, no words.
+  'shiftsAndTips.manualPunch.subtitle', // Restaurant proper name + date placeholder, no translatable words.
+  'shiftsAndTips.editModal.subtitle', // "{{name}} · {{date}}" — punctuation only, no words.
+  'shiftsAndTips.editModal.charCount', // "{{count}} / {{max}}" — punctuation only, no words.
 ])
 
 const en = flatten(load('en.json'))

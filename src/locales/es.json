@@ -72,7 +72,8 @@
     "allTypes": "Todos los tipos",
     "allStatuses": "Todos los estados",
     "category": "Categoría",
-    "allCategories": "Todas las categorías"
+    "allCategories": "Todas las categorías",
+    "employee": "Empleado"
   },
   "auth": {
     "signIn": "Iniciar sesión",
@@ -1177,6 +1178,130 @@
       "droppedAlreadyOpen": "Una entrada pendiente no se pudo completar — ya tienes una entrada marcada desde otro dispositivo.",
       "droppedNoOpenPunch": "Una salida pendiente no se pudo completar — ya marcaste salida desde otro dispositivo.",
       "droppedGeneric": "Una marcación pendiente no se pudo completar y se eliminó de tu cola."
+    }
+  },
+  "shiftsAndTips": {
+    "title": "Turnos y propinas",
+    "subtitle": "Revisa, marca y corrige los marcajes de tiempo",
+    "exportCsv": "Exportar CSV",
+    "addManualPunch": "Agregar marcaje manual",
+    "filters": {
+      "employeeAll": "Todos los empleados",
+      "departmentAll": "Todos",
+      "searchPlaceholder": "Buscar marcajes",
+      "flaggedOnly": "Solo marcados",
+      "from": "Desde",
+      "to": "Hasta"
+    },
+    "stats": {
+      "punches": "Marcajes",
+      "totalHours": "Horas totales",
+      "totalTips": "Propinas totales",
+      "flagged": "Marcados"
+    },
+    "columns": {
+      "date": "Fecha",
+      "employee": "Empleado",
+      "clockIn": "Entrada",
+      "clockOut": "Salida",
+      "hours": "Horas",
+      "tips": "Propinas",
+      "flags": "Marcas"
+    },
+    "stillClockedIn": "Aún registrado",
+    "flags": {
+      "noScheduledShift": "Sin turno programado",
+      "forgottenClockout": "Sigue abierto — ¿olvidó marcar salida?",
+      "manualBy": "Marcaje manual por {{name}}",
+      "missingTipReport": "Falta reporte de propinas"
+    },
+    "rowMenu": {
+      "edit": "Editar marcaje",
+      "addManualClockOut": "Agregar salida manual"
+    },
+    "count": "Mostrando {{shown}} de {{total}} marcajes",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "emptyTitle": "No hay marcajes en este rango",
+    "emptyBody": "Prueba un rango de fechas distinto o borra tus filtros.",
+    "errorTitle": "No se pudieron cargar los marcajes",
+    "errorBody": "Revisa tu conexión e intenta de nuevo.",
+    "toast": {
+      "manualPunchAdded": "Marcaje manual agregado.",
+      "manualPunchFailed": "No se pudo agregar ese marcaje.",
+      "punchUpdated": "Marcaje actualizado.",
+      "punchUpdateFailed": "No se pudo guardar ese cambio."
+    },
+    "csv": {
+      "employee": "Empleado",
+      "date": "Fecha",
+      "clockIn": "Entrada",
+      "clockOut": "Salida",
+      "hours": "Horas",
+      "tips": "Propinas",
+      "flags": "Marcas"
+    },
+    "manualPunch": {
+      "title": "Agregar marcaje manual",
+      "subtitle": "Rosalia's Kitchen · {{date}}",
+      "advisory": "Los marcajes manuales omiten la verificación de selfie y ubicación. Úsalos solo cuando el empleado no pudo marcar por su cuenta.",
+      "employeeLabel": "Empleado",
+      "employeeSearchPlaceholder": "Buscar empleados",
+      "noEligibleEmployees": "No hay empleados disponibles",
+      "changeEmployee": "Cambiar",
+      "dateLabel": "Fecha",
+      "clockInLabel": "Entrada",
+      "clockOutLabel": "Salida",
+      "totalHours": "Total: {{hours}} horas",
+      "scheduledShiftLabel": "Turno programado",
+      "noScheduledShift": "No hay turno programado para esta fecha.",
+      "withinFiveMinutes": "El marcaje está dentro de 5 minutos del turno programado.",
+      "tipsLabel": "Propinas reportadas",
+      "tipsHint": "Déjalo en cero si el empleado reportará las propinas más tarde.",
+      "reasonLabel": "Motivo",
+      "reasonPlaceholder": "Explica por qué se agrega este marcaje manual...",
+      "auditNotice": "Esta entrada quedará registrada en el historial de auditoría como un marcaje manual por {{name}} el {{date}}, y marcada en la lista de marcajes.",
+      "cancel": "Cancelar",
+      "submit": "Agregar marcaje",
+      "submitting": "Agregando…",
+      "errors": {
+        "employeeRequired": "Elige un empleado.",
+        "timeRequired": "Ingresa al menos una hora de entrada o salida.",
+        "reasonRequired": "Se requiere un motivo."
+      }
+    },
+    "editModal": {
+      "title": "Editar marcaje",
+      "subtitle": "{{name}} · {{date}}",
+      "fieldHeader": "Campo",
+      "currentHeader": "Actual",
+      "newHeader": "Nuevo",
+      "clockIn": "Entrada",
+      "clockOut": "Salida",
+      "hours": "Horas",
+      "tips": "Propinas",
+      "recalculated": "recalculado",
+      "netChange": "Cambio neto",
+      "netChangeHours": "{{sign}}{{hours}} h",
+      "wageNote": "El impacto salarial no se muestra aquí — la tarifa por hora no está disponible en esta pantalla.",
+      "stillOpenNote": "Este marcaje todavía no tiene salida.",
+      "photos": "Fotos del marcaje",
+      "photoClockIn": "Entrada · {{time}}",
+      "photoClockOut": "Salida · {{time}}",
+      "noPhoto": "Sin foto (marcaje manual)",
+      "reasonLabel": "Motivo de la edición",
+      "reasonPlaceholder": "Explica por qué se está corrigiendo este marcaje...",
+      "history": "Historial de ediciones",
+      "historyPunchChange": "{{name}} cambió {{field}} de {{from}} a {{to}}",
+      "historyTipChange": "{{name}} cambió las propinas de {{from}} a {{to}}",
+      "fieldClockIn": "la entrada",
+      "fieldClockOut": "la salida",
+      "auditNotice": "Esta edición quedará registrada en el historial de auditoría como {{name}} el {{date}}.",
+      "cancel": "Cancelar",
+      "save": "Guardar cambios",
+      "saving": "Guardando…",
+      "noChanges": "Cambia una hora o el monto de propinas antes de guardar.",
+      "charCount": "{{count}} / {{max}}"
     }
   },
   "push": {

@@ -140,7 +140,13 @@ function tzOffsetMsAt(instantMs: number): number {
  * out right. 23:59 never falls in a DST gap (the US transitions at 02:00), so
  * no third pass or ambiguity handling is needed at these times.
  */
-function instantAtRestaurantWallClock(
+/**
+ * Exported for any caller that needs an arbitrary restaurant-local
+ * date+time turned into a real instant, not just the two fixed weekly
+ * deadlines below — e.g. Shifts & Tips admin turning a manager's typed
+ * clock-in/out time into the ISO timestamp `manualPunch`/`editPunch` expect.
+ */
+export function instantAtRestaurantWallClock(
   isoDate: string,
   hour: number,
   minute: number,

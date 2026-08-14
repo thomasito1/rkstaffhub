@@ -72,7 +72,8 @@
     "allTypes": "All types",
     "allStatuses": "All statuses",
     "category": "Category",
-    "allCategories": "All categories"
+    "allCategories": "All categories",
+    "employee": "Employee"
   },
   "auth": {
     "signIn": "Sign in",
@@ -1177,6 +1178,130 @@
       "droppedAlreadyOpen": "A pending clock-in couldn't go through — you're already clocked in from another device.",
       "droppedNoOpenPunch": "A pending clock-out couldn't go through — you were already clocked out from another device.",
       "droppedGeneric": "A pending punch couldn't go through and was removed from your queue."
+    }
+  },
+  "shiftsAndTips": {
+    "title": "Shifts & tips",
+    "subtitle": "Review, flag and correct time punches",
+    "exportCsv": "Export CSV",
+    "addManualPunch": "Add manual punch",
+    "filters": {
+      "employeeAll": "All employees",
+      "departmentAll": "All",
+      "searchPlaceholder": "Search punches",
+      "flaggedOnly": "Flagged only",
+      "from": "From",
+      "to": "To"
+    },
+    "stats": {
+      "punches": "Punches",
+      "totalHours": "Total hours",
+      "totalTips": "Total tips",
+      "flagged": "Flagged"
+    },
+    "columns": {
+      "date": "Date",
+      "employee": "Employee",
+      "clockIn": "Clock in",
+      "clockOut": "Clock out",
+      "hours": "Hours",
+      "tips": "Tips",
+      "flags": "Flags"
+    },
+    "stillClockedIn": "Still clocked in",
+    "flags": {
+      "noScheduledShift": "No scheduled shift",
+      "forgottenClockout": "Still open — forgotten clock-out?",
+      "manualBy": "Manual punch by {{name}}",
+      "missingTipReport": "Missing tip report"
+    },
+    "rowMenu": {
+      "edit": "Edit punch",
+      "addManualClockOut": "Add manual clock-out"
+    },
+    "count": "Showing {{shown}} of {{total}} punches",
+    "previous": "Previous",
+    "next": "Next",
+    "emptyTitle": "No punches in this range",
+    "emptyBody": "Try a different date range, or clear your filters.",
+    "errorTitle": "Couldn't load punches",
+    "errorBody": "Check your connection and try again.",
+    "toast": {
+      "manualPunchAdded": "Manual punch added.",
+      "manualPunchFailed": "Couldn't add that punch.",
+      "punchUpdated": "Punch updated.",
+      "punchUpdateFailed": "Couldn't save that update."
+    },
+    "csv": {
+      "employee": "Employee",
+      "date": "Date",
+      "clockIn": "Clock in",
+      "clockOut": "Clock out",
+      "hours": "Hours",
+      "tips": "Tips",
+      "flags": "Flags"
+    },
+    "manualPunch": {
+      "title": "Add manual punch",
+      "subtitle": "Rosalia's Kitchen · {{date}}",
+      "advisory": "Manual punches bypass selfie and location verification. Use them only when an employee could not punch themselves.",
+      "employeeLabel": "Employee",
+      "employeeSearchPlaceholder": "Search employees",
+      "noEligibleEmployees": "No employees available",
+      "changeEmployee": "Change",
+      "dateLabel": "Date",
+      "clockInLabel": "Clock in",
+      "clockOutLabel": "Clock out",
+      "totalHours": "Total: {{hours}} hrs",
+      "scheduledShiftLabel": "Scheduled shift",
+      "noScheduledShift": "No scheduled shift for this date.",
+      "withinFiveMinutes": "Punch is within 5 minutes of the scheduled shift.",
+      "tipsLabel": "Tips reported",
+      "tipsHint": "Leave at zero if the employee will report tips later.",
+      "reasonLabel": "Reason",
+      "reasonPlaceholder": "Explain why this manual punch is being added...",
+      "auditNotice": "This entry will be logged to the audit trail as a manual punch by {{name}} on {{date}}, and flagged in the punches list.",
+      "cancel": "Cancel",
+      "submit": "Add punch",
+      "submitting": "Adding…",
+      "errors": {
+        "employeeRequired": "Choose an employee.",
+        "timeRequired": "Enter at least a clock-in or clock-out time.",
+        "reasonRequired": "A reason is required."
+      }
+    },
+    "editModal": {
+      "title": "Edit punch",
+      "subtitle": "{{name}} · {{date}}",
+      "fieldHeader": "Field",
+      "currentHeader": "Current",
+      "newHeader": "New",
+      "clockIn": "Clock in",
+      "clockOut": "Clock out",
+      "hours": "Hours",
+      "tips": "Tips",
+      "recalculated": "recalculated",
+      "netChange": "Net change",
+      "netChangeHours": "{{sign}}{{hours}} hrs",
+      "wageNote": "Wage impact isn't shown here — hourly rate isn't available on this screen.",
+      "stillOpenNote": "This punch has no clock-out yet.",
+      "photos": "Punch photos",
+      "photoClockIn": "Clock in · {{time}}",
+      "photoClockOut": "Clock out · {{time}}",
+      "noPhoto": "No photo (manual punch)",
+      "reasonLabel": "Reason for edit",
+      "reasonPlaceholder": "Explain why this punch is being corrected...",
+      "history": "Edit history",
+      "historyPunchChange": "{{name}} changed {{field}} from {{from}} to {{to}}",
+      "historyTipChange": "{{name}} changed tips from {{from}} to {{to}}",
+      "fieldClockIn": "clock in",
+      "fieldClockOut": "clock out",
+      "auditNotice": "This edit will be recorded in the audit trail as {{name}} on {{date}}.",
+      "cancel": "Cancel",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "noChanges": "Change a time or tip amount before saving.",
+      "charCount": "{{count}} / {{max}}"
     }
   },
   "push": {
