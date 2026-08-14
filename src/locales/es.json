@@ -70,7 +70,9 @@
     "allDepartments": "Todos los departamentos",
     "allRoles": "Todos los puestos",
     "allTypes": "Todos los tipos",
-    "allStatuses": "Todos los estados"
+    "allStatuses": "Todos los estados",
+    "category": "Categoría",
+    "allCategories": "Todas las categorías"
   },
   "auth": {
     "signIn": "Iniciar sesión",
@@ -709,7 +711,8 @@
         "submitted": "Disponibilidad enviada.",
         "locked": "Esa semana se cerró en la fecha límite. Pide a un gerente que la cambie por ti.",
         "failed": "No pudimos enviar tu disponibilidad. Inténtalo de nuevo."
-      }
+      },
+      "requestTimeOff": "Solicitar tiempo libre"
     },
     "requests": {
       "tab": "Solicitudes",
@@ -872,5 +875,145 @@
   },
   "more": {
     "myProfile": "Mi perfil"
+  },
+  "timeOff": {
+    "category": {
+      "paid": "Pagado",
+      "unpaid": "Sin pagar"
+    },
+    "admin": {
+      "title": "Tiempo libre",
+      "subtitle": "Revisa las solicitudes y la cobertura del mes",
+      "requestsTab": "Solicitudes",
+      "calendarTab": "Calendario",
+      "stats": {
+        "pending": "Pendientes",
+        "approved": "Aprobadas",
+        "declined": "Rechazadas"
+      },
+      "columns": {
+        "employee": "Empleado/a",
+        "dates": "Fechas",
+        "category": "Categoría",
+        "conflict": "Conflicto"
+      },
+      "conflictCount_one": "{{count}} turno en conflicto",
+      "conflictCount_other": "{{count}} turnos en conflicto",
+      "count_one": "{{count}} solicitud",
+      "count_other": "{{count}} solicitudes",
+      "viewProfile": "Ver perfil",
+      "declineTitle": "Rechazar tiempo libre",
+      "declineSubtitle": "Solicitud de {{name}}",
+      "declining": "Rechazando…",
+      "reasonLabel": "Motivo (opcional)",
+      "reasonPlaceholder": "Explica el motivo, si quieres.",
+      "emptyTitle": "No hay solicitudes de tiempo libre",
+      "emptyBody": "Aún no hay nada aquí — las solicitudes aparecerán cuando el personal las envíe.",
+      "errorTitle": "No se pudo cargar el tiempo libre",
+      "errorBody": "Algo salió mal. Inténtalo de nuevo.",
+      "toast": {
+        "approved": "Se aprobó el tiempo libre de {{name}}.",
+        "approveFailed": "No se pudo aprobar. Inténtalo de nuevo.",
+        "declined": "Se rechazó el tiempo libre de {{name}}.",
+        "declineFailed": "No se pudo rechazar. Inténtalo de nuevo."
+      }
+    },
+    "calendar": {
+      "more_one": "+{{count}} más",
+      "more_other": "+{{count}} más",
+      "legendApproved": "Tiempo libre aprobado"
+    },
+    "my": {
+      "title": "Tiempo libre",
+      "subtitle": "Solicita tiempo libre y da seguimiento a tus solicitudes.",
+      "newRequest": "Solicitar tiempo libre",
+      "emptyTitle": "Aún no hay solicitudes",
+      "emptyBody": "El tiempo libre que solicites aparecerá aquí.",
+      "errorTitle": "No se pudieron cargar tus solicitudes",
+      "errorBody": "Algo salió mal. Inténtalo de nuevo.",
+      "form": {
+        "startDate": "Fecha de inicio",
+        "endDate": "Fecha de fin",
+        "category": "Categoría",
+        "reason": "Motivo (opcional)",
+        "invalidRange": "Elige una fecha de inicio y fin, con el fin en o después del inicio.",
+        "submit": "Enviar solicitud",
+        "submitting": "Enviando…"
+      },
+      "toast": {
+        "submitted": "Solicitud de tiempo libre enviada.",
+        "submitFailed": "No se pudo enviar tu solicitud. Inténtalo de nuevo."
+      }
+    }
+  },
+  "settings": {
+    "nav": {
+      "general": "General",
+      "roles": "Puestos y jerarquía",
+      "permissions": "Permisos",
+      "timeOff": "Tiempo libre"
+    },
+    "roles": {
+      "title": "Puestos y jerarquía",
+      "subtitle": "Define los puestos de turno, su orden y qué puestos pueden cubrirse entre sí",
+      "newRole": "Nuevo puesto",
+      "errorBody": "No se pudieron cargar los puestos. Inténtalo de nuevo.",
+      "legend": {
+        "title": "Niveles de habilidad",
+        "l1": "Aprendiz — no puede trabajar solo/a ni tomar coberturas",
+        "l2": "Independiente — programación estándar",
+        "l3": "Puede capacitar a otros y cubrir cualquier nivel inferior"
+      },
+      "columns": {
+        "order": "Orden",
+        "role": "Puesto",
+        "department": "Departamento",
+        "employees": "Empleados/as",
+        "canCover": "Puede cubrir"
+      },
+      "employeeCount_one": "{{count}} empleado/a",
+      "employeeCount_other": "{{count}} empleados/as",
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "activate": "Activar",
+      "deactivate": "Desactivar",
+      "moveUp": "Subir",
+      "moveDown": "Bajar",
+      "expand": "Expandir",
+      "collapse": "Contraer",
+      "coverage": {
+        "title": "Puede cubrir",
+        "explainer": "{{role}} puede ser programado/a en estos puestos o cubrir turnos en ellos, sujeto al nivel de habilidad.",
+        "none": "No cubre ningún otro puesto.",
+        "noOtherRoles": "Aún no hay otros puestos para cubrir.",
+        "cancel": "Cancelar",
+        "save": "Guardar cobertura",
+        "cycle": "Esto crea un ciclo de cobertura ({{path}}). La cobertura no debe formar un ciclo.",
+        "confirmTitle": "Esto afecta turnos ya publicados",
+        "confirmBody_one": "1 turno publicado está actualmente asignado a alguien que depende de esta cobertura. Eliminarla no cambia ese turno — alguien deberá notarlo.",
+        "confirmBody_other": "{{count}} turnos publicados están actualmente asignados a personas que dependen de esta cobertura. Eliminarla no cambia esos turnos — alguien deberá notarlo.",
+        "confirmCancel": "Cancelar",
+        "confirmProceed": "Guardar de todos modos"
+      },
+      "newRoleModal": {
+        "title": "Nuevo puesto",
+        "name": "Nombre (inglés)",
+        "nameEs": "Nombre (español)",
+        "department": "Departamento",
+        "color": "Color",
+        "create": "Crear puesto",
+        "duplicate": "Ya existe un puesto con ese nombre.",
+        "nameRequired": "Se requiere un nombre."
+      },
+      "toast": {
+        "reorderFailed": "No se pudo reordenar los puestos. Inténtalo de nuevo.",
+        "activeToggled": "{{role}} ahora está {{state}}.",
+        "activeToggleFailed": "No se pudo actualizar ese puesto. Inténtalo de nuevo.",
+        "coverageSaved": "Cobertura actualizada para {{role}}.",
+        "coverageFailed": "No se pudo guardar la cobertura. Inténtalo de nuevo.",
+        "roleCreated": "{{role}} agregado/a.",
+        "roleCreateFailed": "No se pudo crear el puesto. Inténtalo de nuevo."
+      }
+    }
   }
 }

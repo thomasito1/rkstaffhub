@@ -70,7 +70,9 @@
     "allDepartments": "All departments",
     "allRoles": "All roles",
     "allTypes": "All types",
-    "allStatuses": "All statuses"
+    "allStatuses": "All statuses",
+    "category": "Category",
+    "allCategories": "All categories"
   },
   "auth": {
     "signIn": "Sign in",
@@ -709,7 +711,8 @@
         "submitted": "Availability submitted.",
         "locked": "That week closed at the deadline. Ask a manager to change it for you.",
         "failed": "We couldn't submit your availability. Try again."
-      }
+      },
+      "requestTimeOff": "Request time off"
     },
     "requests": {
       "tab": "Requests",
@@ -872,5 +875,145 @@
   },
   "more": {
     "myProfile": "My profile"
+  },
+  "timeOff": {
+    "category": {
+      "paid": "Paid",
+      "unpaid": "Unpaid"
+    },
+    "admin": {
+      "title": "Time off",
+      "subtitle": "Review requests and see coverage across the month",
+      "requestsTab": "Requests",
+      "calendarTab": "Calendar",
+      "stats": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "declined": "Declined"
+      },
+      "columns": {
+        "employee": "Employee",
+        "dates": "Dates",
+        "category": "Category",
+        "conflict": "Conflict"
+      },
+      "conflictCount_one": "{{count}} shift conflict",
+      "conflictCount_other": "{{count}} shift conflicts",
+      "count_one": "{{count}} request",
+      "count_other": "{{count}} requests",
+      "viewProfile": "View profile",
+      "declineTitle": "Decline time off",
+      "declineSubtitle": "{{name}}'s request",
+      "declining": "Declining…",
+      "reasonLabel": "Reason (optional)",
+      "reasonPlaceholder": "Let them know why, if you'd like.",
+      "emptyTitle": "No time-off requests",
+      "emptyBody": "Nothing here yet — requests will show up as staff submit them.",
+      "errorTitle": "Couldn't load time off",
+      "errorBody": "Something went wrong. Try again.",
+      "toast": {
+        "approved": "Approved {{name}}'s time off.",
+        "approveFailed": "Couldn't approve. Try again.",
+        "declined": "Declined {{name}}'s time off.",
+        "declineFailed": "Couldn't decline. Try again."
+      }
+    },
+    "calendar": {
+      "more_one": "+{{count}} more",
+      "more_other": "+{{count}} more",
+      "legendApproved": "Approved time off"
+    },
+    "my": {
+      "title": "Time off",
+      "subtitle": "Request time off and track your requests.",
+      "newRequest": "Request time off",
+      "emptyTitle": "No requests yet",
+      "emptyBody": "Time off you request will show up here.",
+      "errorTitle": "Couldn't load your requests",
+      "errorBody": "Something went wrong. Try again.",
+      "form": {
+        "startDate": "Start date",
+        "endDate": "End date",
+        "category": "Category",
+        "reason": "Reason (optional)",
+        "invalidRange": "Choose a start and end date, with the end on or after the start.",
+        "submit": "Submit request",
+        "submitting": "Submitting…"
+      },
+      "toast": {
+        "submitted": "Time-off request submitted.",
+        "submitFailed": "Couldn't submit your request. Try again."
+      }
+    }
+  },
+  "settings": {
+    "nav": {
+      "general": "General",
+      "roles": "Roles & hierarchy",
+      "permissions": "Permissions",
+      "timeOff": "Time off"
+    },
+    "roles": {
+      "title": "Roles & hierarchy",
+      "subtitle": "Define shift roles, their order and which roles can cover each other",
+      "newRole": "New role",
+      "errorBody": "Couldn't load roles. Try again.",
+      "legend": {
+        "title": "Skill levels",
+        "l1": "Trainee — cannot work alone or take covers",
+        "l2": "Independent — standard scheduling",
+        "l3": "Can train others and cover any lower level"
+      },
+      "columns": {
+        "order": "Order",
+        "role": "Role",
+        "department": "Department",
+        "employees": "Employees",
+        "canCover": "Can cover"
+      },
+      "employeeCount_one": "{{count}} employee",
+      "employeeCount_other": "{{count}} employees",
+      "active": "Active",
+      "inactive": "Inactive",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "expand": "Expand",
+      "collapse": "Collapse",
+      "coverage": {
+        "title": "Can cover",
+        "explainer": "{{role}} may be scheduled into or take covers for these roles, subject to skill level.",
+        "none": "Covers no other roles.",
+        "noOtherRoles": "No other roles to cover yet.",
+        "cancel": "Cancel",
+        "save": "Save coverage",
+        "cycle": "This creates a coverage loop ({{path}}). Coverage must not form a cycle.",
+        "confirmTitle": "This affects already-published shifts",
+        "confirmBody_one": "1 published shift is currently staffed by someone who relies on this coverage. Removing it does not change that shift — it will need a human to notice.",
+        "confirmBody_other": "{{count}} published shifts are currently staffed by people who rely on this coverage. Removing it does not change those shifts — they will need a human to notice.",
+        "confirmCancel": "Cancel",
+        "confirmProceed": "Save anyway"
+      },
+      "newRoleModal": {
+        "title": "New role",
+        "name": "Name (English)",
+        "nameEs": "Name (Spanish)",
+        "department": "Department",
+        "color": "Color",
+        "create": "Create role",
+        "duplicate": "A role with that name already exists.",
+        "nameRequired": "A name is required."
+      },
+      "toast": {
+        "reorderFailed": "Couldn't reorder roles. Try again.",
+        "activeToggled": "{{role}} is now {{state}}.",
+        "activeToggleFailed": "Couldn't update that role. Try again.",
+        "coverageSaved": "Coverage updated for {{role}}.",
+        "coverageFailed": "Couldn't save coverage. Try again.",
+        "roleCreated": "{{role}} added.",
+        "roleCreateFailed": "Couldn't create the role. Try again."
+      }
+    }
   }
 }

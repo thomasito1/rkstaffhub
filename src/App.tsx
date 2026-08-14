@@ -5,6 +5,11 @@ import { RequireAuth, RequirePermission } from '@/components/guards/RouteGuards'
 import { ComponentGallery } from '@/pages/dev/ComponentGallery'
 import { PlaceholderPage } from '@/pages/PlaceholderPage'
 import { MorePage } from '@/pages/MorePage'
+import { SettingsShell } from '@/pages/settings/SettingsShell'
+import { RolesHierarchyPage } from '@/pages/settings/RolesHierarchyPage'
+import { TimeOffAdminPage } from '@/pages/settings/TimeOffAdminPage'
+import { TimeOffCalendarPage } from '@/pages/settings/TimeOffCalendarPage'
+import { MyTimeOffPage } from '@/pages/availability/MyTimeOffPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { InviteAcceptPage } from '@/pages/auth/InviteAcceptPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
@@ -69,6 +74,7 @@ export default function App() {
           path="availability/glance"
           element={<GlanceViewPage requestsPath="/availability/requests" />}
         />
+        <Route path="time-off" element={<MyTimeOffPage />} />
         <Route
           path="shift-pool"
           element={<PlaceholderPage titleKey="nav.shiftPool" phase={2} />}
@@ -79,10 +85,20 @@ export default function App() {
           path="reports"
           element={<PlaceholderPage titleKey="nav.reports" phase={3} />}
         />
-        <Route
-          path="settings"
-          element={<PlaceholderPage titleKey="nav.settings" phase={0} />}
-        />
+        <Route path="settings" element={<SettingsShell />}>
+          <Route index element={<Navigate to="general" replace />} />
+          <Route
+            path="general"
+            element={<PlaceholderPage titleKey="settings.nav.general" phase={0} />}
+          />
+          <Route path="roles" element={<RolesHierarchyPage />} />
+          <Route
+            path="permissions"
+            element={<PlaceholderPage titleKey="settings.nav.permissions" phase={0} />}
+          />
+          <Route path="time-off" element={<TimeOffAdminPage />} />
+          <Route path="time-off/calendar" element={<TimeOffCalendarPage />} />
+        </Route>
         <Route path="more" element={<MorePage />} />
 
         {/* People — Phase 0. The roster and any other person's profile need

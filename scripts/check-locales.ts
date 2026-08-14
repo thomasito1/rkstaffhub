@@ -38,6 +38,8 @@ const IDENTICAL_OK = new Set([
   'auth.email',
   'nav.search',
   'common.no', // "No" is identical in Spanish.
+  'settings.nav.general', // "General" is identical in Spanish.
+  'settings.roles.newRoleModal.color', // "Color" is identical in Spanish.
 ])
 
 const en = flatten(load('en.json'))
