@@ -35,7 +35,7 @@ import { HttpsError, onCall } from 'firebase-functions/v2/https'
 
 import { COLLECTIONS, db } from './firebase'
 import { requirePermission } from './permissions'
-import { writeAudit } from './audit'
+import { markAuditPending, writeAudit } from './audit'
 import type { EmployeeDoc, ShiftDoc, ShiftRoleDoc } from './model'
 
 export interface RecordScheduleOverrideRequest {
@@ -190,7 +190,7 @@ export const recordScheduleOverride = onCall<RecordScheduleOverrideRequest>(
       })
     })
 
-    await writeAudit({
+    const audited = await writeAudit({
       action: 'schedule.override',
       actorEmployeeId: actor.id,
       actorUid: uid,
@@ -205,6 +205,7 @@ export const recordScheduleOverride = onCall<RecordScheduleOverrideRequest>(
         effectiveSkillLevel,
       },
     })
+    if (!audited) await markAuditPending(shiftRef, 'schedule.override')
 
     return { weekId, shiftId, employeeId, effectiveSkillLevel, requiredSkillLevel }
   },

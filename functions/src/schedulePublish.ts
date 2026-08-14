@@ -36,7 +36,7 @@ import { HttpsError, onCall } from 'firebase-functions/v2/https'
 
 import { COLLECTIONS, db } from './firebase'
 import { requirePermission } from './permissions'
-import { writeAudit } from './audit'
+import { markAuditPending, writeAudit } from './audit'
 import type { ScheduleDoc } from './model'
 
 export interface RecordSchedulePublishRequest {
@@ -165,7 +165,7 @@ export const recordSchedulePublish = onCall<RecordSchedulePublishRequest>(
       }
     })
 
-    await writeAudit({
+    const audited = await writeAudit({
       action: 'schedule.publish',
       actorEmployeeId: actor.id,
       actorUid: uid,
@@ -179,6 +179,7 @@ export const recordSchedulePublish = onCall<RecordSchedulePublishRequest>(
         notifiedCount: result.notifyEmployeeIds.length,
       },
     })
+    if (!audited) await markAuditPending(scheduleRef, 'schedule.publish')
 
     return {
       weekId: result.weekId,

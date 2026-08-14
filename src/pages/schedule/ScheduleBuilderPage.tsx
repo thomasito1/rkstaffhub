@@ -117,6 +117,13 @@ function ScheduleBuilderScreen(): JSX.Element {
   const warningCount = warningGroups.length
   const [warningsOpen, setWarningsOpen] = useState(false)
 
+  // §17: an audit entry that failed to write (after two attempts — see
+  // functions/src/audit.ts) is flagged on the record it was ABOUT, not
+  // invisibly dropped. This is a compliance gap, not a scheduling conflict,
+  // so it gets its own banner rather than folding into warningGroups.
+  const auditPendingCount =
+    (data.schedule?.auditPending ? 1 : 0) + data.shifts.filter((s) => s.auditPending).length
+
   const modalCanEdit = modal?.shift ? canEditExisting : canCreate
 
   return (
@@ -187,6 +194,18 @@ function ScheduleBuilderScreen(): JSX.Element {
           </button>
         </div>
       </div>
+
+      {auditPendingCount > 0 && canPublish ? (
+        <div className="flex shrink-0 items-center gap-2 border-b border-line bg-danger-tint px-8 py-2">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="h-4 w-4 shrink-0 text-danger" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 8v4M12 15.8h.01" />
+          </svg>
+          <p className="text-chip font-medium text-danger">
+            {t('scheduleBuilder.auditPending.banner', { count: auditPendingCount })}
+          </p>
+        </div>
+      ) : null}
 
       {data.loading ? (
         <div className="flex-1 overflow-auto p-6">

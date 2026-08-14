@@ -864,6 +864,10 @@
     "header": {
       "employee": "Employee",
       "forecast": "Fcst {{amount}}"
+    },
+    "auditPending": {
+      "banner_one": "The compliance record for 1 recent change couldn't be saved yet. The change itself was saved — this only affects the audit log. Contact support if this doesn't resolve on its own.",
+      "banner_other": "The compliance record for {{count}} recent changes couldn't be saved yet. The changes themselves were saved — this only affects the audit log. Contact support if this doesn't resolve on its own."
     }
   },
   "more": {

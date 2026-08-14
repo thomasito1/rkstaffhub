@@ -127,6 +127,9 @@ function toSchedule(snap: DocumentSnapshot<DocumentData>): Schedule {
     laborTargetPct: (d.laborTargetPct as number | null) ?? null,
     aiDraftMeta: (d.aiDraftMeta as AiDraftMeta | null) ?? null,
     locationId: (d.locationId as string | null) ?? null,
+    auditPending: d.auditPending === true,
+    auditPendingAction: d.auditPendingAction as Schedule['auditPendingAction'],
+    auditPendingAt: d.auditPendingAt,
     createdAt: d.createdAt,
     updatedAt: d.updatedAt,
   }
@@ -159,6 +162,9 @@ function toShift(
     status: SHIFT_STATUSES.includes(status) ? status : 'draft',
     locationId: (d.locationId as string | null) ?? null,
     dirtySincePublish: d.dirtySincePublish === true,
+    auditPending: d.auditPending === true,
+    auditPendingAction: d.auditPendingAction as Shift['auditPendingAction'],
+    auditPendingAt: d.auditPendingAt,
     createdAt: d.createdAt,
     updatedAt: d.updatedAt,
   }

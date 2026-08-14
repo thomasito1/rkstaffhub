@@ -20,7 +20,7 @@
  * scheduleOverride.ts and schedulePublish.ts.
  */
 
-import { FieldValue } from 'firebase-admin/firestore'
+import { FieldValue, type DocumentReference } from 'firebase-admin/firestore'
 import { logger } from 'firebase-functions'
 
 import { COLLECTIONS, db } from './firebase'
@@ -41,25 +41,69 @@ export interface AuditInput {
   after?: unknown
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 /**
  * Never throws. An audit write that fails must not roll back the mutation it
  * describes — that would turn a logging outage into an outage of invite
- * acceptance. Failures are logged at error level for alerting instead.
+ * acceptance. Retries once after a short delay (a transient Firestore hiccup
+ * is the expected failure mode here, not a persistent outage); if the retry
+ * also fails, logs at error level and returns `false` so the caller can set a
+ * durable, queryable marker on the record it just mutated — an audit entry
+ * may be late, it must never be silently missing (Rafa's ruling, Aug 14
+ * 2026). Returns `true` once the entry is written, on either attempt.
  */
-export async function writeAudit(input: AuditInput): Promise<void> {
+export async function writeAudit(input: AuditInput): Promise<boolean> {
+  const doc = {
+    action: input.action,
+    actorEmployeeId: input.actorEmployeeId,
+    actorUid: input.actorUid,
+    targetType: input.targetType,
+    targetId: input.targetId,
+    reason: input.reason ?? null,
+    before: input.before ?? null,
+    after: input.after ?? null,
+    at: FieldValue.serverTimestamp(),
+  }
+
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      await db.collection(COLLECTIONS.auditLog).add(doc)
+      return true
+    } catch (err) {
+      logger.error('auditLog write failed', { input, err, attempt })
+      if (attempt === 1) await sleep(250)
+    }
+  }
+  return false
+}
+
+/**
+ * Best-effort follow-up to a `writeAudit()` that returned `false`. Flags the
+ * record the audit entry was ABOUT (not auditLog, which just failed) so the
+ * gap is queryable from data any admin screen already reads — no new
+ * collection, no dependency on a Phase 6 dashboard that doesn't exist yet.
+ * Never throws: if even this write fails, the incident is logged and the
+ * caller's response to the client is unaffected either way — the state
+ * change this audit entry describes already committed.
+ */
+export async function markAuditPending(
+  ref: DocumentReference,
+  action: AuditAction,
+): Promise<void> {
   try {
-    await db.collection(COLLECTIONS.auditLog).add({
-      action: input.action,
-      actorEmployeeId: input.actorEmployeeId,
-      actorUid: input.actorUid,
-      targetType: input.targetType,
-      targetId: input.targetId,
-      reason: input.reason ?? null,
-      before: input.before ?? null,
-      after: input.after ?? null,
-      at: FieldValue.serverTimestamp(),
+    await ref.update({
+      auditPending: true,
+      auditPendingAction: action,
+      auditPendingAt: FieldValue.serverTimestamp(),
     })
   } catch (err) {
-    logger.error('auditLog write failed', { input, err })
+    logger.error('failed to set auditPending marker after an audit write failure', {
+      path: ref.path,
+      action,
+      err,
+    })
   }
 }

@@ -864,6 +864,10 @@
     "header": {
       "employee": "Empleado/a",
       "forecast": "Prev. {{amount}}"
+    },
+    "auditPending": {
+      "banner_one": "El registro de auditoría de 1 cambio reciente no se pudo guardar todavía. El cambio en sí se guardó — esto solo afecta al historial de auditoría. Contacta a soporte si esto no se resuelve por sí solo.",
+      "banner_other": "El registro de auditoría de {{count}} cambios recientes no se pudo guardar todavía. Los cambios en sí se guardaron — esto solo afecta al historial de auditoría. Contacta a soporte si esto no se resuelve por sí solo."
     }
   },
   "more": {

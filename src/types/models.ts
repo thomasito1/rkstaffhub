@@ -373,6 +373,16 @@ export interface Schedule {
   laborTargetPct: number | null
   aiDraftMeta: AiDraftMeta | null
   locationId?: string | null
+  /**
+   * Set by the server when its §17 auditLog write failed after this record's
+   * own mutation already committed (both attempts — see functions/src/audit.ts
+   * `writeAudit`/`markAuditPending`). The mutation itself is NOT rolled back;
+   * this only means the audit trail for it needs a human to reconcile. An
+   * audit entry may be late, it must never be silently missing.
+   */
+  auditPending?: boolean
+  auditPendingAction?: AuditAction
+  auditPendingAt?: unknown
   createdAt?: unknown
   updatedAt?: unknown
 }
@@ -416,6 +426,10 @@ export interface Shift {
    * and notified for it.
    */
   dirtySincePublish?: boolean
+  /** See the matching note on `Schedule.auditPending`. */
+  auditPending?: boolean
+  auditPendingAction?: AuditAction
+  auditPendingAt?: unknown
   createdAt?: unknown
   updatedAt?: unknown
 }
