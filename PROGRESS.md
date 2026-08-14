@@ -30,6 +30,48 @@ Phases are sequential. Do not build later-phase features early, even scaffolding
 | Geofenced selfie clock in/out + offline queue | ✅ Done — `src/pages/clock/*`, wired at `/clock` |
 | Tip report at clock-out | ✅ Done — mockup 22's numpad/confirm/$0-confirm flow, gated on `Employee.tipsRequired` |
 | Shifts & Tips admin section | ✅ Done — `src/pages/settings/ShiftsAndTipsPage.tsx`, wired at `/settings/shifts-and-tips` |
+| Thursday 23:59 ET availability deadline, enforced server-side | ✅ Done — `functions/src/availabilityActions.ts`, closes the gap Phase 1 deliberately left open (see below) |
+
+---
+
+## How to review Phase 2
+
+Same emulator+seed setup as Phase 0/1 (see "How to run" below) — `nvm use`,
+`npm run emulators` (terminal 1), seed (terminal 2), `npm run dev` (terminal 3).
+Sign in as a seeded staff member for the self-service surfaces, and as a
+manager (e.g. Denise Lasarte, GM, or Armando Hernandez/Robin Leyva, manager)
+for the admin ones.
+
+| Route | What to check | Compare against |
+| --- | --- | --- |
+| `/shift-pool` | Up for grabs, trade requests, my trades; post an open shift, claim it as another staff member, approve as a manager (try both an eligible and a deliberately-ineligible claimant to see the override panel) | mockups 16, 17a/17b |
+| `/clock` | Clock in (camera + geolocation permission prompts), clock out with tips, clock out with $0 tips, and — by overriding your browser's location — the geofence-blocked screen | mockups 19–23 |
+| `/settings/shifts-and-tips` | Filter/search the punch table, add a manual punch (both a live "right now" one and a backdated pair against a real scheduled shift), edit a punch's time and a tip amount, export CSV | mockups 24, 25, 25b |
+| Push notifications | Grant notification permission on first Shift Pool visit; trigger a pool drop from another account and confirm a notification arrives (dev tools → Application → Service Workers to confirm the SW is `activated`) | spec §7, §15 |
+| Availability (`/availability`) | Submit before Thursday 23:59 ET — succeeds; after — blocked with the same message as before, now enforced server-side rather than just in the UI | spec §5 |
+
+**Known limits, not gaps** (documented in full below, not silently dropped):
+mockup 25's "Auto-closed"/"Outside fence" punch-flag examples can't occur
+under this app's actual behavior (forgotten clock-outs are flagged, never
+auto-closed; an out-of-geofence live punch is rejected, never created) —
+the real flag reasons are `no-scheduled-shift`, `forgotten-clockout`,
+`manualBy`, and a client-derived `missing-tip-report`. The manager
+"notify employee" checkbox on mockup 24 has no backing behavior and was
+left out. The punch edit modal (mockup 25b) shows an hours-only net
+change, not a wage delta — `hourlyRate` lives in a separately-gated
+private subdoc this admin screen doesn't fetch.
+
+**Open item for you**: `VITE_FIREBASE_VAPID_KEY` in `.env.example` is
+still blank — needs a real Web Push certificate key from the Firebase
+console (Project Settings → Cloud Messaging → Web Push certificates)
+before push works against a real deployment. Everything up to obtaining a
+token is built and verified; only this one credential is missing.
+
+**Full verification gate, run cold immediately before this checkpoint**:
+`npm run build` (client + functions), 145 unit tests, i18n parity (1168
+keys, en/es), 118 rules tests, `test:rules:clean` (0 dirty denials, 14
+pre-existing first-pass artifacts — same count as every prior checkpoint
+this phase, none new).
 
 **Time clock — server layer.** `src/lib/geofence.ts` (haversine, pure, symlinked
 into `functions/src/geofence.ts` the same way as `tradeEligibility.ts`) is
