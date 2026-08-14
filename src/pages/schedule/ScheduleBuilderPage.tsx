@@ -12,6 +12,7 @@ import { LaborFooter } from './components/LaborFooter'
 import { PublishModal } from './components/PublishModal'
 import { RoleBandRow } from './components/RoleBandRow'
 import { ShiftModal } from './components/ShiftModal'
+import { WarningsPanel, type WarningGroup } from './components/WarningsPanel'
 import { useScheduleData } from './useScheduleData'
 
 /**
@@ -80,15 +81,40 @@ function ScheduleBuilderScreen(): JSX.Element {
     [data.roles, department, data.shifts],
   )
 
-  const warningCount = useMemo(() => {
-    let count = 0
+  // Grouped by (person, conflict TYPE), not by shift. Per-shift corner flags
+  // on ShiftCard are unchanged — this is only the header badge's count, which
+  // used to increment once per AFFECTED SHIFT. That made one ongoing
+  // condition (a person projected over 40 hrs all week) count once for every
+  // shift they work, rather than once. See PROGRESS.md / DESIGN-HANDOFF.md.
+  const warningGroups = useMemo<WarningGroup[]>(() => {
+    const groups = new Map<string, WarningGroup>()
     for (const shift of data.shifts) {
       if (!shift.employeeId) continue
-      const conflicts = data.conflictsFor(shift, shift.employeeId)
-      if (conflicts.some((c) => c.severity === 'warn')) count += 1
+      const employeeId = shift.employeeId
+      const conflicts = data.conflictsFor(shift, employeeId)
+      for (const c of conflicts) {
+        if (c.severity !== 'warn') continue
+        const key = `${employeeId}::${c.code}`
+        const existing = groups.get(key)
+        if (existing) {
+          existing.shifts.push(shift)
+        } else {
+          groups.set(key, {
+            key,
+            employeeId,
+            code: c.code,
+            messageKey: c.messageKey,
+            params: c.params,
+            shifts: [shift],
+          })
+        }
+      }
     }
-    return count
+    return Array.from(groups.values())
   }, [data])
+
+  const warningCount = warningGroups.length
+  const [warningsOpen, setWarningsOpen] = useState(false)
 
   const modalCanEdit = modal?.shift ? canEditExisting : canCreate
 
@@ -112,13 +138,17 @@ function ScheduleBuilderScreen(): JSX.Element {
 
         <div className="flex items-center gap-3">
           {warningCount > 0 ? (
-            <span className="flex items-center gap-2 rounded-control border border-warning bg-warning-tint px-4 py-2 text-meta font-semibold text-warning">
+            <button
+              type="button"
+              onClick={() => setWarningsOpen(true)}
+              className="flex items-center gap-2 rounded-control border border-warning bg-warning-tint px-4 py-2 text-meta font-semibold text-warning transition-colors hover:bg-warning hover:text-white"
+            >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.75} className="h-4 w-4" aria-hidden="true">
                 <path d="M10.3 3.4 2.6 17a1.5 1.5 0 0 0 1.3 2.2h16.2a1.5 1.5 0 0 0 1.3-2.2L13.7 3.4a1.5 1.5 0 0 0-3.4 0Z" />
                 <path d="M12 9v4M12 16.3h.01" />
               </svg>
               {t('scheduleBuilder.warningCount', { count: warningCount })}
-            </span>
+            </button>
           ) : null}
           {canPublish ? (
             <Button variant="primary" onClick={() => setPublishOpen(true)}>
@@ -236,6 +266,14 @@ function ScheduleBuilderScreen(): JSX.Element {
         onClose={() => setPublishOpen(false)}
         data={data}
         weekRangeLabel={weekRangeLabel}
+      />
+
+      <WarningsPanel
+        open={warningsOpen}
+        onClose={() => setWarningsOpen(false)}
+        groups={warningGroups}
+        employeesById={data.employeesById}
+        lang={lang}
       />
     </div>
   )

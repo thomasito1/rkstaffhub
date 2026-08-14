@@ -850,6 +850,15 @@
         "republished": "Schedule republished",
         "failed": "We couldn't publish the schedule. Try again."
       }
+    },
+    "warnings": {
+      "title": "Scheduling conflicts",
+      "subtitle_one": "{{count}} situation needs a look",
+      "subtitle_other": "{{count}} situations need a look",
+      "empty": "No open warnings this week.",
+      "showShifts_one": "Show {{count}} affected shift",
+      "showShifts_other": "Show {{count}} affected shifts",
+      "hideShifts": "Hide shifts"
     }
   }
 }

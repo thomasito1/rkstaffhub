@@ -850,6 +850,15 @@
         "republished": "Horario vuelto a publicar",
         "failed": "No pudimos publicar el horario. Inténtalo de nuevo."
       }
+    },
+    "warnings": {
+      "title": "Conflictos de horario",
+      "subtitle_one": "{{count}} situación necesita revisión",
+      "subtitle_other": "{{count}} situaciones necesitan revisión",
+      "empty": "No hay advertencias pendientes esta semana.",
+      "showShifts_one": "Mostrar {{count}} turno afectado",
+      "showShifts_other": "Mostrar {{count}} turnos afectados",
+      "hideShifts": "Ocultar turnos"
     }
   }
 }
