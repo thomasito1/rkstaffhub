@@ -55,25 +55,36 @@ async function findOpenPunch(employeeId: string) {
 }
 
 /**
- * The employee's shift today, if any. Punch-without-shift is allowed (spec
- * §8) — this only decides whether to link + leave `flagged` false, never
- * whether the punch itself succeeds.
+ * The employee's shift on `date` (restaurant-local "YYYY-MM-DD"), if any.
+ * Punch-without-shift is allowed (spec §8) — this only decides whether to
+ * link + leave `flagged` false, never whether the punch itself succeeds.
+ *
+ * Takes an explicit date rather than always assuming "today": `manualPunch`
+ * can legitimately backdate (mockup 24 — a shift the employee never punched
+ * at all, added after the fact), and looking up TODAY's shift for a
+ * backdated punch would both miss the real shift (wrongly flagging
+ * `no-scheduled-shift`) and query the wrong week entirely.
  */
-async function findTodaysShift(
+async function findShiftForDate(
   employeeId: string,
+  date: string,
 ): Promise<{ shiftId: string; weekId: string } | null> {
-  const today = todayIsoInRestaurantTz()
-  const weekId = weekIdForIsoDate(today)
+  const weekId = weekIdForIsoDate(date)
   const snap = await db
     .collection(COLLECTIONS.schedules)
     .doc(weekId)
     .collection('shifts')
     .where('employeeId', '==', employeeId)
-    .where('date', '==', today)
+    .where('date', '==', date)
     .limit(1)
     .get()
   const doc = snap.docs[0]
   return doc ? { shiftId: doc.id, weekId } : null
+}
+
+/** Restaurant-local "YYYY-MM-DD" for a punch's own instant — the date it actually happened, not "today". */
+function isoDateOf(instant: string): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date(instant))
 }
 
 // ── clockIn ──────────────────────────────────────────────────────────────────
@@ -116,7 +127,7 @@ export const clockIn = onCall<ClockInRequest>(async (request): Promise<ClockInRe
   await verifySelfieUpload(selfieStoragePath(actor.id, punchId))
   const geo = await verifyGeofence(lat, lng, accuracy)
 
-  const todaysShift = await findTodaysShift(actor.id)
+  const todaysShift = await findShiftForDate(actor.id, todayIsoInRestaurantTz())
   const shiftId = todaysShift?.shiftId ?? null
   const flagged = shiftId === null
   const flagReason = flagged ? 'no-scheduled-shift' : null
@@ -290,7 +301,11 @@ export const manualPunch = onCall<ManualPunchRequest>(
     const actor = await requirePermission(uid, 'punches.edit')
     await requireBelowLevelTarget(actor, employeeId)
 
-    const todaysShift = await findTodaysShift(employeeId)
+    // The shift lookup uses the punch's OWN date, not "today" — manualPunch
+    // routinely backdates (mockup 24), and today's shift would both miss the
+    // real one (wrongly flagging no-scheduled-shift) and query the wrong week.
+    const shiftLookupDate = isoDateOf(clockIn ?? (clockOut as string))
+    const todaysShift = await findShiftForDate(employeeId, shiftLookupDate)
     const shiftId = todaysShift?.shiftId ?? null
     const punchIds: string[] = []
 
@@ -330,7 +345,7 @@ export const manualPunch = onCall<ManualPunchRequest>(
         if (typeof request.data.tipsAmount === 'number' && request.data.tipsAmount >= 0) {
           tx.create(db.collection(COLLECTIONS.tipReports).doc(), {
             employeeId,
-            date: todayIsoInRestaurantTz(),
+            date: isoDateOf(clockOut),
             shiftId,
             amount: request.data.tipsAmount,
             reportedAt: FieldValue.serverTimestamp(),
@@ -369,7 +384,7 @@ export const manualPunch = onCall<ManualPunchRequest>(
         if (typeof request.data.tipsAmount === 'number' && request.data.tipsAmount >= 0) {
           tx.create(db.collection(COLLECTIONS.tipReports).doc(), {
             employeeId,
-            date: todayIsoInRestaurantTz(),
+            date: isoDateOf(clockOut as string),
             shiftId: outShiftId,
             amount: request.data.tipsAmount,
             reportedAt: FieldValue.serverTimestamp(),
