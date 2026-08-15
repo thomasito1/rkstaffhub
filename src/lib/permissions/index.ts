@@ -99,6 +99,35 @@ export function canAccessSensitive(
 }
 
 /**
+ * Roles whose tip reports `role` may view, per the below-your-level rule
+ * (spec §4) — strictly-below only, except Owner's blanket bypass (an Owner
+ * may see even another Owner's tips; every other role excludes its own
+ * rank, since equal-rank access is denied).
+ *
+ * This mirrors firestore.rules' `viewableTipRoles()` EXACTLY. The mirror
+ * exists because a Firestore `list` query is all-or-nothing: the rule can't
+ * be proven safe for an unfiltered query, so the client must constrain the
+ * query itself with `where('employeeAccessRole', 'in', viewableTipRoles(...))`
+ * — the SAME literal set the rule checks membership against — or Firestore
+ * denies the whole request rather than filtering per-document (confirmed
+ * Aug 14 2026; see firestore.rules' tipReports comment for the full story).
+ */
+export function viewableTipRoles(role: AccessRole): AccessRole[] {
+  switch (role) {
+    case 'owner':
+      return ['owner', 'gm', 'manager', 'supervisor', 'staff']
+    case 'gm':
+      return ['manager', 'supervisor', 'staff']
+    case 'manager':
+      return ['supervisor', 'staff']
+    case 'supervisor':
+      return ['staff']
+    default:
+      return []
+  }
+}
+
+/**
  * Department scoping for approvals — spec §4.
  * FOH managers approve FOH trades/availability. Owners and GM bypass.
  */

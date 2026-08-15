@@ -819,6 +819,93 @@ New during Phase 0. Ordered by when they block work:
   if per-flag-type filtering (not just "any flag") turns out to be wanted,
   that's a follow-up, not assumed here.
 
+- **RESOLVED — nobody but a literal Owner could see tip amounts (or any
+  non-Owner/GM's punches) in Shifts & Tips admin.** Found by Rafa's
+  requested Playwright review pass (Aug 14, 2026): GM Denise Lasarte saw
+  Total tips as $0.00, every tipped punch as "—", and a false
+  "Missing tip report" flag on every row — the same code path affects
+  Manager/Supervisor with `tips.viewAll`/`punches.viewAll`.
+
+  **Root cause, and it is not what it first looked like.** `listPunchesInRange`/
+  `listTipReportsInRange` run unfiltered `getDocs()` queries (no `employeeId`
+  where-clause — that's the whole point of an admin view). The rules for
+  both used a cross-document `get()` (`departmentOfTarget()`/`targetRoleOf()`,
+  keyed on `resource.data.employeeId`) to check department/rank. First
+  hypothesis was "list-query rules can't use `get()`, full stop" — so
+  `department` (`Punch`) and `employeeAccessRole` (`TipReport`) were
+  denormalized onto the document at creation time
+  (`functions/src/punchActions.ts`) so the rule could read the field
+  directly, no `get()`. **That alone didn't fix it** — the same 4 tests
+  still failed, one now with a *clean* deny (no `get()` in sight) instead of
+  an evaluation error, which meant the "no `get()`" theory was wrong.
+
+  The actual mechanism, confirmed against Firestore's own docs ("security
+  rules are not filters"): a `list` request is **all-or-nothing**. Firestore
+  evaluates the rule against the query's *potential* result set — using only
+  the query's own `where()`-pinned values and the caller's claims, never
+  real per-document data — and denies the **entire** request if it can't
+  prove every possible match would be allowed. It does not fetch, evaluate
+  per-document, and filter down; a single document conceptually not fully
+  visible causes the whole query to be visible, so it wouldn't. Any rule
+  branch that reads a `resource.data` field the query doesn't constrain
+  poisons the whole expression — with or without a `get()` involved. The
+  `isSelf(subjectEmployeeId())` branch (present in both rules for the
+  legitimate single-document self-read case) was the second half of the
+  problem: it reads `resource.data.employeeId`, which neither query
+  constrains, so it stayed unprovable regardless of what the admin-viewAll
+  branch did.
+
+  **The real fix has two halves, and the rule change alone was never going
+  to be enough:**
+  1. `firestore.rules`: `punchDepartment() == myDepartment()` needed no
+     change to its *shape* — Owner/GM already passed because `ownerOrGm()`
+     is a caller-only constant that short-circuits the whole OR regardless
+     of `resource.data`. `mayViewTipReport()` DID change: a rank
+     *comparison* (`rank(myRole()) > rank(tipReportEmployeeRole())`) can
+     never be proven for a list no matter how it's phrased, because its
+     truth still varies per document and nothing pins it — so it's now a
+     **membership** check (`viewableTipRoles(myRole())`, strictly-below +
+     Owner's blanket bypass) instead.
+  2. The client (`src/lib/db/punches.ts`, `src/lib/db/tipReports.ts`) now
+     adds a `where()` that pins the *exact* field the rule checks, for any
+     caller who isn't Owner/GM: `where('department', '==', actor.department)`
+     for punches, `where('employeeAccessRole', 'in',
+     viewableTipRoles(actor.accessRole))` for tip reports — the identical
+     literal set the rule checks membership against
+     (`src/lib/permissions/index.ts`'s `viewableTipRoles`, mirrored 1:1 in
+     the rule). With the query and the rule pinned to the same values,
+     Firestore can prove every possible match satisfies the rule, and the
+     list succeeds. Two new composite indexes support these
+     (`firestore.indexes.json`: `punches(department,timestamp)`,
+     `tipReports(employeeAccessRole,date)`).
+
+  A caller who genuinely lacks `punches.viewAll`/`tips.viewAll` and somehow
+  still issues this exact query gets a **denied** request, not an empty
+  result — confirmed correct: `list` can't return "empty, but only because I
+  filtered out what you can't see," it can only prove-all-or-deny-all. The
+  app already treats a permission-denied list as an empty array
+  (`isPermissionDenied` catch), and the page itself is gated on holding one
+  of those two permissions in the first place, so this is a non-issue in
+  practice, not a UX gap to close.
+
+  **Known narrow gap, not fixed:** a caller whose own role is `viewableTipRoles`'d
+  *out* of their own admin query (e.g. a tipped Supervisor viewing the same
+  screen they're scoped into) won't see their own tip report in this
+  particular table — `viewableTipRoles(role)` is strictly-below, so it never
+  includes the caller's own role, and Firestore's `in` filter excludes it at
+  the query level before the rule's `isSelf()` branch ever gets a chance.
+  Not addressed because `tipsRequired` in practice means FOH staff, and
+  Supervisor/Manager/GM accounts are not expected to be tipped employees at
+  Rosalia's Kitchen — flagging for Rafa in case that assumption is wrong.
+
+  Rules tests updated to match: the four failing `LIST queries` tests in
+  `tests/rules/punchesTipsTrades.rules.test.ts` were rewritten to mirror the
+  real client query shape (department/role `where()` included) rather than
+  a bare `collection()` read, and the two "no permission" cases now assert
+  `assertFails` instead of an incorrect "assertSucceeds with empty results"
+  expectation. All 125 rules tests + 151 unit tests + both builds +
+  `i18n:check` + `test:rules:clean` pass clean.
+
 - **RESOLVED — publish/republish now write their §17 audit entry.** Promoted
   from a tracked gap to the first task of this work block per Rafa's ruling
   (Aug 13, 2026): **publish must not be used against real data until the audit

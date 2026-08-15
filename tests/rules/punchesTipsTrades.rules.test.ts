@@ -5,8 +5,8 @@ import {
   type RulesTestEnvironment,
 } from '@firebase/rules-unit-testing'
 import { readFileSync } from 'node:fs'
-import { doc, setDoc, updateDoc, deleteDoc, getDoc } from 'firebase/firestore'
-import { beforeAll, afterAll, beforeEach, describe, it } from 'vitest'
+import { collection, doc, getDocs, query, setDoc, updateDoc, deleteDoc, getDoc, where } from 'firebase/firestore'
+import { beforeAll, afterAll, beforeEach, describe, expect, it } from 'vitest'
 
 import { ROLE_DEFAULTS } from '../../src/lib/permissions/defaults'
 
@@ -54,6 +54,10 @@ function punchPayload(employeeId: string, over: Record<string, unknown> = {}) {
     flagReason: null,
     editedBy: null,
     editHistory: [],
+    // Denormalized at creation time (Aug 14 2026 fix) so the department
+    // read-scope check needs no cross-document get() — see firestore.rules'
+    // punchDepartment() doc comment. Default matches emp-staff-foh's own.
+    department: 'FOH',
     locationId: null,
     ...over,
   }
@@ -68,6 +72,9 @@ function tipReportPayload(employeeId: string, over: Record<string, unknown> = {}
     reportedAt: new Date('2026-08-10T22:05:00Z'),
     editedBy: null,
     editHistory: [],
+    // Denormalized at creation time (Aug 14 2026 fix) — see firestore.rules'
+    // tipReportEmployeeRole() doc comment. Default matches emp-staff-foh's own.
+    employeeAccessRole: 'staff',
     locationId: null,
     ...over,
   }
@@ -241,6 +248,59 @@ describe('punches — every write is Cloud-Function-only (spec §8, §17)', () =
   })
 })
 
+describe('punches — LIST queries (Shifts & Tips admin, Aug 14 2026 regression coverage)', () => {
+  // A single-document getDoc() proving a rule "looks right" does NOT prove a
+  // real getDocs() QUERY works. Firestore evaluates a `list` against the
+  // query's POTENTIAL result set — using only the query's own where()-pinned
+  // values and the caller's claims, never real per-document data — and
+  // denies the WHOLE request if it can't prove every possible match is
+  // allowed ("security rules are not filters"). A department comparison
+  // against `resource.data.department` is only provable when the query
+  // itself pins `department` via where(), which is why these mirror
+  // `src/lib/db/punches.ts`'s actual query shape instead of a bare
+  // `collection()` read — an unfiltered admin-shaped query denies outright
+  // for anyone but Owner/GM, get()-free rule or not.
+  it('lets a same-department manager list punches with punches.viewAll via a real query scoped by their own department', async () => {
+    await testEnv.withSecurityRulesDisabled(async (admin) => {
+      const db = admin.firestore()
+      await setDoc(doc(db, 'punches/punch-boh'), punchPayload('emp-staff-boh', { department: 'BOH' }))
+    })
+    const mgr = ctx('uid-emp-mgr-foh', 'emp-mgr-foh', 'manager')
+    const snap = await assertSucceeds(
+      getDocs(query(collection(mgr, 'punches'), where('department', '==', 'FOH'))),
+    )
+    const ids = snap.docs.map((d) => d.id)
+    expect(ids).toContain('punch-foh')
+    // BOH is excluded by the query's own filter, not a per-document rule check.
+    expect(ids).not.toContain('punch-boh')
+  })
+
+  it('lets the owner list punches across every department via an unfiltered query — ownerOrGm() is caller-only, so no department where() is needed', async () => {
+    await testEnv.withSecurityRulesDisabled(async (admin) => {
+      const db = admin.firestore()
+      await setDoc(doc(db, 'punches/punch-boh'), punchPayload('emp-staff-boh', { department: 'BOH' }))
+    })
+    const owner = ctx('uid-emp-owner', 'emp-owner', 'owner')
+    const snap = await assertSucceeds(getDocs(collection(owner, 'punches')))
+    expect(snap.docs.map((d) => d.id)).toEqual(expect.arrayContaining(['punch-foh', 'punch-boh']))
+  })
+
+  it('DENIES a manager without punches.viewAll even with the same department filter — isSelf() is still unconstrained by the query, so Firestore can only deny outright, not return empty', async () => {
+    // Supervisor's role defaults grant schedule.view etc. but not
+    // punches.viewAll (spec §4). The department filter alone can't save this
+    // query: with hasPerm('punches.viewAll') statically false, the rule
+    // collapses to isSelf(subjectEmployeeId()), which still isn't pinned by
+    // any where() clause — some other FOH employee's punch would fail it —
+    // so Firestore denies the whole list. This is correct and secure: the
+    // app never issues this query for a caller lacking the permission in
+    // the first place (ShiftsAndTipsPage gates the whole screen on it).
+    const supervisor = ctx('uid-emp-staff-foh2', 'emp-staff-foh2', 'supervisor')
+    await assertFails(
+      getDocs(query(collection(supervisor, 'punches'), where('department', '==', 'FOH'))),
+    )
+  })
+})
+
 // ── tipReports ───────────────────────────────────────────────────────────────
 
 describe('tipReports — below-level scoped, every write Cloud-Function-only (spec §4, §8, §17)', () => {
@@ -262,10 +322,26 @@ describe('tipReports — below-level scoped, every write Cloud-Function-only (sp
   it("DENIES an EQUAL-RANK manager reading another manager's tip report", async () => {
     await testEnv.withSecurityRulesDisabled(async (admin) => {
       const db = admin.firestore()
-      await setDoc(doc(db, 'tipReports/tip-mgr'), tipReportPayload('emp-mgr-foh2'))
+      await setDoc(
+        doc(db, 'tipReports/tip-mgr'),
+        tipReportPayload('emp-mgr-foh2', { employeeAccessRole: 'manager' }),
+      )
     })
     const mgr = ctx('uid-emp-mgr-foh', 'emp-mgr-foh', 'manager')
     await assertFails(getDoc(doc(mgr, 'tipReports/tip-mgr')))
+  })
+
+  it("DENIES an EQUAL-RANK manager even when the record predates employeeAccessRole (fails closed to 'owner')", async () => {
+    // A record missing the denormalized field must never read as MORE
+    // permissive than one that has it — tipReportEmployeeRole()'s fallback
+    // is 'owner', the highest rank, so an equal-rank manager is still denied.
+    await testEnv.withSecurityRulesDisabled(async (admin) => {
+      const db = admin.firestore()
+      const { employeeAccessRole: _drop, ...withoutRole } = tipReportPayload('emp-mgr-foh2')
+      await setDoc(doc(db, 'tipReports/tip-mgr-legacy'), withoutRole)
+    })
+    const mgr = ctx('uid-emp-mgr-foh', 'emp-mgr-foh', 'manager')
+    await assertFails(getDoc(doc(mgr, 'tipReports/tip-mgr-legacy')))
   })
 
   it('denies the employee submitting their own tip report directly (must go through recordPunch)', async () => {
@@ -278,6 +354,75 @@ describe('tipReports — below-level scoped, every write Cloud-Function-only (sp
   it('denies a manager editing a tip amount directly (must go through editTipReport)', async () => {
     const mgr = ctx('uid-emp-mgr-foh', 'emp-mgr-foh', 'manager')
     await assertFails(updateDoc(doc(mgr, 'tipReports/tip-foh'), { amount: 0 }))
+  })
+})
+
+describe('tipReports — LIST queries (Shifts & Tips admin, Aug 14 2026 regression coverage)', () => {
+  // Same rationale as punches' matching block. A RANK COMPARISON
+  // (rank(myRole()) > rank(tipReportEmployeeRole())) can never be proven
+  // for a list, even get()-free, because its truth still varies per
+  // document and no where() pins it. mayViewTipReport() is a MEMBERSHIP
+  // check instead (viewableTipRoles()), which the query mirrors exactly via
+  // where('employeeAccessRole', 'in', ...) — see src/lib/db/tipReports.ts.
+  it('lets a strictly-higher-rank manager list tip reports with tips.viewAll via a real query scoped to roles below their own', async () => {
+    await testEnv.withSecurityRulesDisabled(async (admin) => {
+      const db = admin.firestore()
+      await setDoc(
+        doc(db, 'tipReports/tip-mgr-peer'),
+        tipReportPayload('emp-mgr-foh2', { employeeAccessRole: 'manager' }),
+      )
+    })
+    const mgr = ctx('uid-emp-mgr-foh', 'emp-mgr-foh', 'manager')
+    const snap = await assertSucceeds(
+      getDocs(
+        query(
+          collection(mgr, 'tipReports'),
+          where('date', '==', '2026-08-10'),
+          where('employeeAccessRole', 'in', ['supervisor', 'staff']),
+        ),
+      ),
+    )
+    const ids = snap.docs.map((d) => d.id)
+    expect(ids).toContain('tip-foh')
+    // Equal rank (manager reading another manager) is excluded by the
+    // query's own 'in' filter, not a per-document rule check.
+    expect(ids).not.toContain('tip-mgr-peer')
+  })
+
+  it("lets the owner list every tip report via the same query shape, including a manager peer's — owner's viewableTipRoles includes every role", async () => {
+    await testEnv.withSecurityRulesDisabled(async (admin) => {
+      const db = admin.firestore()
+      await setDoc(
+        doc(db, 'tipReports/tip-mgr-peer'),
+        tipReportPayload('emp-mgr-foh2', { employeeAccessRole: 'manager' }),
+      )
+    })
+    const owner = ctx('uid-emp-owner', 'emp-owner', 'owner')
+    const snap = await assertSucceeds(
+      getDocs(
+        query(
+          collection(owner, 'tipReports'),
+          where('date', '==', '2026-08-10'),
+          where('employeeAccessRole', 'in', ['owner', 'gm', 'manager', 'supervisor', 'staff']),
+        ),
+      ),
+    )
+    expect(snap.docs.map((d) => d.id)).toEqual(expect.arrayContaining(['tip-foh', 'tip-mgr-peer']))
+  })
+
+  it('DENIES a staff member without tips.viewAll attempting the unscoped admin query shape', async () => {
+    // viewableTipRoles('staff') is [] — the real listTipReportsInRange
+    // short-circuits locally and never queries Firestore at all for this
+    // caller (an empty 'in' array is an invalid query anyway). This proves
+    // the defense-in-depth case: if a client attempted the admin query's
+    // shape without a role filter regardless, Firestore denies the whole
+    // request rather than filtering it down to empty — isSelf() is still
+    // unconstrained by the query, and some other employee's tip report
+    // would fail it.
+    const peer = ctx('uid-emp-staff-foh2', 'emp-staff-foh2', 'staff')
+    await assertFails(
+      getDocs(query(collection(peer, 'tipReports'), where('date', '==', '2026-08-10'))),
+    )
   })
 })
 

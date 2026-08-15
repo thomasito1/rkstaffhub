@@ -195,14 +195,15 @@ function ShiftsAndTipsScreen(): JSX.Element {
   const [editingRow, setEditingRow] = useState<PunchRow | null>(null)
 
   const load = useCallback(async () => {
+    if (!actor) return
     setLoading(true)
     setLoadError(false)
     try {
       const [people, roles, punchList, tipList] = await Promise.all([
         listEmployees(),
         getShiftRoleMap(),
-        listPunchesInRange(startDate, endDate),
-        listTipReportsInRange(startDate, endDate),
+        listPunchesInRange(startDate, endDate, actor),
+        listTipReportsInRange(startDate, endDate, actor),
       ])
       setEmployees(people)
       setRoleMap(roles)
@@ -213,7 +214,7 @@ function ShiftsAndTipsScreen(): JSX.Element {
     } finally {
       setLoading(false)
     }
-  }, [startDate, endDate])
+  }, [startDate, endDate, actor])
 
   useEffect(() => {
     void load()

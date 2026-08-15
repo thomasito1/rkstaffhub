@@ -4,6 +4,7 @@ import {
   canAccessSensitive,
   canApproveForDepartment,
   canActOn,
+  viewableTipRoles,
   type Actor,
 } from './index'
 import { ROLE_DEFAULTS } from './defaults'
@@ -192,5 +193,33 @@ describe('canActOn — permission AND below-level together', () => {
 
     // Target is below, but the manager lacks employees.editPay → blocked.
     expect(canActOn(mgr, 'employees.editPay', target('staff'))).toBe(false)
+  })
+})
+
+describe('viewableTipRoles — mirrors firestore.rules for list-query safety (Aug 14 2026)', () => {
+  it('owner sees every role, including other owners (blanket bypass)', () => {
+    expect(viewableTipRoles('owner')).toEqual(['owner', 'gm', 'manager', 'supervisor', 'staff'])
+  })
+
+  it('every non-owner role excludes its own rank (equal-rank is denied, spec §4)', () => {
+    expect(viewableTipRoles('gm')).not.toContain('gm')
+    expect(viewableTipRoles('manager')).not.toContain('manager')
+    expect(viewableTipRoles('supervisor')).not.toContain('supervisor')
+  })
+
+  it('gm sees manager, supervisor, staff — strictly below', () => {
+    expect(viewableTipRoles('gm')).toEqual(['manager', 'supervisor', 'staff'])
+  })
+
+  it('manager sees supervisor, staff — strictly below', () => {
+    expect(viewableTipRoles('manager')).toEqual(['supervisor', 'staff'])
+  })
+
+  it('supervisor sees staff only', () => {
+    expect(viewableTipRoles('supervisor')).toEqual(['staff'])
+  })
+
+  it('staff sees no one else\'s tips (self-access is handled separately, not via this list)', () => {
+    expect(viewableTipRoles('staff')).toEqual([])
   })
 })

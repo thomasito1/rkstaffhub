@@ -146,6 +146,9 @@ export const clockIn = onCall<ClockInRequest>(async (request): Promise<ClockInRe
     flagged,
     flagReason,
     syncedFromOfflineQueue: Boolean(syncedFromOfflineQueue),
+    // Denormalized so firestore.rules' admin list read can check it directly,
+    // no cross-document get() — see Punch.department's doc comment.
+    department: actor.employee.department,
     editHistory: [],
     createdAt: FieldValue.serverTimestamp(),
     updatedAt: FieldValue.serverTimestamp(),
@@ -223,6 +226,7 @@ export const clockOut = onCall<ClockOutRequest>(async (request): Promise<ClockOu
       flagged: false,
       flagReason: null,
       syncedFromOfflineQueue: Boolean(syncedFromOfflineQueue),
+      department: actor.employee.department,
       editHistory: [],
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
@@ -238,6 +242,10 @@ export const clockOut = onCall<ClockOutRequest>(async (request): Promise<ClockOu
         reportedAt: FieldValue.serverTimestamp(),
         editedBy: null,
         editHistory: [],
+        // Denormalized so firestore.rules' below-level admin list read can
+        // check it directly, no cross-document get() — see
+        // TipReport.employeeAccessRole's doc comment.
+        employeeAccessRole: actor.employee.accessRole,
         createdAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp(),
       })
@@ -271,7 +279,7 @@ export interface ManualPunchResponse {
 async function requireBelowLevelTarget(
   actor: Awaited<ReturnType<typeof requirePermission>>,
   employeeId: string,
-): Promise<void> {
+): Promise<EmployeeDoc> {
   const targetSnap = await db.collection(COLLECTIONS.employees).doc(employeeId).get()
   if (!targetSnap.exists) throw new HttpsError('not-found', 'That employee does not exist.')
   const target = targetSnap.data() as EmployeeDoc
@@ -282,6 +290,7 @@ async function requireBelowLevelTarget(
       'You may only act on a punch for someone below your access level.',
     )
   }
+  return target
 }
 
 export const manualPunch = onCall<ManualPunchRequest>(
@@ -299,7 +308,7 @@ export const manualPunch = onCall<ManualPunchRequest>(
     }
 
     const actor = await requirePermission(uid, 'punches.edit')
-    await requireBelowLevelTarget(actor, employeeId)
+    const target = await requireBelowLevelTarget(actor, employeeId)
 
     // The shift lookup uses the punch's OWN date, not "today" — manualPunch
     // routinely backdates (mockup 24), and today's shift would both miss the
@@ -322,6 +331,7 @@ export const manualPunch = onCall<ManualPunchRequest>(
       manualReason: reason,
       flagged: shiftId === null,
       flagReason: shiftId === null ? 'no-scheduled-shift' : null,
+      department: target.department,
       editHistory: [],
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
@@ -351,6 +361,7 @@ export const manualPunch = onCall<ManualPunchRequest>(
             reportedAt: FieldValue.serverTimestamp(),
             editedBy: actor.id,
             editHistory: [],
+            employeeAccessRole: target.accessRole,
             createdAt: FieldValue.serverTimestamp(),
             updatedAt: FieldValue.serverTimestamp(),
           })
@@ -390,6 +401,7 @@ export const manualPunch = onCall<ManualPunchRequest>(
             reportedAt: FieldValue.serverTimestamp(),
             editedBy: actor.id,
             editHistory: [],
+            employeeAccessRole: target.accessRole,
             createdAt: FieldValue.serverTimestamp(),
             updatedAt: FieldValue.serverTimestamp(),
           })
@@ -543,7 +555,7 @@ export const editTipReport = onCall<EditTipReportRequest>(
       return { tipReportId }
     }
 
-    await requireBelowLevelTarget(actor, employeeId as string)
+    const target = await requireBelowLevelTarget(actor, employeeId as string)
     const ref = db.collection(COLLECTIONS.tipReports).doc()
     const historyEntry = { by: actor.id, at: Timestamp.now(), oldAmount: 0, newAmount, reason }
     await ref.set({
@@ -554,6 +566,7 @@ export const editTipReport = onCall<EditTipReportRequest>(
       reportedAt: FieldValue.serverTimestamp(),
       editedBy: actor.id,
       editHistory: [historyEntry],
+      employeeAccessRole: target.accessRole,
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
     })

@@ -18,9 +18,15 @@ import {
 } from 'firebase/firestore'
 
 import { COLLECTIONS, db } from '@/lib/firebase'
-import type { Punch, PunchGeo } from '@/types/models'
+import type { AccessRole, Department, Punch, PunchGeo } from '@/types/models'
 
 import { isPermissionDenied } from './errors'
+
+/** The minimal caller shape `listPunchesInRange` needs to scope its query. */
+export interface PunchListActor {
+  accessRole: AccessRole
+  department: Department
+}
 
 function toPunch(snap: QueryDocumentSnapshot<DocumentData>): Punch {
   const d = snap.data()
@@ -84,11 +90,23 @@ export function punchLocalDate(p: Punch): string | null {
  * a two-week admin window is a few hundred documents at most, cheap to
  * filter in memory rather than needing a matching composite index per
  * filter combination.
+ *
+ * `actor` scopes the query itself for non-Owner/GM callers: a Firestore
+ * `list` is all-or-nothing (see firestore.rules' `punchDepartment()`
+ * comment), so a Manager/Supervisor's query MUST pin
+ * `where('department', '==', actor.department)` or the whole request is
+ * denied outright, not merely filtered. Owner/GM see every department, so
+ * no department filter is added for them.
  */
-export async function listPunchesInRange(startDate: string, endDate: string): Promise<Punch[]> {
+export async function listPunchesInRange(
+  startDate: string,
+  endDate: string,
+  actor: PunchListActor,
+): Promise<Punch[]> {
   const DAY_MS = 24 * 60 * 60 * 1000
   const widenedStart = Timestamp.fromMillis(new Date(`${startDate}T00:00:00Z`).getTime() - DAY_MS)
   const widenedEnd = Timestamp.fromMillis(new Date(`${endDate}T23:59:59Z`).getTime() + DAY_MS)
+  const scopedToDepartment = actor.accessRole !== 'owner' && actor.accessRole !== 'gm'
 
   try {
     const snap = await getDocs(
@@ -96,6 +114,7 @@ export async function listPunchesInRange(startDate: string, endDate: string): Pr
         collection(db, COLLECTIONS.punches),
         where('timestamp', '>=', widenedStart),
         where('timestamp', '<=', widenedEnd),
+        ...(scopedToDepartment ? [where('department', '==', actor.department)] : []),
         orderBy('timestamp', 'asc'),
       ),
     )

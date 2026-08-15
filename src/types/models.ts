@@ -664,6 +664,17 @@ export interface Punch {
   syncedFromOfflineQueue?: boolean
   editedBy?: string | null
   editHistory: PunchEditHistoryEntry[]
+  /**
+   * Denormalized from the employee at creation time (same reasoning as
+   * `Trade.department`) so firestore.rules' admin list-query read can check
+   * it directly, with no cross-document `get()` — a rule that needs a
+   * `get()` keyed on a field the query itself doesn't constrain (here,
+   * `employeeId`) is what made Shifts & Tips admin return empty for every
+   * non-owner/GM role (Aug 14 2026 fix): Firestore rejects a whole `list`
+   * query outright when it can't prove the rule holds without per-document
+   * reads, regardless of result count.
+   */
+  department?: Department
   locationId?: string | null
   createdAt?: unknown
   updatedAt?: unknown
@@ -690,6 +701,15 @@ export interface TipReport {
   reportedAt: unknown
   editedBy?: string | null
   editHistory: TipReportEditHistoryEntry[]
+  /**
+   * Denormalized from the employee at creation time — firestore.rules'
+   * below-level read check (`canAccessSensitive`, spec §4) needs the
+   * TARGET's rank, and a `get()` keyed on `employeeId` (a field the query
+   * itself doesn't constrain) is exactly what made a list query across
+   * many employees' tip reports fail outright for every non-owner role
+   * (Aug 14 2026 fix — see the matching note on `Punch.department`).
+   */
+  employeeAccessRole?: AccessRole
   locationId?: string | null
   createdAt?: unknown
   updatedAt?: unknown

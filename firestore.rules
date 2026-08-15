@@ -755,9 +755,39 @@ service cloud.firestore {
           : '__nobody__';
       }
 
+      // `scopedTo(subjectEmployeeId())` looks correct here but is NOT
+      // list-query-safe: it calls `departmentOfTarget()`, a `get()` keyed on
+      // `resource.data.employeeId` — a field the query doesn't constrain.
+      //
+      // A `list` request is all-or-nothing: Firestore evaluates the rule
+      // against the query's POTENTIAL result set — using only the query's
+      // own where()-pinned values and the caller's claims, never real
+      // per-document data — and denies the WHOLE query if it can't prove
+      // every possible match would be allowed ("security rules are not
+      // filters"; confirmed Aug 14 2026, reproduced identically at 5 and 20
+      // distinct employees, so it's not a get()-count ceiling). Removing the
+      // get() (denormalizing `department` onto the punch, same reasoning as
+      // `Trade.department`) was necessary but NOT sufficient by itself — the
+      // comparison below still reads `resource.data.department`, a field the
+      // query left unconstrained, so it remained unprovable.
+      //
+      // The other half of the fix is the CLIENT: it now adds
+      // `where('department', '==', actor.department)` to this query for any
+      // caller who isn't Owner/GM (src/lib/db/punches.ts). With that filter
+      // present, `resource.data.department` is pinned to the same literal
+      // value `myDepartment()` resolves to for that caller, so the equality
+      // below IS provable — do not remove the client-side filter.
+      function punchDepartment() {
+        return 'department' in resource.data ? resource.data.department : '__no_target_dept__';
+      }
+
+      function mayViewPunch() {
+        return ownerOrGm() || myDepartment() == punchDepartment();
+      }
+
       allow read: if hasIdentity()
                   && (isSelf(subjectEmployeeId())
-                      || (hasPerm('punches.viewAll') && scopedTo(subjectEmployeeId())));
+                      || (hasPerm('punches.viewAll') && mayViewPunch()));
 
       allow create, update, delete: if false;
     }
@@ -779,9 +809,43 @@ service cloud.firestore {
           : '__nobody__';
       }
 
+      // `employeeAccessRole` is denormalized onto the tip report at creation
+      // time (functions/src/punchActions.ts) so this reads it directly, no
+      // extra fetch. Missing the field fails closed to 'owner' — a
+      // below-level check must never widen because a record predates it.
+      function tipReportEmployeeRole() {
+        return 'employeeAccessRole' in resource.data ? resource.data.employeeAccessRole : 'owner';
+      }
+
+      // A `list` request is all-or-nothing: Firestore evaluates the rule
+      // against the query's POTENTIAL result set, using only the query's own
+      // where()-pinned values and the caller's claims — never per-document
+      // (confirmed Aug 14 2026; "security rules are not filters"). A rank
+      // COMPARISON (rank(myRole()) > rank(tipReportEmployeeRole())) can't be
+      // proven this way even after denormalizing the field, because the
+      // comparison's truth still varies per document and the query doesn't
+      // pin `employeeAccessRole` to any single value.
+      //
+      // A MEMBERSHIP check against a literal role list, mirrored exactly by
+      // the client's `where('employeeAccessRole', 'in', viewableTipRoles(...))`
+      // (src/lib/permissions/index.ts), IS provable: every value the query
+      // can return is drawn from that same literal set, so the rule holds
+      // for all of them. Do not go back to a rank() comparison here.
+      function viewableTipRoles(role) {
+        return role == 'owner' ? ['owner', 'gm', 'manager', 'supervisor', 'staff']
+             : role == 'gm' ? ['manager', 'supervisor', 'staff']
+             : role == 'manager' ? ['supervisor', 'staff']
+             : role == 'supervisor' ? ['staff']
+             : [];
+      }
+
+      function mayViewTipReport() {
+        return tipReportEmployeeRole() in viewableTipRoles(myRole());
+      }
+
       allow read: if hasIdentity()
                   && (isSelf(subjectEmployeeId())
-                      || (hasPerm('tips.viewAll') && canAccessSensitive(subjectEmployeeId())));
+                      || (hasPerm('tips.viewAll') && mayViewTipReport()));
 
       allow create, update, delete: if false;
     }
