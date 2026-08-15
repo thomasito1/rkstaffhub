@@ -906,6 +906,48 @@ New during Phase 0. Ordered by when they block work:
   expectation. All 125 rules tests + 151 unit tests + both builds +
   `i18n:check` + `test:rules:clean` pass clean.
 
+  **Two follow-up confirmations from Rafa's review (Aug 15, 2026), both
+  addressed:**
+
+  1. **"The security property must hold with zero client cooperation."**
+     Added 3 tests proving the `where()` clauses are a usability
+     requirement (what makes the query *provable*, so it succeeds), not the
+     enforcement — a hostile or merely buggy client that skips or pads them
+     is denied outright, never handed a leak: a manager WITH
+     `punches.viewAll` who omits the `department` `where()` entirely; a
+     manager WITH `tips.viewAll` who omits the `employeeAccessRole`
+     `where()` entirely; and a manager who pads the `employeeAccessRole
+     'in'` array to include their own rank, trying to smuggle a peer's tip
+     report through (the padded document still fails
+     `mayViewTipReport()`, so Firestore can't prove the widened query and
+     denies all of it). All three assert `assertFails`. 128 rules tests
+     now pass.
+
+  2. **Role staleness on `tipReports.employeeAccessRole`.** Decided
+     **backfill on role change**, not keep-with-documentation — a cheap
+     path existed: `onEmployeeRoleChange` (`functions/src/claims.ts`)
+     already fires exactly on the promotion/demotion edge to sync custom
+     claims, so the same trigger now also rewrites every existing tip
+     report's `employeeAccessRole` to the employee's new role
+     (`backfillTipReportAccessRole()`, `functions/src/punchActions.ts`,
+     batched at Firestore's 500-write limit). Reasoning: the below-level
+     rule is about an employee's **current** sensitivity, not the rank they
+     happened to hold when a specific report was filed — without backfill,
+     a promoted employee's pre-promotion reports would stay visible to
+     every newly-equal-rank peer manager **forever**, which is exactly the
+     leak the rule exists to prevent. The reverse (a demoted manager's old
+     reports staying hidden from a now-authorized peer) fails closed rather
+     than leaking, but would silently undercount tip totals for that peer's
+     admin view — also worth fixing, and backfill fixes both directions at
+     once since it's a single field write, not a peer-only correction.
+     Verified live against the functions emulator (not merely reasoned
+     about): seeded a staff employee with two historical tip reports plus
+     an unrelated decoy on a different employee, promoted the employee to
+     manager, confirmed both of their own reports flipped to
+     `employeeAccessRole: 'manager'` while the decoy stayed `'staff'`
+     untouched, and the trigger's own `role.change` audit entry recorded
+     `tipReportsBackfilled: 2`.
+
 - **RESOLVED — publish/republish now write their §17 audit entry.** Promoted
   from a tracked gap to the first task of this work block per Rafa's ruling
   (Aug 13, 2026): **publish must not be used against real data until the audit

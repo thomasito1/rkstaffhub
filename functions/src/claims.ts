@@ -17,6 +17,7 @@ import { writeAudit } from './audit'
 import { COLLECTIONS, adminAuth, db } from './firebase'
 import { isAccessRole, type AccessRole, type EmployeeDoc } from './model'
 import { canAccessSensitive, mayConferRole, requirePermission } from './permissions'
+import { backfillTipReportAccessRole } from './punchActions'
 
 /** Result of pushing claims out to an employee's linked sign-in identities. */
 export interface ClaimSyncResult {
@@ -158,6 +159,7 @@ export const onEmployeeRoleChange = onDocumentUpdated(
     }
 
     const sync = await syncClaimsForEmployee(employeeId, after)
+    const backfilled = await backfillTipReportAccessRole(employeeId, nextRole)
 
     logger.info('accessRole changed — claims refreshed', {
       employeeId,
@@ -165,6 +167,7 @@ export const onEmployeeRoleChange = onDocumentUpdated(
       nextRole,
       updated: sync.updated.length,
       failed: sync.failed.length,
+      tipReportsBackfilled: backfilled,
     })
 
     await writeAudit({
@@ -178,7 +181,12 @@ export const onEmployeeRoleChange = onDocumentUpdated(
       targetId: employeeId,
       reason: 'role.change',
       before: { role: previousRole as AccessRole | undefined },
-      after: { role: nextRole, uids: sync.updated, failedUids: sync.failed },
+      after: {
+        role: nextRole,
+        uids: sync.updated,
+        failedUids: sync.failed,
+        tipReportsBackfilled: backfilled,
+      },
     })
   },
 )

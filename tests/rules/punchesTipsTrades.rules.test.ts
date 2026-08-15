@@ -299,6 +299,21 @@ describe('punches — LIST queries (Shifts & Tips admin, Aug 14 2026 regression 
       getDocs(query(collection(supervisor, 'punches'), where('department', '==', 'FOH'))),
     )
   })
+
+  it('DENIES a manager WITH punches.viewAll who omits the department where() clause entirely — the fix does not depend on client cooperation', async () => {
+    // src/lib/db/punches.ts always adds the department where() for a
+    // non-Owner/GM caller, but the SECURITY property must not rest on that:
+    // a hostile or simply buggy client that skips it must still be denied,
+    // never silently handed every department's punches. With no where()
+    // pinning `department`, punchDepartment() still varies per document and
+    // Firestore can't prove myDepartment() == punchDepartment() for every
+    // possible match (some other department's punch would fail it) — so it
+    // denies the whole request outright. This is the exact shape of the
+    // original bug (Aug 14 2026): the fix is the where() clause existing at
+    // all, and this proves its absence fails CLOSED, not open.
+    const mgr = ctx('uid-emp-mgr-foh', 'emp-mgr-foh', 'manager')
+    await assertFails(getDocs(collection(mgr, 'punches')))
+  })
 })
 
 // ── tipReports ───────────────────────────────────────────────────────────────
@@ -422,6 +437,52 @@ describe('tipReports — LIST queries (Shifts & Tips admin, Aug 14 2026 regressi
     const peer = ctx('uid-emp-staff-foh2', 'emp-staff-foh2', 'staff')
     await assertFails(
       getDocs(query(collection(peer, 'tipReports'), where('date', '==', '2026-08-10'))),
+    )
+  })
+
+  it('DENIES a manager WITH tips.viewAll who omits the employeeAccessRole where() clause entirely — the fix does not depend on client cooperation', async () => {
+    // Same principle as punches' matching hostile-client test: the
+    // where('employeeAccessRole', 'in', viewableTipRoles(...)) clause
+    // src/lib/db/tipReports.ts always adds is a USABILITY requirement (it's
+    // what makes the query provable and therefore succeed), not the
+    // enforcement. A client that skips it must be denied outright, never
+    // handed every role's tips filtered down to what mayViewTipReport()
+    // would have allowed — Firestore cannot do that per-document filtering
+    // for a list at all, which is exactly why omitting the where() fails
+    // closed here instead of leaking.
+    const mgr = ctx('uid-emp-mgr-foh', 'emp-mgr-foh', 'manager')
+    await assertFails(
+      getDocs(query(collection(mgr, 'tipReports'), where('date', '==', '2026-08-10'))),
+    )
+  })
+
+  it("DENIES a manager who pads the employeeAccessRole 'in' array to include their OWN rank — a hostile client can't smuggle a peer's tips through by widening the filter", async () => {
+    // If a manager's client queried where('employeeAccessRole', 'in',
+    // ['manager', 'supervisor', 'staff']) instead of the real
+    // viewableTipRoles('manager') = ['supervisor', 'staff'], the padded
+    // array admits 'manager' as a possible match — and for any document
+    // where employeeAccessRole IS 'manager', mayViewTipReport() evaluates
+    // to false (not in viewableTipRoles('manager')). Firestore can't prove
+    // the rule holds for every value the query's own filter allows through,
+    // so it denies the whole request — proving the rule's correctness does
+    // not depend on the client only ever asking for what it's allowed to
+    // see; a wider ask is refused, not silently narrowed.
+    await testEnv.withSecurityRulesDisabled(async (admin) => {
+      const db = admin.firestore()
+      await setDoc(
+        doc(db, 'tipReports/tip-mgr-peer2'),
+        tipReportPayload('emp-mgr-foh2', { employeeAccessRole: 'manager' }),
+      )
+    })
+    const mgr = ctx('uid-emp-mgr-foh', 'emp-mgr-foh', 'manager')
+    await assertFails(
+      getDocs(
+        query(
+          collection(mgr, 'tipReports'),
+          where('date', '==', '2026-08-10'),
+          where('employeeAccessRole', 'in', ['manager', 'supervisor', 'staff']),
+        ),
+      ),
     )
   })
 })

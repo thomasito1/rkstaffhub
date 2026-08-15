@@ -29,7 +29,7 @@ import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { COLLECTIONS, db } from './firebase'
 import { canAccessSensitive, requirePermission } from './permissions'
 import { markAuditPending, writeAudit } from './audit'
-import type { EmployeeDoc, PunchDoc } from './model'
+import type { AccessRole, EmployeeDoc, PunchDoc } from './model'
 import {
   selfieStoragePath,
   throwPunchError,
@@ -586,3 +586,41 @@ export const editTipReport = onCall<EditTipReportRequest>(
     return { tipReportId: ref.id }
   },
 )
+
+/**
+ * Rewrite every existing tip report's denormalized `employeeAccessRole` to
+ * an employee's new role — called from `onEmployeeRoleChange`
+ * (functions/src/claims.ts) so the below-level rule (spec §4) always
+ * reflects an employee's CURRENT rank, never the rank they held when a
+ * given report was filed. Decided Aug 15 2026: a promoted employee's old
+ * reports must become AS sensitive as any other current peer's — leaving
+ * them stamped with the pre-promotion role would let a newly-equal-rank
+ * manager go on seeing them forever, which is exactly what the below-level
+ * rule exists to prevent. See PROGRESS.md for the full reasoning.
+ *
+ * Batched at Firestore's 500-writes-per-batch limit; returns the count
+ * actually changed (skips documents already at the target role, so a
+ * same-role no-op write — e.g. an unrelated field edit that still fires
+ * the trigger's `before`/`after` diff — costs nothing).
+ */
+export async function backfillTipReportAccessRole(
+  employeeId: string,
+  role: AccessRole,
+): Promise<number> {
+  const snap = await db
+    .collection(COLLECTIONS.tipReports)
+    .where('employeeId', '==', employeeId)
+    .get()
+  const stale = snap.docs.filter((d) => d.data().employeeAccessRole !== role)
+
+  const BATCH_LIMIT = 500
+  for (let i = 0; i < stale.length; i += BATCH_LIMIT) {
+    const batch = db.batch()
+    for (const doc of stale.slice(i, i + BATCH_LIMIT)) {
+      batch.update(doc.ref, { employeeAccessRole: role })
+    }
+    await batch.commit()
+  }
+
+  return stale.length
+}
