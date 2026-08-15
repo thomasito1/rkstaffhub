@@ -1,6 +1,6 @@
 /**
- * Validation for editing the `canCoverRoleIds` hierarchy — Settings → Roles
- * (spec §7.1). Two independent concerns:
+ * Validation for editing the role catalog — Settings → Roles (spec §7.1).
+ * Three independent concerns:
  *
  *   1. Graph sanity (`findCoverageCycle`) — the eligibility engine
  *      (`effectiveSkillFor` in conflicts.ts) only ever looks one hop from an
@@ -10,11 +10,20 @@
  *      describe a real org chart. A role covering itself is the same class
  *      of problem (a 1-node cycle), so one check catches both.
  *
- *   2. Blast radius (`findInvalidatedShifts`) — REMOVING a coverage edge can
- *      leave an already-published, already-staffed shift held by someone who
- *      is no longer eligible for it under the new rules. The assignment
- *      itself is never touched by this module; it only tells the caller
- *      which shifts to warn about before the save commits.
+ *   2. Blast radius on a COVERAGE edit (`findInvalidatedShifts`) — REMOVING
+ *      a coverage edge can leave an already-published, already-staffed shift
+ *      held by someone who is no longer eligible for it under the new rules.
+ *      The assignment itself is never touched by this module; it only tells
+ *      the caller which shifts to warn about before the save commits.
+ *
+ *   3. Blast radius on a role DEACTIVATION (`findTemplatesRequiringRole`) —
+ *      the sibling check to #2, for a different edit: deactivating a role
+ *      that a shiftTemplate's requirements still name (spec §6) leaves that
+ *      day-part permanently unfulfillable, since a requirement is a straight
+ *      roleId reference, never resolved through canCoverRoleIds the way an
+ *      actual shift assignment is. Same shape as #2 — this only tells the
+ *      caller what to warn about, the deactivation itself commits or not at
+ *      the caller's discretion.
  */
 
 import { effectiveSkillFor, type EmployeeLike } from './conflicts'
@@ -117,4 +126,24 @@ export function findInvalidatedShifts(
     if (before > 0 && after === 0) affected.push(shift.id)
   }
   return affected
+}
+
+export interface TemplateForRoleCheck {
+  id: string
+  name: string
+  requirements: { roleId: string; count: number }[]
+}
+
+/**
+ * Templates that would go permanently unfulfillable if `roleId` were
+ * deactivated — any requirement line naming that exact role with a
+ * count greater than zero. A count-0 line is already meaningless (see
+ * shiftTemplates.ts's `toRequirements`) so it is never worth warning about
+ * on its own.
+ */
+export function findTemplatesRequiringRole<T extends TemplateForRoleCheck>(
+  templates: T[],
+  roleId: string,
+): T[] {
+  return templates.filter((tpl) => tpl.requirements.some((r) => r.roleId === roleId && r.count > 0))
 }

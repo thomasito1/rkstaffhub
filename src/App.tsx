@@ -7,6 +7,7 @@ import { PlaceholderPage } from '@/pages/PlaceholderPage'
 import { MorePage } from '@/pages/MorePage'
 import { SettingsShell } from '@/pages/settings/SettingsShell'
 import { RolesHierarchyPage } from '@/pages/settings/RolesHierarchyPage'
+import { ShiftTemplatesPage } from '@/pages/settings/ShiftTemplatesPage'
 import { TimeOffAdminPage } from '@/pages/settings/TimeOffAdminPage'
 import { TimeOffCalendarPage } from '@/pages/settings/TimeOffCalendarPage'
 import { ShiftsAndTipsPage } from '@/pages/settings/ShiftsAndTipsPage'
@@ -96,6 +97,7 @@ export default function App() {
             element={<PlaceholderPage titleKey="settings.nav.general" phase={0} />}
           />
           <Route path="roles" element={<RolesHierarchyPage />} />
+          <Route path="shift-templates" element={<ShiftTemplatesPage />} />
           <Route
             path="permissions"
             element={<PlaceholderPage titleKey="settings.nav.permissions" phase={0} />}

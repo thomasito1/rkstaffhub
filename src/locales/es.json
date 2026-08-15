@@ -877,6 +877,12 @@
     "pushPending": {
       "banner_one": "1 empleado/a no pudo ser notificado/a sobre este horario. El horario en sí se guardó — solo puede que no haya visto la notificación.",
       "banner_other": "{{count}} empleados/as no pudieron ser notificados/as sobre este horario. El horario en sí se guardó — solo puede que no hayan visto la notificación."
+    },
+    "fulfillment": {
+      "rowLabel": "Cobertura por franja horaria",
+      "met": "Requisitos cumplidos",
+      "unmet": "Requisitos no cumplidos",
+      "requirementLine": "{{count}}× {{role}} (mín. N{{level}}) — hay {{have}}"
     }
   },
   "more": {
@@ -958,7 +964,8 @@
       "roles": "Puestos y jerarquía",
       "permissions": "Permisos",
       "timeOff": "Tiempo libre",
-      "shiftsAndTips": "Turnos y propinas"
+      "shiftsAndTips": "Turnos y propinas",
+      "shiftTemplates": "Plantillas de turno"
     },
     "roles": {
       "title": "Puestos y jerarquía",
@@ -1020,6 +1027,53 @@
         "coverageFailed": "No se pudo guardar la cobertura. Inténtalo de nuevo.",
         "roleCreated": "{{role}} agregado/a.",
         "roleCreateFailed": "No se pudo crear el puesto. Inténtalo de nuevo."
+      },
+      "deactivateWarning": {
+        "title": "Este puesto es requerido por plantillas de turno",
+        "body_one": "{{count}} plantilla de turno aún requiere {{role}} en sus requisitos — desactivarlo dejará esa franja horaria permanentemente sin poder cumplirse hasta que cambie el requisito:",
+        "body_other": "{{count}} plantillas de turno aún requieren {{role}} en sus requisitos — desactivarlo dejará esas franjas horarias permanentemente sin poder cumplirse hasta que cambien los requisitos:",
+        "cancel": "Cancelar",
+        "proceed": "Desactivar de todos modos"
+      }
+    },
+    "shiftTemplates": {
+      "title": "Plantillas de turno",
+      "subtitle": "Define el personal y nivel de habilidad requeridos por franja horaria — el creador de horarios compara los turnos contra esto.",
+      "newTemplate": "Nueva plantilla",
+      "errorBody": "No se pudieron cargar las plantillas de turno. Intenta de nuevo.",
+      "emptyBody": "Aún no hay plantillas de turno. Agrega una para empezar a monitorear la cobertura por franja horaria en el creador de horarios.",
+      "noRequirements": "Sin requisitos definidos",
+      "requirementLine": "{{count}}× {{role}} (mín. N{{level}})",
+      "deleteConfirm": {
+        "title": "¿Eliminar esta plantilla?",
+        "body": "Esto elimina \"{{name}}\" y sus requisitos. Esta acción no se puede deshacer."
+      },
+      "modal": {
+        "newTitle": "Nueva plantilla de turno",
+        "editTitle": "Editar plantilla de turno",
+        "name": "Nombre",
+        "namePlaceholder": "p. ej. Cena del viernes",
+        "dayOfWeek": "Día de la semana",
+        "startTime": "Hora de inicio",
+        "endTime": "Hora de fin",
+        "requirementsTitle": "Requisitos",
+        "addRequirement": "Agregar requisito",
+        "noRequirementsYet": "Aún no hay requisitos — agrega uno abajo.",
+        "role": "Puesto",
+        "count": "Cantidad",
+        "minSkillLevel": "Nivel mínimo",
+        "minLevelOption": "N{{level}}",
+        "removeRequirement": "Quitar requisito",
+        "nameRequired": "Se requiere un nombre.",
+        "roleRequired": "Cada requisito necesita un puesto seleccionado."
+      },
+      "toast": {
+        "created": "{{name}} agregada.",
+        "createFailed": "No se pudo crear la plantilla. Intenta de nuevo.",
+        "updated": "{{name}} actualizada.",
+        "updateFailed": "No se pudo actualizar la plantilla. Intenta de nuevo.",
+        "deleted": "{{name}} eliminada.",
+        "deleteFailed": "No se pudo eliminar la plantilla. Intenta de nuevo."
       }
     }
   },

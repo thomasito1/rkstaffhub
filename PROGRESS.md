@@ -1,15 +1,13 @@
 # PROGRESS — RK StaffHub
 
-**Current phase: Phase 2 — Trades + Time Clock + Tips** (spec §19)
-Phase 0 and Phase 1 complete and reviewed.
-Last updated: Aug 14, 2026 — trade eligibility engine, claim/accept/approve/decline,
-the FCM push + ZenZap stub infrastructure (server AND client), the Shift
-Pool UI (mockups 16/17), the full time-clock feature (server layer +
-mockups 19–23, wired at `/clock`), the Shifts & Tips admin screen
-(mockups 24/25/25b, wired at `/settings/shifts-and-tips`), and the
-Thursday-deadline callable closing the one gap Phase 1 had deliberately
-left open. **Every Phase 2 checklist item is done.** Phase 2 checkpoint
-below — stopped for Rafa's review before Phase 3.
+**Current phase: Phase 3 — Shift templates + Tasks + Payroll** (spec §19)
+Phase 0, Phase 1, and Phase 2 complete and reviewed.
+Last updated: Aug 15, 2026 — Phase 3(a) done: the Shift templates Settings UI
+and the schedule builder's day-part fulfillment (met/unmet) badge, plus two
+follow-ups from Rafa's review of the Aug 14 tip-visibility fix (a hostile-
+client rules-test trio, and role-change backfill for `tipReports.
+employeeAccessRole`). Phase 3(b) (task definitions + Cloud Scheduler
+materialization) and 3(c) (pay periods + payroll workshop) not yet started.
 
 Phases are sequential. Do not build later-phase features early, even scaffolding.
 
@@ -31,6 +29,99 @@ Phases are sequential. Do not build later-phase features early, even scaffolding
 | Tip report at clock-out | ✅ Done — mockup 22's numpad/confirm/$0-confirm flow, gated on `Employee.tipsRequired` |
 | Shifts & Tips admin section | ✅ Done — `src/pages/settings/ShiftsAndTipsPage.tsx`, wired at `/settings/shifts-and-tips` |
 | Thursday 23:59 ET availability deadline, enforced server-side | ✅ Done — `functions/src/availabilityActions.ts`, closes the gap Phase 1 deliberately left open (see below) |
+
+---
+
+## Phase 3 status (spec §19's checklist)
+
+| Item | Status |
+| --- | --- |
+| (a) shiftTemplates Settings UI + builder fulfillment badges | ✅ Done (Aug 15) — see below |
+| (b) Task definitions + Cloud Scheduler materialization, folding in the 48h trade-expiry sweep | Not started |
+| (c) Pay periods + payroll workshop (locked FLSA model, generic/Gusto/ADP CSV exports) | Not started |
+
+### (a) Shift templates + fulfillment badges — Aug 15, 2026
+
+No mockup exists for either the Settings screen or the fulfillment badge —
+checked `.superdesign/export/` and `.superdesign/pending/` first, per
+CLAUDE.md's rule to check pending prompts before treating something as
+undesigned. Neither has anything: mockup 11 (schedule builder) draws no
+requirement badge at all, and no `.superdesign/pending/*.json` prompt
+mentions "template", "day-part", "fulfil", or "headcount". Both the
+Settings page's layout and the badge's visual are new design work within
+the existing tokens/components, not a replication of anything.
+
+**`src/lib/scheduling/fulfillment.ts`** (new, 20 unit tests) — the pure
+"required vs. covered" engine, deliberately shaped like `conflicts.ts`:
+plain data in, typed findings out, no reads/writes/permission checks. Two
+decisions worth recording for whoever wires Phase 5's AI scheduler into
+this, since spec §13 means to reuse it rather than reimplement:
+
+- **Each requirement line is checked independently against the full pool
+  of matching shifts, not a consumed/allocated split.** Spec §6's own
+  example — "4 Servers min-L1 with at least one L3" — models naturally as
+  TWO lines (`{count:4, minSkillLevel:1}`, `{count:1, minSkillLevel:3}`)
+  both checked against the same server shifts; a shift built at L3
+  satisfies both bars at once. A bin-packing/consumption algorithm was
+  considered and rejected — nothing in the spec or the data model implies
+  a shared, decrementing pool, and the independent-line reading is both
+  simpler and trivially composable (no cross-line state) for an AI prompt
+  builder to consume per-line.
+- **Fulfillment counts SLOTS CREATED, not slots STAFFED.** An open shift
+  (`employeeId: null`) counts the same as an assigned one; only a
+  `cancelled` shift is excluded (`dropped` still counts — it's a real slot,
+  just unclaimed). The badge answers "has the builder built enough shift
+  cards for this day-part," a different question from "is everyone
+  assigned," which the builder's existing Open Shifts row already answers.
+
+**Builder integration**: `useScheduleData` now loads `shiftTemplates` and
+exposes `templateFulfillment` (memoized `computeWeekFulfillment` over the
+week's own shifts). `DayPartFulfillmentRow` renders one small pill per
+template landing on each date (multiple day-parts can share a date, e.g.
+Lunch + Dinner), aligned to the header/role-band grid via the shared
+`GRID_COLS`; renders nothing when no templates exist yet.
+
+**Settings → Shift templates** (`ShiftTemplatesPage.tsx`, wired at
+`/settings/shift-templates`) — day-grouped list (Monday → Sunday, matching
+the builder's own week order), create/edit modal with a dynamic
+requirement-row editor (role, count, min skill level), plain-confirm
+delete (no cross-reference warning needed — unlike a ShiftRole, nothing
+else points at a templateId, per `shiftTemplates.ts`'s own doc comment).
+**Gated on `schedule.edit`, not `settings.manage`** — checked
+`firestore.rules`' `shiftTemplates` match block first and it ties writes to
+`schedule.edit`, deliberately different from `shiftRoles`' `settings.manage`
+gate (a day-part requirement is a scheduling concern, not a settings one,
+even though the page lives under the Settings nav). Getting this gate wrong
+would have either locked out managers who build the schedule but lack
+`settings.manage`, or let someone edit templates without the edit
+permission the rule actually requires — worth flagging since it's an easy
+copy-paste mistake from `RolesHierarchyPage`'s `settings.manage` guard.
+
+**Sibling warning on role deactivation** (Rafa's ask): a shiftTemplate
+requirement is a straight `roleId` reference, never resolved through
+`canCoverRoleIds` the way an actual shift assignment is — so deactivating a
+role a template still requires leaves that day-part permanently
+unfulfillable, the same class of problem `findInvalidatedShifts` already
+guards against for coverage-removal. Added the sibling check,
+`findTemplatesRequiringRole()` (`src/lib/scheduling/roleHierarchy.ts`, 4
+unit tests, TDD — written failing first, confirmed red, then implemented),
+and wired it into `RolesHierarchyPage`'s deactivate button: deactivating a
+role now shows a confirm listing every affected template by name before
+committing, exactly mirroring `CoveragePanel`'s existing
+confirm-with-warning shape for coverage removal.
+
+Verification: `computeWeekFulfillment`/`computeTemplateFulfillment` — 20
+new unit tests (TDD, written failing first); `findTemplatesRequiringRole` —
+4 new unit tests (also TDD); 175 unit tests total, both builds, 128 rules
+tests (unaffected — no `firestore.rules` change was needed, the existing
+`shiftTemplates` write rule already gated on `schedule.edit`), i18n parity
+(1213 keys), `test:rules:clean` all pass.
+
+Two follow-ups from Rafa's review of the Aug 14 tip-visibility fix (a
+hostile-client rules-test trio, and role-change backfill for
+`tipReports.employeeAccessRole`) landed just before this phase started —
+see "Known issues / cleanup backlog" below for the full writeup, filed
+under the original fix rather than duplicated here.
 
 ---
 
@@ -481,7 +572,7 @@ exists for payroll period rollovers; track alongside that work, not before.
 | Requests + glance view | ✅ Done |
 | Deadlines & reminders | ✅ Done |
 | shiftRoles + role hierarchy settings | ✅ Done (Aug 14) — Settings → Roles & hierarchy, with cycle detection and a confirm-with-warning before a coverage removal strands a published shift |
-| shiftTemplates | ⚠️ **Data layer only** — `src/lib/db/shiftTemplates.ts` exists (seeded, 14 docs); no Settings UI to edit day-part headcount requirements, and the builder has no requirement-fulfillment (met/unmet) badge per shift-role band. Not part of Rafa's Aug 14 checkpoint ask; flagging as the one item on this checklist still unbuilt. |
+| shiftTemplates | ✅ Done (Aug 15, Phase 3(a)) — Settings → Shift templates (day-grouped list, create/edit/delete, no mockup existed for this so the layout is new design work) plus a builder fulfillment row (met/unmet badge per day-part) driven by a pure `computeWeekFulfillment` engine — see Phase 3 status below. |
 | Schedule builder (grid, conflicts engine, labor footer) | ✅ Done |
 | Publish/republish + notifications | ✅ Done (Aug 14) — republish now detects edits to already-published shifts, not just new draft ones; §17 audit write retries once and leaves a durable `auditPending` marker (surfaced on the builder) if it still fails |
 | Staff schedule views | ✅ Done (Aug 14) — `/schedule` splits by role: the builder, or the new My Schedule (week list + shift detail) for everyone else |

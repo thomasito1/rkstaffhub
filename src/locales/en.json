@@ -877,6 +877,12 @@
     "pushPending": {
       "banner_one": "1 employee couldn't be notified about this schedule. The schedule itself was saved — they just may not have seen a push notification about it.",
       "banner_other": "{{count}} employees couldn't be notified about this schedule. The schedule itself was saved — they just may not have seen a push notification about it."
+    },
+    "fulfillment": {
+      "rowLabel": "Day-part coverage",
+      "met": "Requirements met",
+      "unmet": "Requirements not met",
+      "requirementLine": "{{count}}× {{role}} (min L{{level}}) — have {{have}}"
     }
   },
   "more": {
@@ -958,7 +964,8 @@
       "roles": "Roles & hierarchy",
       "permissions": "Permissions",
       "timeOff": "Time off",
-      "shiftsAndTips": "Shifts & tips"
+      "shiftsAndTips": "Shifts & tips",
+      "shiftTemplates": "Shift templates"
     },
     "roles": {
       "title": "Roles & hierarchy",
@@ -1020,6 +1027,53 @@
         "coverageFailed": "Couldn't save coverage. Try again.",
         "roleCreated": "{{role}} added.",
         "roleCreateFailed": "Couldn't create the role. Try again."
+      },
+      "deactivateWarning": {
+        "title": "This role is required by shift templates",
+        "body_one": "{{count}} shift template still requires {{role}} in its requirements — deactivating it will leave that day-part permanently unfulfillable until the requirement changes:",
+        "body_other": "{{count}} shift templates still require {{role}} in their requirements — deactivating it will leave those day-parts permanently unfulfillable until the requirements change:",
+        "cancel": "Cancel",
+        "proceed": "Deactivate anyway"
+      }
+    },
+    "shiftTemplates": {
+      "title": "Shift templates",
+      "subtitle": "Set headcount and skill requirements per day-part — the builder checks schedules against these.",
+      "newTemplate": "New template",
+      "errorBody": "Couldn't load shift templates. Try again.",
+      "emptyBody": "No shift templates yet. Add one to start tracking day-part coverage in the builder.",
+      "noRequirements": "No requirements set",
+      "requirementLine": "{{count}}× {{role}} (min L{{level}})",
+      "deleteConfirm": {
+        "title": "Delete this template?",
+        "body": "This removes \"{{name}}\" and its requirements. This cannot be undone."
+      },
+      "modal": {
+        "newTitle": "New shift template",
+        "editTitle": "Edit shift template",
+        "name": "Name",
+        "namePlaceholder": "e.g. Fri Dinner",
+        "dayOfWeek": "Day of week",
+        "startTime": "Start time",
+        "endTime": "End time",
+        "requirementsTitle": "Requirements",
+        "addRequirement": "Add requirement",
+        "noRequirementsYet": "No requirements yet — add one below.",
+        "role": "Role",
+        "count": "Count",
+        "minSkillLevel": "Min. skill level",
+        "minLevelOption": "L{{level}}",
+        "removeRequirement": "Remove requirement",
+        "nameRequired": "A name is required.",
+        "roleRequired": "Every requirement needs a role selected."
+      },
+      "toast": {
+        "created": "{{name}} added.",
+        "createFailed": "Couldn't create the template. Try again.",
+        "updated": "{{name}} updated.",
+        "updateFailed": "Couldn't update the template. Try again.",
+        "deleted": "{{name}} deleted.",
+        "deleteFailed": "Couldn't delete the template. Try again."
       }
     }
   },

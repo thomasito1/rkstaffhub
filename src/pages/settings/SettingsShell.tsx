@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next'
 const TABS = [
   { to: '/settings/general', labelKey: 'settings.nav.general' },
   { to: '/settings/roles', labelKey: 'settings.nav.roles' },
+  { to: '/settings/shift-templates', labelKey: 'settings.nav.shiftTemplates' },
   { to: '/settings/permissions', labelKey: 'settings.nav.permissions' },
   { to: '/settings/time-off', labelKey: 'settings.nav.timeOff' },
   { to: '/settings/shifts-and-tips', labelKey: 'settings.nav.shiftsAndTips' },

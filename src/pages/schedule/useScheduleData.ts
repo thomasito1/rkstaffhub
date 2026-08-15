@@ -12,6 +12,7 @@ import {
   listEmployees,
   listShiftRoles,
   listShifts,
+  listShiftTemplates,
   listTimeOff,
   publishSchedule as dbPublishSchedule,
   republishSchedule as dbRepublishSchedule,
@@ -27,12 +28,14 @@ import {
   type ConflictContext,
   type ShiftLike,
 } from '@/lib/scheduling/conflicts'
+import { computeWeekFulfillment, type TemplateFulfillment } from '@/lib/scheduling/fulfillment'
 import {
   WEEKDAY_KEYS,
   type Employee,
   type Schedule,
   type Shift,
   type ShiftRole,
+  type ShiftTemplate,
   type TimeOffRequest,
   type WeekdayKey,
 } from '@/types/models'
@@ -73,6 +76,9 @@ export interface ScheduleData {
   rolesById: Map<string, ShiftRole>
   canCoverRoleIds: Record<string, string[]>
   shifts: Shift[]
+  templates: ShiftTemplate[]
+  /** One entry per shiftTemplate, resolved to this week's date — spec §6's met/unmet badge. */
+  templateFulfillment: TemplateFulfillment[]
   compensationByEmployee: Map<string, EmployeeCompensation | null>
   /** schedule.laborTargetPct, falling back to settings/app (spec §6). */
   laborTargetPct: number
@@ -127,6 +133,7 @@ export function useScheduleData(initialWeekId: string): ScheduleData {
   const [employees, setEmployees] = useState<Employee[]>([])
   const [roles, setRoles] = useState<ShiftRole[]>([])
   const [shifts, setShifts] = useState<Shift[]>([])
+  const [templates, setTemplates] = useState<ShiftTemplate[]>([])
   const [timeOff, setTimeOff] = useState<TimeOffRequest[]>([])
   const [availability, setAvailability] = useState<
     Map<string, Awaited<ReturnType<typeof effectiveAvailabilityFor>>>
@@ -143,7 +150,7 @@ export function useScheduleData(initialWeekId: string): ScheduleData {
     setLoadError(false)
     try {
       const dates = datesForWeekId(weekId)
-      const [scheduleDoc, appSettings, roster, roleCatalog, weekShifts, weekTimeOff] =
+      const [scheduleDoc, appSettings, roster, roleCatalog, weekShifts, weekTimeOff, templateCatalog] =
         await Promise.all([
           getSchedule(weekId),
           getAppSettings(),
@@ -151,6 +158,7 @@ export function useScheduleData(initialWeekId: string): ScheduleData {
           listShiftRoles(),
           listShifts(weekId),
           listTimeOff({ from: dates[0], to: dates[6] }),
+          listShiftTemplates(),
         ])
 
       // schedules.ts's typed getSchedule() intentionally does not model
@@ -202,6 +210,7 @@ export function useScheduleData(initialWeekId: string): ScheduleData {
       setEmployees(roster)
       setRoles(roleCatalog)
       setShifts(weekShifts)
+      setTemplates(templateCatalog)
       setTimeOff(weekTimeOff)
       setAvailability(new Map(availabilityEntries))
       setCompensation(new Map(compensationEntries))
@@ -218,6 +227,24 @@ export function useScheduleData(initialWeekId: string): ScheduleData {
   useEffect(() => {
     void load()
   }, [load])
+
+  const templateFulfillment = useMemo(
+    () =>
+      computeWeekFulfillment(
+        templates,
+        shifts.map((s) => ({
+          id: s.id,
+          date: s.date,
+          startTime: s.startTime,
+          endTime: s.endTime,
+          roleId: s.roleId,
+          requiredSkillLevel: s.requiredSkillLevel,
+          status: s.status,
+        })),
+        weekDates[0] ?? weekId,
+      ),
+    [templates, shifts, weekDates, weekId],
+  )
 
   const employeesById = useMemo(() => new Map(employees.map((e) => [e.id, e])), [employees])
   const rolesById = useMemo(() => new Map(roles.map((r) => [r.id, r])), [roles])
@@ -333,6 +360,8 @@ export function useScheduleData(initialWeekId: string): ScheduleData {
     rolesById,
     canCoverRoleIds,
     shifts,
+    templates,
+    templateFulfillment,
     compensationByEmployee: compensation,
     laborTargetPct,
     projectedSalesByDate,

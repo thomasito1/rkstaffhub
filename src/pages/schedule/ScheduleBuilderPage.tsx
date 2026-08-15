@@ -9,6 +9,7 @@ import { addDaysToIsoDate } from '@/lib/deadlines'
 import { formatDate, weekIdFor } from '@/lib/format'
 import type { Department, Shift } from '@/types/models'
 
+import { DayPartFulfillmentRow } from './components/DayPartFulfillmentRow'
 import { LaborFooter } from './components/LaborFooter'
 import { PublishModal } from './components/PublishModal'
 import { RoleBandRow } from './components/RoleBandRow'
@@ -265,6 +266,12 @@ function ScheduleBuilderScreen(): JSX.Element {
             weekDates={data.weekDates}
             weekdayKeyFor={data.weekdayKeyFor}
             projectedSalesByDate={data.projectedSalesByDate}
+          />
+          <DayPartFulfillmentRow
+            weekDates={data.weekDates}
+            templates={data.templates}
+            fulfillment={data.templateFulfillment}
+            rolesById={data.rolesById}
           />
           {visibleRoles.map((role) => (
             <RoleBandRow

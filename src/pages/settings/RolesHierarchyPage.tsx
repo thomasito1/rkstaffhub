@@ -8,6 +8,7 @@ import {
   listEmployees,
   listShifts,
   listShiftRoles,
+  listShiftTemplates,
   reorderShiftRoles,
   roleIdFromName,
   setCanCoverRoleIds,
@@ -15,8 +16,13 @@ import {
   upsertShiftRole,
 } from '@/lib/db'
 import { weekIdFor } from '@/lib/format'
-import { findCoverageCycle, findInvalidatedShifts, type RoleNode } from '@/lib/scheduling/roleHierarchy'
-import type { Department, Employee, ShiftRole } from '@/types/models'
+import {
+  findCoverageCycle,
+  findInvalidatedShifts,
+  findTemplatesRequiringRole,
+  type RoleNode,
+} from '@/lib/scheduling/roleHierarchy'
+import type { Department, Employee, ShiftRole, ShiftTemplate } from '@/types/models'
 
 /**
  * Settings → Roles & hierarchy — mockup 32's layout, with one deliberate
@@ -55,19 +61,29 @@ function RolesHierarchyScreen(): JSX.Element {
 
   const [roles, setRoles] = useState<ShiftRole[]>([])
   const [employees, setEmployees] = useState<Employee[]>([])
+  const [templates, setTemplates] = useState<ShiftTemplate[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [newRoleOpen, setNewRoleOpen] = useState(false)
   const [busyId, setBusyId] = useState<string | null>(null)
+  const [pendingDeactivate, setPendingDeactivate] = useState<{
+    role: ShiftRole
+    templates: ShiftTemplate[]
+  } | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
     setLoadError(false)
     try {
-      const [r, e] = await Promise.all([listShiftRoles(), listEmployees({ status: 'active' })])
+      const [r, e, tpls] = await Promise.all([
+        listShiftRoles(),
+        listEmployees({ status: 'active' }),
+        listShiftTemplates(),
+      ])
       setRoles(r)
       setEmployees(e)
+      setTemplates(tpls)
     } catch {
       setLoadError(true)
     } finally {
@@ -117,9 +133,8 @@ function RolesHierarchyScreen(): JSX.Element {
     }
   }
 
-  async function toggleActive(role: ShiftRole): Promise<void> {
+  async function commitToggleActive(role: ShiftRole, nextActive: boolean): Promise<void> {
     setBusyId(role.id)
-    const nextActive = !role.active
     try {
       await setShiftRoleActive(role.id, nextActive)
       toast.show({
@@ -134,7 +149,28 @@ function RolesHierarchyScreen(): JSX.Element {
       toast.show({ tone: 'error', message: t('settings.roles.toast.activeToggleFailed') })
     } finally {
       setBusyId(null)
+      setPendingDeactivate(null)
     }
+  }
+
+  /**
+   * Deactivating needs the same "blast radius" gate coverage-removal already
+   * has (CoveragePanel's `findInvalidatedShifts`), for a different reason:
+   * a shiftTemplate requirement is a straight roleId reference (spec §6),
+   * never resolved through canCoverRoleIds, so deactivating a role a
+   * template still names leaves that day-part permanently unfulfillable —
+   * see `findTemplatesRequiringRole`'s doc comment.
+   */
+  function toggleActive(role: ShiftRole): void {
+    const nextActive = !role.active
+    if (!nextActive) {
+      const affected = findTemplatesRequiringRole(templates, role.id)
+      if (affected.length > 0) {
+        setPendingDeactivate({ role, templates: affected })
+        return
+      }
+    }
+    void commitToggleActive(role, nextActive)
   }
 
   return (
@@ -251,7 +287,7 @@ function RolesHierarchyScreen(): JSX.Element {
                     <button
                       type="button"
                       disabled={busy}
-                      onClick={() => void toggleActive(role)}
+                      onClick={() => toggleActive(role)}
                       className="text-chip font-medium text-ink-muted transition-colors duration-hover hover:text-ink disabled:opacity-40"
                     >
                       {t(role.active ? 'settings.roles.deactivate' : 'settings.roles.activate')}
@@ -295,6 +331,39 @@ function RolesHierarchyScreen(): JSX.Element {
           void load()
         }}
       />
+
+      <Modal
+        open={pendingDeactivate !== null}
+        onClose={() => setPendingDeactivate(null)}
+        title={t('settings.roles.deactivateWarning.title')}
+        footer={
+          <>
+            <Button onClick={() => setPendingDeactivate(null)}>
+              {t('settings.roles.deactivateWarning.cancel')}
+            </Button>
+            <Button
+              variant="danger"
+              disabled={busyId !== null}
+              onClick={() =>
+                pendingDeactivate &&
+                void commitToggleActive(pendingDeactivate.role, false)
+              }
+            >
+              {t('settings.roles.deactivateWarning.proceed')}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-meta text-ink">
+          {t('settings.roles.deactivateWarning.body', {
+            role: pendingDeactivate ? roleName(pendingDeactivate.role) : '',
+            count: pendingDeactivate?.templates.length ?? 0,
+          })}
+        </p>
+        <ul className="mt-2 list-disc space-y-0.5 pl-5 text-chip text-ink-muted">
+          {pendingDeactivate?.templates.map((tpl) => <li key={tpl.id}>{tpl.name}</li>)}
+        </ul>
+      </Modal>
     </div>
   )
 }

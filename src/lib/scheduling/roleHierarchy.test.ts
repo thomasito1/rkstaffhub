@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { findCoverageCycle, findInvalidatedShifts, type RoleNode } from './roleHierarchy'
+import {
+  findCoverageCycle,
+  findInvalidatedShifts,
+  findTemplatesRequiringRole,
+  type RoleNode,
+  type TemplateForRoleCheck,
+} from './roleHierarchy'
 import type { EmployeeLike } from './conflicts'
 
 const ROLES: RoleNode[] = [
@@ -117,5 +123,45 @@ describe('findInvalidatedShifts', () => {
       ['server', 'host', 'expo'],
     )
     expect(affected).toEqual([])
+  })
+})
+
+describe('findTemplatesRequiringRole', () => {
+  function tpl(over: Partial<TemplateForRoleCheck> = {}): TemplateForRoleCheck {
+    return {
+      id: 'tpl-1',
+      name: 'Fri Dinner',
+      requirements: [{ roleId: 'server', count: 2 }],
+      ...over,
+    }
+  }
+
+  it('flags a template whose requirements name the deactivated role with a positive count', () => {
+    const affected = findTemplatesRequiringRole([tpl()], 'server')
+    expect(affected).toEqual([tpl()])
+  })
+
+  it('does not flag a template that never requires the role', () => {
+    const affected = findTemplatesRequiringRole(
+      [tpl({ requirements: [{ roleId: 'bartender', count: 2 }] })],
+      'server',
+    )
+    expect(affected).toEqual([])
+  })
+
+  it('does not flag a requirement line with a zero count — already meaningless', () => {
+    const affected = findTemplatesRequiringRole(
+      [tpl({ requirements: [{ roleId: 'server', count: 0 }] })],
+      'server',
+    )
+    expect(affected).toEqual([])
+  })
+
+  it('flags multiple templates independently', () => {
+    const monLunch = tpl({ id: 'tpl-mon', requirements: [{ roleId: 'server', count: 1 }] })
+    const friDinner = tpl({ id: 'tpl-fri', requirements: [{ roleId: 'server', count: 4 }] })
+    const bohOnly = tpl({ id: 'tpl-boh', requirements: [{ roleId: 'expo', count: 1 }] })
+    const affected = findTemplatesRequiringRole([monLunch, friDinner, bohOnly], 'server')
+    expect(affected.map((t) => t.id)).toEqual(['tpl-mon', 'tpl-fri'])
   })
 })
