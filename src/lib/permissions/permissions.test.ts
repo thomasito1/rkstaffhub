@@ -48,12 +48,14 @@ describe('role defaults matrix', () => {
     }
   })
 
-  it('withholds payroll export, pay edits and settings from a manager', () => {
+  it('withholds payroll (view, export, lock), pay edits and settings from a manager', () => {
     const mgr = actor('manager')
     expect(hasPermission(mgr, 'schedule.publish')).toBe(true)
     expect(hasPermission(mgr, 'discipline.issue')).toBe(true)
-    expect(hasPermission(mgr, 'payroll.view')).toBe(true)
 
+    // Tightened off Manager's grant set, Phase 3(c) (Rafa's ruling, Aug 2026):
+    // "full sensitive-read trio on payroll reads (Owner/GM only per matrix)".
+    expect(hasPermission(mgr, 'payroll.view')).toBe(false)
     expect(hasPermission(mgr, 'payroll.export')).toBe(false)
     expect(hasPermission(mgr, 'payroll.lockPeriod')).toBe(false)
     expect(hasPermission(mgr, 'employees.editPay')).toBe(false)

@@ -33,6 +33,9 @@ export type AuditAction =
   | 'trade.override'
   | 'punch.edit'
   | 'tip.edit'
+  | 'period.lock'
+  | 'period.unlock'
+  | 'payroll.export'
 
 export interface AuditInput {
   action: AuditAction

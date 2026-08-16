@@ -966,7 +966,8 @@
       "timeOff": "Time off",
       "shiftsAndTips": "Shifts & tips",
       "shiftTemplates": "Shift templates",
-      "tasks": "Tasks"
+      "tasks": "Tasks",
+      "payroll": "Payroll"
     },
     "roles": {
       "title": "Roles & hierarchy",
@@ -1066,7 +1067,20 @@
         "minLevelOption": "L{{level}}",
         "removeRequirement": "Remove requirement",
         "nameRequired": "A name is required.",
-        "roleRequired": "Every requirement needs a role selected."
+        "roleRequired": "Every requirement needs a role selected.",
+        "variant": {
+          "toggle": "This is a seasonal variant of another template",
+          "helper": "A variant overrides its base template's requirements for the date range below, then reverts automatically once the range ends.",
+          "profileKey": "Base template",
+          "profileKeyPlaceholder": "Select the template this replaces…",
+          "startDate": "Start date",
+          "endDate": "End date",
+          "seasonLabel": "Season label",
+          "seasonLabelPlaceholder": "e.g. Fall hours",
+          "profileKeyRequired": "Select which template this variant replaces.",
+          "datesRequired": "A start and end date are required for a seasonal variant.",
+          "dateOrderInvalid": "The start date must be on or before the end date."
+        }
       },
       "toast": {
         "created": "{{name}} added.",
@@ -1178,6 +1192,107 @@
       "archive": {
         "emptyTitle": "No archived tasks",
         "emptyBody": "Deactivated tasks will show up here."
+      }
+    },
+    "payroll": {
+      "title": "Payroll",
+      "subtitle": "Review hours, tips and gross pay before locking the period",
+      "previousPeriod": "Previous period",
+      "nextPeriod": "Next period",
+      "selectPeriod": "Select pay period",
+      "periodOrdinal": "{{frequency}} · Period {{index}} of {{total}}",
+      "frequency": {
+        "weekly": "Weekly",
+        "biweekly": "Biweekly",
+        "semimonthly": "Semimonthly"
+      },
+      "status": {
+        "open": "Open",
+        "review": "In review",
+        "locked": "Locked",
+        "exported": "Exported"
+      },
+      "lockPeriod": "Lock period",
+      "unlockPeriod": "Unlock period",
+      "exportCsv": "Export CSV",
+      "exportOptions": "Export options",
+      "exportVariant": {
+        "generic": {
+          "title": "Generic CSV",
+          "subtitle": "Standard mapping for common tools"
+        },
+        "gusto": {
+          "title": "Gusto export",
+          "subtitle": "Pre-formatted for Gusto payroll"
+        },
+        "adp": {
+          "title": "ADP Run",
+          "subtitle": "Optimized for ADP Run/Workforce"
+        }
+      },
+      "stats": {
+        "employees": "Employees",
+        "regularHours": "Regular hrs",
+        "overtimeHours": "Overtime hrs",
+        "tips": "Tips",
+        "totalGross": "Total gross"
+      },
+      "view": {
+        "perPeriod": "Per period",
+        "perWorkweek": "Per workweek"
+      },
+      "columns": {
+        "empNumber": "Emp #",
+        "name": "Name",
+        "type": "Type",
+        "regHours": "Reg hrs",
+        "otHours": "OT hrs",
+        "rate": "Rate",
+        "hourlyGross": "Hourly gross",
+        "tips": "Tips",
+        "salary": "Salary",
+        "total": "Total"
+      },
+      "workweekColumns": {
+        "week": "Week"
+      },
+      "accountabilityOnly": "accountability only",
+      "doesNotClock": "does not clock",
+      "totals": "Totals",
+      "drillDown": "View punches & tips",
+      "emptyTitle": "No one to show yet",
+      "emptyBody": "No active employees with compensation on file for this period.",
+      "errorTitle": "Couldn't load this period",
+      "errorBody": "Something went wrong loading payroll data. Try again.",
+      "noPeriodsTitle": "No pay periods yet",
+      "noPeriodsBody": "Pay periods appear here once they're set up.",
+      "toast": {
+        "locked": "Pay period locked.",
+        "unlocked": "Pay period unlocked and returned to review.",
+        "exported": "CSV downloaded."
+      },
+      "unlockModal": {
+        "title": "Unlock this pay period?",
+        "subtitle": "Owner/GM only. A reason is required and is logged to the audit trail.",
+        "reasonLabel": "Reason",
+        "reasonPlaceholder": "Why does this period need to be reopened?",
+        "cancel": "Cancel",
+        "confirm": "Unlock period"
+      },
+      "draftExportConfirm": {
+        "title": "Export as draft?",
+        "body": "This period isn't locked yet, so this export is a DRAFT and its filename is marked accordingly. You can export again once the period is locked. Continue?",
+        "cancel": "Cancel",
+        "continue": "Continue"
+      },
+      "errors": {
+        "generic": "That didn't work. Try again.",
+        "alreadyLocked": "This period is already locked.",
+        "notLocked": "This period isn't locked.",
+        "ownerGmOnly": "Only an Owner or GM can do that.",
+        "periodNotFound": "That pay period no longer exists.",
+        "reasonRequired": "A reason is required.",
+        "exportFailed": "Couldn't export this period. Try again."
       }
     }
   },
@@ -1331,6 +1446,7 @@
       "tips-required": "Enter your total tips for this shift before clocking out.",
       "reason-required": "A reason is required.",
       "below-level-required": "You don't have permission to do that.",
+      "period-locked": "This pay period is locked. Ask an Owner/GM to unlock it first.",
       "generic": "That didn't go through. Try again."
     },
     "offline": {

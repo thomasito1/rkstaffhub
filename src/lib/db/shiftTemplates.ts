@@ -31,6 +31,7 @@ import { COLLECTIONS, db } from '@/lib/firebase'
 import {
   WEEKDAY_KEYS,
   type ShiftTemplate,
+  type ShiftTemplateDateRange,
   type ShiftTemplateRequirement,
   type SkillLevel,
   type WeekdayKey,
@@ -46,6 +47,11 @@ export interface NewShiftTemplateInput {
   startTime: string
   endTime: string
   requirements?: ShiftTemplateRequirement[]
+  /** Groups a base template with its seasonal variant(s) — omit to default to this doc's own id (a plain, unvaried template is trivially its own group). A seasonal variant MUST pass the base's own profileKey explicitly. */
+  profileKey?: string
+  /** Omit/null for the undated base; set for a seasonal variant. */
+  dateRange?: ShiftTemplateDateRange | null
+  seasonLabel?: string | null
   locationId?: string | null
 }
 
@@ -72,6 +78,13 @@ function toRequirements(raw: unknown): ShiftTemplateRequirement[] {
   })
 }
 
+function toDateRange(raw: unknown): ShiftTemplateDateRange | null {
+  if (!raw || typeof raw !== 'object') return null
+  const r = raw as Partial<ShiftTemplateDateRange>
+  if (!r.startDate || !r.endDate) return null
+  return { startDate: String(r.startDate), endDate: String(r.endDate) }
+}
+
 function toShiftTemplate(
   snap: DocumentSnapshot<DocumentData> | QueryDocumentSnapshot<DocumentData>,
 ): ShiftTemplate {
@@ -84,6 +97,11 @@ function toShiftTemplate(
     startTime: String(d.startTime ?? ''),
     endTime: String(d.endTime ?? ''),
     requirements: toRequirements(d.requirements),
+    // A pre-migration doc has no profileKey on file — default to its own id,
+    // matching `TemplateLike`'s own "untagged = singleton group" fallback.
+    profileKey: String(d.profileKey ?? snap.id),
+    dateRange: toDateRange(d.dateRange),
+    seasonLabel: (d.seasonLabel as string | null) ?? null,
     locationId: (d.locationId as string | null) ?? null,
     createdAt: d.createdAt,
     updatedAt: d.updatedAt,
@@ -138,6 +156,9 @@ export async function createShiftTemplate(
     startTime: input.startTime,
     endTime: input.endTime,
     requirements: toRequirements(input.requirements),
+    profileKey: input.profileKey ?? ref.id,
+    dateRange: input.dateRange ?? null,
+    seasonLabel: input.seasonLabel ?? null,
     locationId: input.locationId ?? null,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),

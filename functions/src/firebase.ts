@@ -41,6 +41,7 @@ export const COLLECTIONS = {
   availability: 'availability',
   tasks: 'tasks',
   taskInstances: 'taskInstances',
+  payPeriods: 'payPeriods',
 } as const
 
 /** `settings/{APP_SETTINGS_ID}` — mirrors src/lib/db/settings.ts's constant. */

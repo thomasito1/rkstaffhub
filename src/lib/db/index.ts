@@ -39,3 +39,7 @@ export * from './tipReports'
 // completeTaskInstance is a Cloud Function, see src/lib/tasks/taskActions.ts.
 export * from './tasks'
 export * from './taskInstances'
+
+// Phase 3(c) — payroll (spec §11). Reads only — lock/unlock/export are
+// Cloud Functions, see src/lib/payroll/payrollActions.ts.
+export * from './payPeriods'

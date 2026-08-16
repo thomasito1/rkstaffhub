@@ -205,6 +205,7 @@ const KNOWN_PUNCH_ERROR_KEYS = new Set([
   'tips-required',
   'reason-required',
   'below-level-required',
+  'period-locked',
 ])
 
 /** A user-facing message for any error a punch/tip Cloud Function call rejects with. */

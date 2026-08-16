@@ -59,11 +59,18 @@ const MANAGER: PermissionKey[] = [
   'employees.rankSkills',
   'discipline.view',
   'discipline.issue',
-  'payroll.view',
   'ai.generateSchedule',
   // Explicitly NOT granted per spec §4: payroll.export, payroll.lockPeriod,
   // employees.editPay, policies.manage, settings.manage, permissions.manage,
   // ai.configureKeys.
+  //
+  // `payroll.view` ALSO tightened off this list, Phase 3(c) (Rafa's ruling,
+  // Aug 2026): "full sensitive-read trio on payroll reads (Owner/GM only per
+  // matrix)". Spec §4's own prose only says Manager gets "no payroll
+  // export," not "no payroll view" — but the ruling supersedes that reading:
+  // payroll reads (hourly rate × hours, gross pay, tips) are strictly
+  // Owner/GM, tighter than punches/tips.viewAll (which Manager keeps above
+  // for Shifts & Tips admin — a different, less sensitive screen).
 ]
 
 /** GM gets everything except the AI key vault (spec §4, toggleable). */

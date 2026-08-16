@@ -283,6 +283,7 @@ export type AuditAction =
   | 'trade.override'
   | 'period.lock'
   | 'period.unlock'
+  | 'payroll.export'
   | 'ai.keyChange'
   | 'discipline.issue'
   | 'employee.import'
@@ -485,6 +486,12 @@ export interface ShiftTemplateRequirement {
   minSkillLevel: SkillLevel
 }
 
+/** Inclusive "YYYY-MM-DD" bounds — a seasonal variant's active window (Rafa's ruling, Aug 2026). */
+export interface ShiftTemplateDateRange {
+  startDate: string
+  endDate: string
+}
+
 export interface ShiftTemplate {
   id: string
   /** e.g. "Fri Dinner". */
@@ -499,6 +506,29 @@ export interface ShiftTemplate {
   startTime: string
   endTime: string
   requirements: ShiftTemplateRequirement[]
+  /**
+   * Groups a base template with its seasonal variant(s) for the SAME
+   * `dayOfWeek` — e.g. `"weekend-dinner"` links the base Fri/Sat dinner
+   * template to its Sept-Dec extended-hours variant. Required because
+   * `dayOfWeek` alone can't disambiguate which day-part a dated variant
+   * overrides — a single day carries more than one (lunch AND dinner).
+   * Ruled by Rafa, Aug 2026, as the first dated-variant feature on this
+   * collection; see `dateRange`'s own doc comment for the pick rule.
+   */
+  profileKey: string
+  /**
+   * `null` = the undated base, always active. Non-null = a dated variant
+   * that WINS OVER the base for any date inside its range — "most-specific-
+   * match-wins," resolved by `src/lib/scheduling/templateVariants.ts` rather
+   * than trusted from whichever doc a naive query happens to return first.
+   * Deliberately kept small (Rafa's own instruction): only ONE variant per
+   * profileKey is expected in practice (the seasonal Sept 1–Dec 31 extended-
+   * hours window), so the resolver's tie-break for two overlapping dated
+   * variants is undefined behavior, not a feature — don't create that case.
+   */
+  dateRange: ShiftTemplateDateRange | null
+  /** Display label for a dated variant only (e.g. "Fall hours") — null for the undated base. */
+  seasonLabel: string | null
   locationId?: string | null
   createdAt?: unknown
   updatedAt?: unknown
@@ -814,6 +844,41 @@ export interface TaskInstance {
    * enforced only at the point of action, not at the point of listing).
    */
   department: Department
+  locationId?: string | null
+  createdAt?: unknown
+  updatedAt?: unknown
+}
+
+// ── payPeriods/{periodId} ────────────────────────────────────────────────────
+
+export type PayPeriodStatus = 'open' | 'review' | 'locked' | 'exported'
+
+export interface PayPeriod {
+  id: string
+  /** Inclusive "YYYY-MM-DD", restaurant-local. */
+  startDate: string
+  endDate: string
+  status: PayPeriodStatus
+  /**
+   * Set by the `lockPayPeriod`/`unlockPayPeriod` callables (Phase 3(c)) —
+   * never a client write, same "the Function is the only path" shape as
+   * `recordSchedulePublish`. Unlock requires Owner/GM + a non-empty reason
+   * (spec's own §11 "no more punch/tip edits without unlock by Owner/GM,
+   * logged"); both transitions write an `auditLog` entry.
+   */
+  lockedAt?: unknown
+  lockedBy?: string | null
+  unlockedAt?: unknown
+  unlockedBy?: string | null
+  unlockReason?: string | null
+  /** Set by the CSV export callable — spec §11's own fields, unchanged. */
+  exportedAt?: unknown
+  exportedBy?: string | null
+  exportFileName?: string | null
+  /** See the matching note on `Schedule.auditPending` — a failed audit write after a lock/unlock/export surfaces here rather than vanishing. */
+  auditPending?: boolean
+  auditPendingAction?: AuditAction
+  auditPendingAt?: unknown
   locationId?: string | null
   createdAt?: unknown
   updatedAt?: unknown

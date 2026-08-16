@@ -924,6 +924,26 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    // ── payPeriods (spec §11, Phase 3(c)) ─────────────────────────────────────
+    // Full sensitive-read gate, ruled by Rafa: payroll reads are Owner/GM
+    // ONLY — `payroll.view` was tightened off Manager's default grant set
+    // specifically for this (src/lib/permissions/defaults.ts), a stricter
+    // bar than punches/tipReports' below-level+department scoping. Unlike
+    // those two, there is no per-document department/rank field to reason
+    // about here — a flat `hasPerm()` gate needs no client-side query
+    // cooperation to hold (no `where()` shape can make an ineligible caller
+    // provable), so a single-document read and an unscoped `list` fail
+    // identically for anyone without the permission. Every write — lock,
+    // unlock, export-stamping — is Cloud-Function-only
+    // (`functions/src/payrollActions.ts`), same shape as punches/tipReports:
+    // lock/unlock need the audit guarantee and unlock's required-reason
+    // check enforced server-side, not trusted from a client claim.
+
+    match /payPeriods/{periodId} {
+      allow read: if hasPerm('payroll.view');
+      allow create, update, delete: if false;
+    }
+
     // ── trades (spec §7, §17) ─────────────────────────────────────────────────
     // Unlike punches/tipReports, POSTING a trade risks nothing irreversible —
     // no shift reassignment happens until a manager approves — so create and

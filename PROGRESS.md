@@ -2,11 +2,14 @@
 
 **Current phase: Phase 3 — Shift templates + Tasks + Payroll** (spec §19)
 Phase 0, Phase 1, and Phase 2 complete and reviewed.
-Last updated: Aug 16, 2026 — Phase 3(b) done: task definitions + Cloud
-Scheduler materialization + staff/admin views, the 48h direct-trade expiry
-sweep folded in per Rafa's restated ruling, and the three follow-ups from his
-3(a) review (fulfillment doc comment, a 4-profile shiftTemplates rebuild, a
-second seeded week). Phase 3(c) (pay periods + payroll workshop) not yet started.
+Last updated: Aug 16, 2026 — **Phase 3 complete**: 3(c) (pay periods + payroll
+workshop) done, closing out Phase 3 alongside a final service-map rework that
+supersedes 3(b)'s provisional weekday/weekend template split. Per-workweek
+FLSA overtime allocated to semimonthly periods, integer-cents money
+throughout, `payroll.view` tightened to Owner/GM only, period lock/unlock
+with the audit guarantee, generic/Gusto/ADP CSV export, and a four-profile
+service map (Weekday Lunch, Brunch, Weekday-shape Dinner, Weekend Dinner)
+with the first dated-variant (seasonal hours) feature on `shiftTemplates`.
 
 Phases are sequential. Do not build later-phase features early, even scaffolding.
 
@@ -37,7 +40,7 @@ Phases are sequential. Do not build later-phase features early, even scaffolding
 | --- | --- |
 | (a) shiftTemplates Settings UI + builder fulfillment badges | ✅ Done (Aug 15) — see below |
 | (b) Task definitions + Cloud Scheduler materialization, folding in the 48h trade-expiry sweep | ✅ Done (Aug 16) — see below |
-| (c) Pay periods + payroll workshop (locked FLSA model, generic/Gusto/ADP CSV exports) | Not started |
+| (c) Pay periods + payroll workshop (locked FLSA model, generic/Gusto/ADP CSV exports) | ✅ Done (Aug 16) — see below |
 
 ### (a) Shift templates + fulfillment badges — Aug 15, 2026
 
@@ -302,6 +305,181 @@ established split (pure algorithmic modules like `fulfillment.ts`/
 `tradeEligibility.ts` get committed unit tests; Cloud Function glue gets
 live-emulator verification, same as `tradeActions.ts`/`punchActions.ts`
 before it, "no committed test file for Cloud Functions in this codebase").
+
+### (c) Payroll: pay periods + Workshop + final service-map rework — Aug 16, 2026
+
+**FLSA engine** (`src/lib/payroll/overtime.ts`, TDD): the spec's own ruled
+correctness trap — overtime is per Mon–Sun WORKWEEK, never by summing hours
+inside a semimonthly period — is the one piece of this phase built and tested
+first. `splitOvertimeForWorkweek` attributes OT by chronological order within
+a week (the specific day that crosses the 40h mark is itself split, every day
+after is entirely OT); `allocateHoursToPeriod` groups by workweek THEN filters
+to a period's dates, never the reverse. The seed proves this against real
+data, not just synthetic tests: Marisol Peña works 45h across Aug 17–23,
+straddling the Aug 20/21 semimonthly boundary — verified live in the Workshop
+UI at **36.0 regular / 0.0 OT** for the Aug 6–20 period and **4.0 regular /
+5.0 OT** for Aug 21–Sep 5, summing back to the workweek's true 40 regular / 5
+OT split exactly.
+
+**Integer cents** (`src/lib/money.ts`): `Employee.hourlyRate`/`salaryAmount`
+stay dollar `number`s (a Phase 0 decision, not reopened) — `dollarsToCents()`
+is the ONE place that float is ever read, converting once at the boundary.
+Every computation downstream (`computePayrollRow`, the CSV export) is integer
+cents; a float reappears only transiently for display/CSV formatting, never
+accumulated or fed back into more math. Verified live: Marisol's $16.00/hr ×
+36h regular = $576.00 exactly, both in the Workshop table and the exported
+CSV.
+
+**Rendering rules** (`src/lib/payroll/payrollRows.ts`): salaried-with-punches
+(`clockRequired: true`) shows hours for ACCOUNTABILITY ONLY —
+`accountabilityOnly: true`, `hourlyGrossCents` always 0 — pay is the
+period-prorated salary, never hours-derived; non-clocking shows no hours at
+all, salary only. Salary proration is a general annualize-then-divide
+formula (`prorateSalaryToPeriodCents`) so a monthly salary into a semimonthly
+period is exactly halved (24/12 periods-per-year, no drift) and a weekly
+salary into a biweekly period is exactly doubled, without hardcoding the
+semimonthly case specifically.
+
+**`payroll.view` tightened to Owner/GM only** (`src/lib/permissions/
+defaults.ts`) — Rafa's ruling: "full sensitive-read trio on payroll reads."
+This REMOVES `payroll.view` from Manager's default grant set, a real
+tightening of the existing permission matrix, not just a new gate — Manager
+keeps `punches.viewAll`/`tips.viewAll` for Shifts & Tips admin (a different,
+less sensitive screen) but loses payroll specifically. `firestore.rules`'
+`payPeriods` match is a flat `hasPerm('payroll.view')` gate with no
+per-document scoping (unlike punches/tipReports/taskInstances — there's no
+department/rank concept here, so no list-query-provability complexity either).
+23 new rules tests prove the trio: cooperative (owner, GM), hostile (manager,
+supervisor, staff all denied read AND write, including a manager holding an
+explicit `permissionOverrides` grant succeeding — proving the rule reads
+effective permission, not a hardcoded role check), and unconditional
+Cloud-Function-only writes on every role including owner. 173 rules tests
+total, 0 dirty denials.
+
+**Lock/unlock** (`functions/src/payrollActions.ts`): `lockPayPeriod`
+(`payroll.lockPeriod`) and `unlockPayPeriod` — unlock is gated TWICE,
+deliberately stricter than the permission key alone: `payroll.lockPeriod` AND
+the actor's actual `accessRole` is literally `owner`/`gm` (spec's own text
+names "Owner/GM" for unlock specifically), plus a required non-empty reason.
+Unlocking returns `status` to `'review'`, not `'open'` — the period was
+already reviewed once, and reopening it fully would lose that milestone. Both
+write a `period.lock`/`period.unlock` `auditLog` entry. Verified live: locked
+Aug 6–20, confirmed `status: 'locked'` + `lockedBy` in Firestore, then
+unlocked with a reason, confirmed both audit entries and the `status: 'review'`
+transition.
+
+**Locked periods reject punch/tip edits, server-side** (`functions/src/
+punchActions.ts`'s `editPunch`/`editTipReport`, via `functions/src/
+payrollHelpers.ts`'s `assertPeriodNotLocked`) — checked against BOTH a punch's
+current and proposed-new date, so an edit can't dodge the lock by moving a
+punch's timestamp into or out of a locked period. **Verified live, not just
+unit-tested** (this is Cloud Function behavior, not a firestore.rules
+constraint, so it isn't rules-testable — matches this codebase's own
+established split): attempted to add an hour to Marisol's Aug 17 punch while
+its period was locked — rejected, punch's stored timestamp unchanged
+(confirmed via a direct Firestore read), and the admin UI showed "This pay
+period is locked. Ask an Owner/GM to unlock it first." (a real gap the
+Playwright pass caught and fixed: `shiftsAndTipsShared.ts`'s
+`punchErrorMessage` didn't recognize the new `payroll/period-locked` code and
+was falling back to a generic "That didn't go through" message — added it to
+`KNOWN_PUNCH_ERROR_KEYS` plus the `clock.errors.period-locked` locale key,
+en/es).
+
+**Scope decision, not a gap**: this lock only blocks `editPunch`/
+`editTipReport`, per the literal ruling ("punch/tip EDITS"). `manualPunch`
+(creating a new, possibly-backdated punch) is NOT blocked by a locked period
+— someone could still add pay-affecting hours to an already-locked period via
+a fresh manual punch. Flagged here for Rafa's awareness rather than silently
+expanding scope beyond what was ruled.
+
+**CSV export** (`functions/src/payrollExport.ts`): generic (spec §11's exact
+column list), Gusto-shaped, and ADP-shaped variants — **the Gusto/ADP column
+names are best-effort, NOT verified against a real account or provider
+import spec**, same "illustrative, not real" caveat this file already carries
+for mockup 26's numbers; confirm against Rafa's actual accounts before a real
+payroll run. Returns CSV text directly in the callable response (no Storage
+round-trip — a restaurant this size's payroll is a few dozen rows) for the
+client to turn into a downloaded file. Exporting a LOCKED period transitions
+`status` to the terminal `'exported'`; exporting an unlocked one stamps
+`exportedAt`/`exportedBy`/`exportFileName` informationally without changing
+`status`, and the filename gets a `_DRAFT` suffix — verified live: exported
+Aug 6–20 while unlocked, got a confirm dialog ("This period isn't locked
+yet... Continue?"), downloaded `payroll_2026-08-06_2026-08-20_generic_DRAFT.csv`,
+contents checked byte-for-byte correct (only employees with real pay-affecting
+activity included, not padded with empty rows).
+
+**Workshop UI** (`src/pages/settings/PayrollWorkshopPage.tsx`, wired at
+`/settings/payroll`, `payroll.view`-gated): period selector, per-period AND
+per-workweek views from the same underlying row data (both required by
+Rafa's ruling), the accountability-only/non-clocking rendering keyed
+directly off `PayrollRow` fields rather than re-derived in the UI, lock/unlock
+buttons, three-way CSV export with draft-warning, drill-down link to Shifts &
+Tips admin. Omits mockup 26's "labor is $X at Y% of $Z in sales" line — there
+is no sales/POS data source in this app (spec §20 non-goal), so that figure
+can't be shown without fabricating a number.
+
+**Service map — final ruling, supersedes 3(b)'s provisional weekday/weekend
+split.** Four profiles with real hours and a distinct Brunch day-part (Rafa's
+proposed line-up — server ×2 @L1, host ×1 @L1, barista ×1 @L1, prep-cook ×1
+@L1 — accepted without a veto):
+- **Weekday Lunch** — Mon–Fri, 11:00–16:00
+- **Brunch** — Sat–Sun, 10:00–16:00 (replaces Sat/Sun lunch ENTIRELY — there
+  is no Saturday or Sunday lunch template)
+- **Weekday-shape Dinner** — Sun–Thu, 16:00–22:00 (Sunday dinner reads as
+  weekday-shaped, not weekend)
+- **Weekend Dinner** — Fri–Sat, 16:00–23:00
+
+Saturday = Brunch + Weekend Dinner; Sunday = Brunch + Weekday-shape Dinner;
+Friday = Weekday Lunch + Weekend Dinner. Still 14 base `shiftTemplates` docs
+(2 per day × 7 days), reshaped from 3(b)'s split rather than added to.
+
+**Dated variants — the first on `shiftTemplates`, kept deliberately small**
+(`profileKey`/`dateRange`/`seasonLabel` fields, `src/lib/scheduling/
+fulfillment.ts`'s `resolveActiveTemplatesForDate`, TDD): a dated variant wins
+over its undated base for any date inside its range ("most-specific-match-
+wins"); `profileKey` links a base to its variant across the SAME `dayOfWeek`
+(required since a single day carries more than one day-part, so `dayOfWeek`
+alone can't disambiguate which one a variant overrides). Seasonal extension,
+Sept 1–Dec 31 2026, same headcounts as base: Weekday-shape Dinner → 23:00 (5
+variant docs, one per Sun–Thu), Weekend Dinner → 24:00 (2 variant docs, Fri/
+Sat) — 7 new documents, 21 `shiftTemplates` total. Settings UI gained a small
+"Seasonal variant" toggle in the existing create/edit modal (a `profileKey`
+select populated from existing templates, not freeform text, so a variant
+can't silently target nothing via a typo).
+
+**Reseeded**: week 1 (Aug 10–16) untouched — labor-math reconciliation still
+exact to the dollar, confirmed live. Week 2 (Aug 17–23) rebuilt against the
+new service map: every weekend day-part met (Fri Weekday Lunch + Weekend
+Dinner, Sat Brunch + Weekend Dinner, Sun Brunch), two deliberate weekday gaps
+carried forward from 3(b)'s original demo (Wed dinner's host line 0/1 unmet,
+Thu dinner's second server line 1/2 partial) — same weekday-dinner profile,
+so the same gaps still apply honestly under the new grouping. `payPeriods`
+seeded with the two periods bracketing the Aug 20/21 boundary plus two older
+ones (`locked`, `exported`) for the Workshop's review history. **A real,
+approved extension of what this seed does**: real `punches` documents were
+seeded directly for Marisol's OT-proof week — `scripts/seed.ts` had
+deliberately never pre-seeded punches before (Aug 14 2026 note: "generated at
+runtime"), but nobody was going to manually clock one employee in and out for
+a week just to review this feature, the same reasoning that justified
+pre-seeding `taskInstances` directly in 3(b).
+
+**Deferred, not gaps** — logged as settled decisions (Rafa's ruling): (a)
+data-informed headcount suggestions belong to Phase 5's AI scheduler, never
+built into `shiftTemplates`/fulfillment/payroll now, never auto-applied even
+then; (b) full YoY/MoM labor analytics needs real sales history, tied to the
+future POS/Leah integration spec §20 already excludes from v1. See "✅
+Accepted spec deviations" → A4 below for the full writeup.
+
+**Verified against a live Auth+Firestore+Functions emulator**, real
+`httpsCallable`, covering the full loop: signed in as Owner — Workshop
+renders 23 employees across both period/workweek views with the exact
+hand-computed OT split; locked a period, confirmed server state + audit
+entry; attempted (and correctly failed) a locked-period punch edit via the
+real Shifts & Tips admin UI, confirmed the punch's stored data never changed;
+unlocked with a reason, confirmed the `review` transition + audit entry;
+exported a draft CSV, confirmed the confirm-dialog, filename, and byte-exact
+contents. `npm run build` (client + functions), 211 unit tests, i18n parity
+(1401 keys), 173 rules tests, 0 dirty denials all pass.
 
 ---
 
@@ -900,6 +1078,33 @@ Mockups 26 and 35 render a biweekly period (Aug 3–16 2026). Where they differ 
 the above they are **visual-only** — replicate their layout, not their period math.
 
 See the semimonthly/overtime trap in "Known issues" below before starting Phase 3.
+
+### A4. Two Phase-3(c)-adjacent capabilities are deliberately deferred, not gaps
+
+**Ruled by Rafa, Aug 2026**, alongside the Phase 3(c) payroll guardrails and the
+final template/service-map rulings — recorded so neither reads as an oversight
+later:
+
+- **(a) Data-informed headcount suggestions are a Phase 5 AI-scheduler
+  capability, not part of `shiftTemplates`/the fulfillment engine now.** The
+  idea — consuming manual weekly labor-projection numbers plus accumulated
+  actuals (real hours/sales history once available) to suggest DELTAS to a
+  template's headcount requirements — belongs entirely to spec §13's
+  generation flow: a suggestion is surfaced in the template editor for a
+  human to accept or reject, exactly like an AI-generated schedule draft
+  itself, and is **never auto-applied** to a live template. Nothing in
+  Phase 3(b)/(a)/(c)'s `shiftTemplates`/fulfillment/payroll work should grow
+  a "suggest a headcount" feature of its own before Phase 5 — that would be
+  building later-phase functionality early, which CLAUDE.md's hard rules
+  already forbid.
+- **(b) Full year-over-year / month-over-month labor analytics is post-v1.**
+  It needs real sales history to be meaningful (labor % against actual
+  revenue, not just the manually-entered weekly projection this app already
+  has per spec §16's dashboard card), which requires the POS/Leah
+  integration spec §20 explicitly rules out of v1 ("no POS/sales
+  integration... no Leah/ERP/ZenZap integration beyond the webhook stub").
+  Tracked here as a named future capability, not silently dropped — revisit
+  once that integration exists, not before.
 
 ---
 

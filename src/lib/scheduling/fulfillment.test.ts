@@ -254,3 +254,48 @@ describe('computeWeekFulfillment', () => {
     expect(computeWeekFulfillment([], [], '2026-08-10')).toEqual([])
   })
 })
+
+describe('computeWeekFulfillment — dated variants (Rafa\'s ruling, Aug 2026: most-specific-match-wins)', () => {
+  const base = template({
+    id: 'tpl-fri-dinner-base',
+    profileKey: 'weekend-dinner',
+    dayOfWeek: 'fri',
+    startTime: '16:00',
+    endTime: '23:00',
+    requirements: [{ roleId: 'server', count: 2, minSkillLevel: 1 }],
+  })
+  const fallVariant = template({
+    id: 'tpl-fri-dinner-fall',
+    profileKey: 'weekend-dinner',
+    dayOfWeek: 'fri',
+    startTime: '16:00',
+    endTime: '24:00', // extended hours
+    dateRange: { startDate: '2026-09-01', endDate: '2026-12-31' },
+    requirements: [{ roleId: 'server', count: 2, minSkillLevel: 1 }],
+  })
+
+  it('uses the undated BASE template for a week outside the variant\'s date range', () => {
+    const results = computeWeekFulfillment([base, fallVariant], [], '2026-08-10') // Aug week — before the Sept variant
+    expect(results).toHaveLength(1)
+    expect(results[0]?.templateId).toBe('tpl-fri-dinner-base')
+  })
+
+  it('uses the DATED VARIANT for a week inside its date range, never both', () => {
+    const results = computeWeekFulfillment([base, fallVariant], [], '2026-09-07') // a Monday in September
+    expect(results).toHaveLength(1)
+    expect(results[0]?.templateId).toBe('tpl-fri-dinner-fall')
+  })
+
+  it('an untagged template (no profileKey/dateRange at all) behaves exactly as before — its own singleton group', () => {
+    const plain = template({ id: 'tpl-plain', dayOfWeek: 'wed' })
+    const results = computeWeekFulfillment([plain], [], '2026-08-10')
+    expect(results).toHaveLength(1)
+    expect(results[0]?.templateId).toBe('tpl-plain')
+  })
+
+  it('different profileKeys on the same dayOfWeek are independent — both resolve, unaffected by each other', () => {
+    const lunch = template({ id: 'tpl-fri-lunch', profileKey: 'weekday-lunch', dayOfWeek: 'fri', startTime: '11:00', endTime: '16:00' })
+    const results = computeWeekFulfillment([base, lunch], [], '2026-08-10')
+    expect(results.map((r) => r.templateId).sort()).toEqual(['tpl-fri-dinner-base', 'tpl-fri-lunch'])
+  })
+})

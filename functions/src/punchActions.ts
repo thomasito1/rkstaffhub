@@ -29,6 +29,7 @@ import { HttpsError, onCall } from 'firebase-functions/v2/https'
 import { COLLECTIONS, db } from './firebase'
 import { canAccessSensitive, requirePermission } from './permissions'
 import { markAuditPending, writeAudit } from './audit'
+import { assertPeriodNotLocked, isoDateOfInstant } from './payrollHelpers'
 import type { AccessRole, EmployeeDoc, PunchDoc } from './model'
 import {
   selfieStoragePath,
@@ -466,6 +467,12 @@ export const editPunch = onCall<EditPunchRequest>(async (request): Promise<EditP
   const newTs = Timestamp.fromDate(new Date(newTimestamp))
   const historyEntry = { by: actor.id, at: Timestamp.now(), oldTimestamp, newTimestamp: newTs, reason }
 
+  // A punch moving INTO or OUT OF a locked period is blocked either way —
+  // spec §11: "no more punch/tip edits without unlock." Check both the
+  // punch's current date and its proposed new date.
+  await assertPeriodNotLocked(isoDateOfInstant(oldTimestamp.toDate()))
+  await assertPeriodNotLocked(isoDateOfInstant(newTs.toDate()))
+
   await punchRef(punchId).update({
     timestamp: newTs,
     editedBy: actor.id,
@@ -528,8 +535,9 @@ export const editTipReport = onCall<EditTipReportRequest>(
       const ref = db.collection(COLLECTIONS.tipReports).doc(tipReportId)
       const snap = await ref.get()
       if (!snap.exists) throw new HttpsError('not-found', 'That tip report no longer exists.')
-      const report = snap.data() as { employeeId: string; amount: number }
+      const report = snap.data() as { employeeId: string; amount: number; date?: string }
       await requireBelowLevelTarget(actor, report.employeeId)
+      if (report.date) await assertPeriodNotLocked(report.date)
 
       const oldAmount = report.amount
       const historyEntry = { by: actor.id, at: Timestamp.now(), oldAmount, newAmount, reason }
@@ -556,6 +564,7 @@ export const editTipReport = onCall<EditTipReportRequest>(
     }
 
     const target = await requireBelowLevelTarget(actor, employeeId as string)
+    if (date) await assertPeriodNotLocked(date)
     const ref = db.collection(COLLECTIONS.tipReports).doc()
     const historyEntry = { by: actor.id, at: Timestamp.now(), oldAmount: 0, newAmount, reason }
     await ref.set({

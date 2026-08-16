@@ -45,6 +45,8 @@ const IDENTICAL_OK = new Set([
   'shiftsAndTips.manualPunch.subtitle', // Restaurant proper name + date placeholder, no translatable words.
   'shiftsAndTips.editModal.subtitle', // "{{name}} · {{date}}" — punctuation only, no words.
   'shiftsAndTips.editModal.charCount', // "{{count}} / {{max}}" — punctuation only, no words.
+  'settings.payroll.columns.total', // "Total" is identical in Spanish.
+  'settings.payroll.exportVariant.adp.title', // "ADP Run" is a product name, not translated.
 ])
 
 const en = flatten(load('en.json'))

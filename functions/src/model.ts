@@ -57,7 +57,10 @@ export type PushCategory =
   | 'task.missed'
 
 /** Only the fields the server reads. The employee document has many more. */
+export type EmploymentType = 'hourly-tipped' | 'hourly' | 'salaried-weekly' | 'salaried-monthly' | 'non-clocking'
+
 export interface EmployeeDoc {
+  employeeNumber?: string
   firstName?: string
   lastName?: string
   preferredName?: string | null
@@ -69,6 +72,7 @@ export interface EmployeeDoc {
   authUids?: string[]
   shiftRoles?: { roleId: string; skillLevel: number; isPrimary?: boolean }[]
   pushTokens?: PushTokenDoc[]
+  employmentType?: EmploymentType
   clockRequired?: boolean
   tipsRequired?: boolean
 }
@@ -161,6 +165,18 @@ export function displayName(employee: EmployeeDoc): string {
 /** Only the fields the punch/tip callables need. */
 export interface AppSettingsDoc {
   geofence?: { lat: number; lng: number; radiusMeters: number }
+  payPeriod?: {
+    frequency?: 'weekly' | 'biweekly' | 'semimonthly'
+    startDay?: string
+    semimonthlyDays?: [number, number]
+  }
+}
+
+/** Only the fields the payroll callables need. */
+export interface CompensationDoc {
+  hourlyRate?: number | null
+  salaryAmount?: number | null
+  salaryPeriod?: 'weekly' | 'monthly' | null
 }
 
 export type PunchType = 'in' | 'out'
@@ -180,6 +196,7 @@ export interface PunchDoc {
   status?: 'open' | 'closed'
   flagged?: boolean
   flagReason?: string | null
+  timestamp?: FirebaseFirestore.Timestamp
 }
 
 /** Mirrors TipReport (src/types/models.ts). */
@@ -218,4 +235,21 @@ export interface TaskInstanceDoc {
   assigneeEmployeeId?: string | null
   status?: TaskInstanceStatus
   department?: Department
+}
+
+export type PayPeriodStatus = 'open' | 'review' | 'locked' | 'exported'
+
+/** Mirrors PayPeriod (src/types/models.ts). */
+export interface PayPeriodDoc {
+  startDate?: string
+  endDate?: string
+  status?: PayPeriodStatus
+  lockedAt?: unknown
+  lockedBy?: string | null
+  unlockedAt?: unknown
+  unlockedBy?: string | null
+  unlockReason?: string | null
+  exportedAt?: unknown
+  exportedBy?: string | null
+  exportFileName?: string | null
 }

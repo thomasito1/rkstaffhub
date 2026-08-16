@@ -966,7 +966,8 @@
       "timeOff": "Tiempo libre",
       "shiftsAndTips": "Turnos y propinas",
       "shiftTemplates": "Plantillas de turno",
-      "tasks": "Tareas"
+      "tasks": "Tareas",
+      "payroll": "Nómina"
     },
     "roles": {
       "title": "Puestos y jerarquía",
@@ -1066,7 +1067,20 @@
         "minLevelOption": "N{{level}}",
         "removeRequirement": "Quitar requisito",
         "nameRequired": "Se requiere un nombre.",
-        "roleRequired": "Cada requisito necesita un puesto seleccionado."
+        "roleRequired": "Cada requisito necesita un puesto seleccionado.",
+        "variant": {
+          "toggle": "Esta es una variante de temporada de otra plantilla",
+          "helper": "Una variante reemplaza los requisitos de su plantilla base durante el rango de fechas indicado, y vuelve a la plantilla base automáticamente cuando el rango termina.",
+          "profileKey": "Plantilla base",
+          "profileKeyPlaceholder": "Selecciona la plantilla que reemplaza…",
+          "startDate": "Fecha de inicio",
+          "endDate": "Fecha de fin",
+          "seasonLabel": "Etiqueta de temporada",
+          "seasonLabelPlaceholder": "p. ej. Horario de otoño",
+          "profileKeyRequired": "Selecciona qué plantilla reemplaza esta variante.",
+          "datesRequired": "Se requiere una fecha de inicio y de fin para una variante de temporada.",
+          "dateOrderInvalid": "La fecha de inicio debe ser igual o anterior a la fecha de fin."
+        }
       },
       "toast": {
         "created": "{{name}} agregada.",
@@ -1178,6 +1192,107 @@
       "archive": {
         "emptyTitle": "No hay tareas archivadas",
         "emptyBody": "Las tareas desactivadas aparecerán aquí."
+      }
+    },
+    "payroll": {
+      "title": "Nómina",
+      "subtitle": "Revisa horas, propinas y pago bruto antes de bloquear el período",
+      "previousPeriod": "Período anterior",
+      "nextPeriod": "Período siguiente",
+      "selectPeriod": "Seleccionar período de pago",
+      "periodOrdinal": "{{frequency}} · Período {{index}} de {{total}}",
+      "frequency": {
+        "weekly": "Semanal",
+        "biweekly": "Quincenal",
+        "semimonthly": "Semimensual"
+      },
+      "status": {
+        "open": "Abierto",
+        "review": "En revisión",
+        "locked": "Bloqueado",
+        "exported": "Exportado"
+      },
+      "lockPeriod": "Bloquear período",
+      "unlockPeriod": "Desbloquear período",
+      "exportCsv": "Exportar CSV",
+      "exportOptions": "Opciones de exportación",
+      "exportVariant": {
+        "generic": {
+          "title": "CSV genérico",
+          "subtitle": "Mapeo estándar para herramientas comunes"
+        },
+        "gusto": {
+          "title": "Exportar a Gusto",
+          "subtitle": "Preformateado para la nómina de Gusto"
+        },
+        "adp": {
+          "title": "ADP Run",
+          "subtitle": "Optimizado para ADP Run/Workforce"
+        }
+      },
+      "stats": {
+        "employees": "Empleados",
+        "regularHours": "Horas regulares",
+        "overtimeHours": "Horas extra",
+        "tips": "Propinas",
+        "totalGross": "Bruto total"
+      },
+      "view": {
+        "perPeriod": "Por período",
+        "perWorkweek": "Por semana laboral"
+      },
+      "columns": {
+        "empNumber": "N.º emp.",
+        "name": "Nombre",
+        "type": "Tipo",
+        "regHours": "Hrs. reg.",
+        "otHours": "Hrs. extra",
+        "rate": "Tarifa",
+        "hourlyGross": "Bruto por hora",
+        "tips": "Propinas",
+        "salary": "Salario",
+        "total": "Total"
+      },
+      "workweekColumns": {
+        "week": "Semana"
+      },
+      "accountabilityOnly": "solo control, no afecta el pago",
+      "doesNotClock": "no marca entrada",
+      "totals": "Totales",
+      "drillDown": "Ver marcaciones y propinas",
+      "emptyTitle": "Nadie que mostrar todavía",
+      "emptyBody": "No hay empleados activos con datos de compensación para este período.",
+      "errorTitle": "No se pudo cargar este período",
+      "errorBody": "Algo salió mal al cargar los datos de nómina. Intenta de nuevo.",
+      "noPeriodsTitle": "Todavía no hay períodos de pago",
+      "noPeriodsBody": "Los períodos de pago aparecerán aquí una vez configurados.",
+      "toast": {
+        "locked": "Período de pago bloqueado.",
+        "unlocked": "Período de pago desbloqueado y devuelto a revisión.",
+        "exported": "CSV descargado."
+      },
+      "unlockModal": {
+        "title": "¿Desbloquear este período de pago?",
+        "subtitle": "Solo Owner/GM. Se requiere un motivo y queda registrado en la auditoría.",
+        "reasonLabel": "Motivo",
+        "reasonPlaceholder": "¿Por qué es necesario reabrir este período?",
+        "cancel": "Cancelar",
+        "confirm": "Desbloquear período"
+      },
+      "draftExportConfirm": {
+        "title": "¿Exportar como borrador?",
+        "body": "Este período aún no está bloqueado, así que esta exportación es un BORRADOR y su nombre de archivo lo indica. Puedes exportar de nuevo una vez bloqueado el período. ¿Continuar?",
+        "cancel": "Cancelar",
+        "continue": "Continuar"
+      },
+      "errors": {
+        "generic": "Eso no funcionó. Intenta de nuevo.",
+        "alreadyLocked": "Este período ya está bloqueado.",
+        "notLocked": "Este período no está bloqueado.",
+        "ownerGmOnly": "Solo un Owner o GM puede hacer eso.",
+        "periodNotFound": "Ese período de pago ya no existe.",
+        "reasonRequired": "Se requiere un motivo.",
+        "exportFailed": "No se pudo exportar este período. Intenta de nuevo."
       }
     }
   },
@@ -1331,6 +1446,7 @@
       "tips-required": "Ingresa el total de tus propinas de este turno antes de marcar salida.",
       "reason-required": "Se requiere un motivo.",
       "below-level-required": "No tienes permiso para hacer eso.",
+      "period-locked": "Este período de nómina está bloqueado. Pide a un propietario/GM que lo desbloquee primero.",
       "generic": "Eso no se pudo completar. Inténtalo de nuevo."
     },
     "offline": {

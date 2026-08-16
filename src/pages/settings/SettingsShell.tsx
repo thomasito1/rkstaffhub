@@ -23,6 +23,7 @@ const TABS = [
   { to: '/settings/permissions', labelKey: 'settings.nav.permissions' },
   { to: '/settings/time-off', labelKey: 'settings.nav.timeOff' },
   { to: '/settings/shifts-and-tips', labelKey: 'settings.nav.shiftsAndTips' },
+  { to: '/settings/payroll', labelKey: 'settings.nav.payroll' },
 ] as const
 
 export function SettingsShell(): JSX.Element {

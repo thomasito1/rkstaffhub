@@ -46,12 +46,27 @@ export interface RequirementLike {
   minSkillLevel: SkillLevel
 }
 
+export interface TemplateDateRangeLike {
+  startDate: string // "YYYY-MM-DD", inclusive
+  endDate: string // "YYYY-MM-DD", inclusive
+}
+
 export interface TemplateLike {
   id: string
   dayOfWeek: WeekdayKey
   startTime: string // "HH:mm"
   endTime: string // "HH:mm"
   requirements: RequirementLike[]
+  /**
+   * Groups a base template with its seasonal variant(s) for the same
+   * `dayOfWeek` (Rafa's ruling, Aug 2026 — see `resolveActiveTemplatesForDate`).
+   * Optional and defaults to the template's own `id` when absent, so an
+   * untagged template is trivially its own singleton group — existing
+   * templates with no variant concept behave exactly as before.
+   */
+  profileKey?: string
+  /** `null`/absent = the undated base, always active. Non-null wins over the base for any date inside range. */
+  dateRange?: TemplateDateRangeLike | null
 }
 
 export interface FulfillmentShiftLike {
@@ -141,16 +156,61 @@ export function computeTemplateFulfillment(
 }
 
 /**
- * Every template resolved to its date within `weekStartIso`'s week, each
- * checked against only the shifts that fall on that same date.
+ * Among templates sharing the same `dayOfWeek`, picks ONE winner per
+ * `profileKey` for `date` — "most-specific-match-wins" (Rafa's ruling, Aug
+ * 2026, the first dated-variant feature on this collection): a template
+ * whose `dateRange` contains `date` wins over the undated base. Deliberately
+ * small — with only one seasonal variant expected per profileKey in
+ * practice, two overlapping DATED variants for the same group is undefined
+ * behavior (picks whichever the input order happens to find first), not a
+ * feature to design around.
+ */
+export function resolveActiveTemplatesForDate<T extends TemplateLike>(
+  templates: T[],
+  dayOfWeek: WeekdayKey,
+  date: string,
+): T[] {
+  const byProfileKey = new Map<string, T[]>()
+  for (const t of templates) {
+    if (t.dayOfWeek !== dayOfWeek) continue
+    const key = t.profileKey ?? t.id
+    const group = byProfileKey.get(key)
+    if (group) group.push(t)
+    else byProfileKey.set(key, [t])
+  }
+
+  const winners: T[] = []
+  for (const group of byProfileKey.values()) {
+    const dated = group.find(
+      (t) => t.dateRange && t.dateRange.startDate <= date && date <= t.dateRange.endDate,
+    )
+    const base = group.find((t) => !t.dateRange)
+    const winner = dated ?? base
+    if (winner) winners.push(winner)
+  }
+  return winners
+}
+
+/**
+ * Every template resolved to its date within `weekStartIso`'s week — first
+ * resolving which variant is ACTIVE per day (`resolveActiveTemplatesForDate`),
+ * so a base template and its seasonal variant never both contribute a
+ * fulfillment result for the same day-part — each checked against only the
+ * shifts that fall on that same date.
  */
 export function computeWeekFulfillment(
   templates: TemplateLike[],
   shifts: FulfillmentShiftLike[],
   weekStartIso: string,
 ): TemplateFulfillment[] {
-  return templates.map((template) => {
-    const date = dateForTemplateInWeek(template.dayOfWeek, weekStartIso)
-    return computeTemplateFulfillment(template, shifts, date)
-  })
+  const dayOfWeeks = new Set(templates.map((t) => t.dayOfWeek))
+  const results: TemplateFulfillment[] = []
+  for (const dayOfWeek of dayOfWeeks) {
+    const date = dateForTemplateInWeek(dayOfWeek, weekStartIso)
+    const active = resolveActiveTemplatesForDate(templates, dayOfWeek, date)
+    for (const template of active) {
+      results.push(computeTemplateFulfillment(template, shifts, date))
+    }
+  }
+  return results
 }

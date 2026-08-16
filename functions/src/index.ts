@@ -41,6 +41,13 @@
  *                                            'missed' before creating new ones
  *   completeTaskInstance   tasks.complete · claims (if pool) + marks an
  *                                            instance done, atomically
+ *   lockPayPeriod/
+ *   unlockPayPeriod       payroll.lockPeriod · §11 review→lock/unlock, audited;
+ *                                            unlock additionally requires the
+ *                                            actor's real accessRole be
+ *                                            Owner/GM, not just the permission
+ *   exportPayPeriodCsv    payroll.export   · §11 generic/Gusto/ADP CSV,
+ *                                            audited + stamped on the period
  *
  * Region is the default us-central1, matching `getFunctions(app)` in
  * `src/lib/firebase.ts` — the client passes no region, so changing it here
@@ -68,3 +75,5 @@ export { submitAvailability } from './availabilityActions'
 export { sweepExpiredTrades } from './tradeScheduled'
 export { materializeDailyTasks, materializeWeeklyTasks, materializeMonthlyTasks } from './tasksScheduled'
 export { completeTaskInstance } from './taskActions'
+export { lockPayPeriod, unlockPayPeriod } from './payrollActions'
+export { exportPayPeriodCsv } from './payrollExport'

@@ -9,6 +9,7 @@ import {
   listShiftRoles,
   listShiftTemplates,
   updateShiftTemplate,
+  type NewShiftTemplateInput,
 } from '@/lib/db'
 import { WEEKDAY_KEYS } from '@/types/models'
 import type {
@@ -228,6 +229,7 @@ function ShiftTemplatesScreen(): JSX.Element {
         <TemplateModal
           template={modalTarget === 'new' ? null : modalTarget}
           roles={roles}
+          templates={templates}
           onClose={() => setModalTarget(null)}
           onSaved={() => {
             setModalTarget(null)
@@ -273,11 +275,13 @@ function toRows(reqs: ShiftTemplateRequirement[]): RequirementRow[] {
 function TemplateModal({
   template,
   roles,
+  templates,
   onClose,
   onSaved,
 }: {
   template: ShiftTemplate | null
   roles: ShiftRole[]
+  templates: ShiftTemplate[]
   onClose: () => void
   onSaved: () => void
 }): JSX.Element {
@@ -293,6 +297,32 @@ function TemplateModal({
   const [rows, setRows] = useState<RequirementRow[]>(() => toRows(template?.requirements ?? []))
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+
+  // Rafa's instruction: "Settings UI gets the variant affordance. Keep it
+  // small." — a template with a non-null dateRange IS a seasonal variant, so
+  // editing one re-opens with the toggle pre-checked and its fields filled.
+  const [isVariant, setIsVariant] = useState(Boolean(template?.dateRange))
+  const [profileKey, setProfileKey] = useState(template?.profileKey ?? '')
+  const [variantStartDate, setVariantStartDate] = useState(template?.dateRange?.startDate ?? '')
+  const [variantEndDate, setVariantEndDate] = useState(template?.dateRange?.endDate ?? '')
+  const [seasonLabel, setSeasonLabel] = useState(template?.seasonLabel ?? '')
+
+  // profileKey MUST match an existing base template's profileKey to override
+  // anything, so this is a select populated from the DISTINCT profileKey
+  // values already on file — never a freeform text input that could typo its
+  // way into silently not overriding the base it was meant to replace.
+  const profileKeyOptions = useMemo(() => {
+    const labelByKey = new Map<string, string>()
+    for (const tpl of templates) {
+      const isBase = tpl.dateRange === null
+      if (!labelByKey.has(tpl.profileKey) || isBase) {
+        labelByKey.set(tpl.profileKey, `${tpl.name} (${t(`weekdays.short.${tpl.dayOfWeek}`)})`)
+      }
+    }
+    return Array.from(labelByKey.entries())
+      .map(([key, label]) => ({ key, label }))
+      .sort((a, b) => a.label.localeCompare(b.label))
+  }, [templates, t])
 
   const roleName = useCallback(
     (role: ShiftRole) => (lang.startsWith('es') && role.nameEs ? role.nameEs : role.name),
@@ -330,6 +360,20 @@ function TemplateModal({
       setError(t('settings.shiftTemplates.modal.roleRequired'))
       return
     }
+    if (isVariant) {
+      if (!profileKey) {
+        setError(t('settings.shiftTemplates.modal.variant.profileKeyRequired'))
+        return
+      }
+      if (!variantStartDate || !variantEndDate) {
+        setError(t('settings.shiftTemplates.modal.variant.datesRequired'))
+        return
+      }
+      if (variantStartDate > variantEndDate) {
+        setError(t('settings.shiftTemplates.modal.variant.dateOrderInvalid'))
+        return
+      }
+    }
 
     const requirements: ShiftTemplateRequirement[] = rows.map((r) => ({
       roleId: r.roleId,
@@ -340,10 +384,38 @@ function TemplateModal({
     setSaving(true)
     try {
       if (template) {
-        await updateShiftTemplate(template.id, { name: trimmedName, dayOfWeek, startTime, endTime, requirements })
+        // Off is the common case: reset profileKey to the doc's own id so it
+        // fully detaches from any variant group rather than lingering as an
+        // orphaned "base" for a profileKey some other variant still targets.
+        const variantPatch = isVariant
+          ? {
+              profileKey,
+              dateRange: { startDate: variantStartDate, endDate: variantEndDate },
+              seasonLabel: seasonLabel.trim() || null,
+            }
+          : { profileKey: template.id, dateRange: null, seasonLabel: null }
+        await updateShiftTemplate(template.id, {
+          name: trimmedName,
+          dayOfWeek,
+          startTime,
+          endTime,
+          requirements,
+          ...variantPatch,
+        })
         toast.show({ tone: 'success', message: t('settings.shiftTemplates.toast.updated', { name: trimmedName }) })
       } else {
-        await createShiftTemplate({ name: trimmedName, dayOfWeek, startTime, endTime, requirements })
+        // Off omits profileKey from the create call entirely so
+        // createShiftTemplate defaults it to the new doc's own id.
+        const input: NewShiftTemplateInput = { name: trimmedName, dayOfWeek, startTime, endTime, requirements }
+        if (isVariant) {
+          input.profileKey = profileKey
+          input.dateRange = { startDate: variantStartDate, endDate: variantEndDate }
+          input.seasonLabel = seasonLabel.trim() || null
+        } else {
+          input.dateRange = null
+          input.seasonLabel = null
+        }
+        await createShiftTemplate(input)
         toast.show({ tone: 'success', message: t('settings.shiftTemplates.toast.created', { name: trimmedName }) })
       }
       onSaved()
@@ -502,6 +574,76 @@ function TemplateModal({
               })}
             </div>
           )}
+        </div>
+
+        <div className="border-t border-line pt-4">
+          <label className="flex items-center gap-2 text-chip font-medium text-ink-muted">
+            <input
+              type="checkbox"
+              checked={isVariant}
+              onChange={(e) => setIsVariant(e.target.checked)}
+              className="h-5 w-5 rounded border-line text-primary focus:ring-primary"
+            />
+            {t('settings.shiftTemplates.modal.variant.toggle')}
+          </label>
+          <p className="mt-1 text-chip text-ink-muted">{t('settings.shiftTemplates.modal.variant.helper')}</p>
+
+          {isVariant ? (
+            <div className="mt-3 space-y-3">
+              <div>
+                <label className="mb-1 block text-chip font-medium text-ink-muted">
+                  {t('settings.shiftTemplates.modal.variant.profileKey')}
+                </label>
+                <select
+                  value={profileKey}
+                  onChange={(e) => setProfileKey(e.target.value)}
+                  className={FIELD_CLASS}
+                >
+                  <option value="">{t('settings.shiftTemplates.modal.variant.profileKeyPlaceholder')}</option>
+                  {profileKeyOptions.map((opt) => (
+                    <option key={opt.key} value={opt.key}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 block text-chip font-medium text-ink-muted">
+                    {t('settings.shiftTemplates.modal.variant.startDate')}
+                  </label>
+                  <input
+                    type="date"
+                    value={variantStartDate}
+                    onChange={(e) => setVariantStartDate(e.target.value)}
+                    className={`${FIELD_CLASS} tabular`}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-chip font-medium text-ink-muted">
+                    {t('settings.shiftTemplates.modal.variant.endDate')}
+                  </label>
+                  <input
+                    type="date"
+                    value={variantEndDate}
+                    onChange={(e) => setVariantEndDate(e.target.value)}
+                    className={`${FIELD_CLASS} tabular`}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-chip font-medium text-ink-muted">
+                  {t('settings.shiftTemplates.modal.variant.seasonLabel')}
+                </label>
+                <input
+                  value={seasonLabel}
+                  onChange={(e) => setSeasonLabel(e.target.value)}
+                  placeholder={t('settings.shiftTemplates.modal.variant.seasonLabelPlaceholder')}
+                  className={FIELD_CLASS}
+                />
+              </div>
+            </div>
+          ) : null}
         </div>
 
         {error ? <p className="text-chip font-medium text-danger">{error}</p> : null}
