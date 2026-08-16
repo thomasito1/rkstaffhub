@@ -2,12 +2,11 @@
 
 **Current phase: Phase 3 — Shift templates + Tasks + Payroll** (spec §19)
 Phase 0, Phase 1, and Phase 2 complete and reviewed.
-Last updated: Aug 15, 2026 — Phase 3(a) done: the Shift templates Settings UI
-and the schedule builder's day-part fulfillment (met/unmet) badge, plus two
-follow-ups from Rafa's review of the Aug 14 tip-visibility fix (a hostile-
-client rules-test trio, and role-change backfill for `tipReports.
-employeeAccessRole`). Phase 3(b) (task definitions + Cloud Scheduler
-materialization) and 3(c) (pay periods + payroll workshop) not yet started.
+Last updated: Aug 16, 2026 — Phase 3(b) done: task definitions + Cloud
+Scheduler materialization + staff/admin views, the 48h direct-trade expiry
+sweep folded in per Rafa's restated ruling, and the three follow-ups from his
+3(a) review (fulfillment doc comment, a 4-profile shiftTemplates rebuild, a
+second seeded week). Phase 3(c) (pay periods + payroll workshop) not yet started.
 
 Phases are sequential. Do not build later-phase features early, even scaffolding.
 
@@ -37,7 +36,7 @@ Phases are sequential. Do not build later-phase features early, even scaffolding
 | Item | Status |
 | --- | --- |
 | (a) shiftTemplates Settings UI + builder fulfillment badges | ✅ Done (Aug 15) — see below |
-| (b) Task definitions + Cloud Scheduler materialization, folding in the 48h trade-expiry sweep | Not started |
+| (b) Task definitions + Cloud Scheduler materialization, folding in the 48h trade-expiry sweep | ✅ Done (Aug 16) — see below |
 | (c) Pay periods + payroll workshop (locked FLSA model, generic/Gusto/ADP CSV exports) | Not started |
 
 ### (a) Shift templates + fulfillment badges — Aug 15, 2026
@@ -122,6 +121,187 @@ hostile-client rules-test trio, and role-change backfill for
 `tipReports.employeeAccessRole`) landed just before this phase started —
 see "Known issues / cleanup backlog" below for the full writeup, filed
 under the original fix rather than duplicated here.
+
+**Three follow-ups from Rafa's 3(a) review, closed before 3(b) started:**
+1. **Fulfillment doc comment** — `src/lib/scheduling/fulfillment.ts` now
+   states explicitly that a requirement line matches a shift's own `roleId`
+   only; `canCoverRoleIds` coverage is never consulted, so Phase 5's prompt
+   builder can't misread a coverage-eligible shift of a different role as
+   satisfying a requirement.
+2. **shiftTemplates rebuilt as 4 profiles** — the 14 hand-tuned per-day
+   requirement sets collapsed into weekday (Mon–Thu)/weekend (Fri–Sun) ×
+   lunch/dinner, still 14 `shiftTemplates` docs (unchanged shape), approved
+   with two additions (On Call Server to weekend dinner, Host to weekday
+   dinner). **The Mon–Thu/Fri–Sun day split, and whether Friday lunch is
+   really weekday-shaped, are still provisional pending Rafa's confirmation**
+   — flagged in `scripts/seed.ts`'s own comment at `TEMPLATE_REQUIREMENTS`.
+3. **A second seeded week, Aug 17–23**, staffed as a deliberate mix so the
+   builder shows both badge states (and the partial-tooltip render) somewhere
+   in the seed without touching week 1's labor-math shifts: every weekend
+   day-part is fully met; Wed dinner's host line and Thu dinner's second
+   server line are intentionally left unmet/short, each commented at the
+   point of omission in `scripts/seed.ts`.
+
+### (b) Tasks + Cloud Scheduler materialization + 48h trade-expiry sweep — Aug 16, 2026
+
+**The 48h trade-expiry ruling was made once already and lost to a `/clear`.**
+Restated by Rafa and recorded here so it can't happen again — see "RESOLVED
+— 48h direct-trade expiry sweep" under Phase 2's trade-feature write-up
+above (search this file for that heading) for the full ruling. Summary: a
+dedicated `'expired'` `Trade.status` literal (never
+reuses `'declined'`); only `open` direct offers expire, never
+`pending-approval`; expiry instant is `min(expiresAt, the shift's own start
+instant)`; the offerer is notified (`trade.expired` push). Implemented in
+`functions/src/tradeScheduled.ts`'s hourly `sweepExpiredTrades` (same
+"hourly, not exact-instant" reasoning as `checkForgottenClockOuts`), using a
+new `functions/src/timeHelpers.ts` for the shift-start restaurant-tz instant
+math (a deliberate small duplicate of `availabilityHelpers.ts`'s own
+two-pass DST resolution, same non-shareable-across-the-build-boundary
+reasoning documented there).
+
+**Data model** (`src/types/models.ts`): `TaskDefinition`
+(`tasks/{taskDefId}`) and `TaskInstance` (`taskInstances/{instanceId}`) per
+spec §3, plus one resolved scope addition beyond the spec text:
+`requiresPhoto`, a per-task boolean (mockups 27/28 show a per-task photo-proof
+toggle, not spec text) — gated overall by the already-scaffolded
+`AppSettings.featureFlags.taskPhotoProof`; if that flag is off, no task's
+photo requirement is enforced or shown regardless of this field. Every
+`TaskInstance` denormalizes `title`/`titleEs`/`dueRule`/`requiresPhoto`/
+`cadence`/`department` from its definition AT MATERIALIZATION TIME (same
+reasoning as `TipReport.employeeAccessRole`), which has a real consequence
+for the client: `tasks/{taskDefId}` reads are `tasks.manage`-gated
+(nobody outside the admin Task Manager ever reads a definition directly),
+and `src/lib/db/tasks.ts`'s deactivate-not-delete lifecycle (mirroring
+`shiftRoles`, not `shiftTemplates`) exists because `taskInstances` reference
+`taskDefId` — a hard delete would orphan history the way a `shiftTemplates`
+delete never could.
+
+**Materialization** (`functions/src/tasksScheduled.ts`, three `onSchedule`
+functions per spec's exact cadence: `materializeDailyTasks` 4am daily,
+`materializeWeeklyTasks` 4am Monday, `materializeMonthlyTasks` 4am the 1st).
+Two deliberately different shapes, both load-bearing:
+- `role`/`department` assignTo, daily/weekly/monthly cadence: ONE pool
+  instance (`assigneeEmployeeId: null`) — spec's "claimable pool tasks for
+  their role" describes a single shared task, not one copy per eligible
+  person.
+- `per-shift` cadence: ONE instance PER matching published shift that day,
+  pre-assigned to that shift's own employeeId (shifts with no assignee are
+  skipped). A day with three matching Server shifts materializes three
+  instances, one per server, each surfacing at that server's own clock-out —
+  never a shared pool, unlike the bullet above.
+
+Idempotent by construction: every instance id is deterministic
+(`${taskDefId}_${period}[_${employeeId-or-shiftId}]`), and `createMissing()`
+reads existing ids first via `db.getAll()` and only writes what's missing —
+a rerun (redeploy, manual replay) can never clobber an already-`done`/
+`missed` instance. Each function sweeps the PRIOR period's still-`open`
+instances of its own cadence(s) to `missed` first (plain ISO-string period
+comparison — `"YYYY-MM-DD"`/weekId/`"YYYY-MM"` all sort lexicographically, no
+instant math needed), notifying that department's managers per instance
+(`task.missed`, a new `PushCategory`, spec §15's "missed tasks (managers)").
+
+**Completion** (`functions/src/taskActions.ts`'s `completeTaskInstance`):
+unreachable from a client write — `firestore.rules`' `taskInstances` match
+denies create/update/delete unconditionally, same shape as punches/
+tipReports. Claims (if the instance is an unclaimed pool one) AND marks done
+atomically inside one transaction; a pool claim re-verifies the caller's
+actual scope against the LIVE `TaskDefinition` (department or one of the
+caller's own `shiftRoles`), never trusted from the client or from
+`TaskInstance.department` alone. A `requiresPhoto` instance is rejected
+server-side without a `photoPath`, not just hidden in the UI.
+
+**Rules** (`firestore.rules`): `tasks` is `tasks.manage`-gated for both read
+and write. `taskInstances` read is `isSelf(assigneeEmployeeId)` OR
+`mayViewPoolInstance()` — `tasks.manage` (any department) or `tasks.complete`
++ **still-unclaimed** + a department match, the exact department-broad-list/
+precise-action-eligibility split Shift Pool's "Up for grabs" already
+established (list visibility is broad and provable; precise role
+eligibility is enforced only at the point of action, in
+`completeTaskInstance`, never in the list rule).
+
+**A real bug, found by the rules-test pass and fixed before it shipped:**
+`mayViewPoolInstance()`'s first draft checked department only — it never
+checked `assigneeEmployeeId == null` — so any `tasks.complete` holder
+(effectively every employee) could read ANY instance in their own
+department, including one already assigned to a named coworker (their
+notes, `completedBy`, `photoPath`), not just an unclaimed pool one. Fixed by
+adding `isUnclaimedPoolInstance()`, mirroring `trades`' own `mayReadTrade()`
+requiring `status == 'open'` before granting a same-department non-party a
+read — the exact established precedent this rule should have followed from
+the start. `tests/rules/tasks.rules.test.ts` (23 tests) now proves both the
+positive case and this specific regression; 152 rules tests total, 0 dirty
+denials (16 first-pass `get()` artifacts, was 14 — the 2 new ones are the
+`tasks` definitions match block's own write rule, the same harmless
+first-pass-evaluation-error shape `firestore.rules`' header already
+documents, now exercised for the first time).
+
+**Client** (`src/lib/db/tasks.ts`, `src/lib/db/taskInstances.ts`,
+`src/lib/tasks/taskActions.ts`): `listMyTaskInstances(employeeId,
+department)` runs two separate list-query-safe queries (assigned-to-me, any
+department; unclaimed pool in my department) rather than one combined `OR`,
+for the same list-query-provability reason the rule itself is shaped that
+way. `listTaskInstancesForPeriod(period)` serves the admin Completion
+dashboard's "today" tiles — deliberately not a broader "all instances ever"
+query, since a weekly/monthly instance's `period` is never literally
+"today" by construction (a weekly task doesn't have a today boolean, only a
+this-week one) — the dashboard's "today" tiles are therefore an honest
+subset (effectively daily+per-shift cadence), not an all-cadence view; noted
+here so it doesn't read as a gap later.
+
+**UI**: Settings → Tasks (`src/pages/settings/TaskManagerPage.tsx`, wired at
+`/settings/tasks`, `tasks.manage`-gated) — Definitions/Completion/Archive
+tabs per mockup 28 (no mockup exists for Completion's actual content beyond
+its three stat tiles' visual style, same "new design work within tokens" class
+of decision as 3(a)'s own Settings page). Staff "My Tasks"
+(`src/pages/tasks/MyTasksPage.tsx`, wired at `/tasks`, replacing the Phase-0
+placeholder) per mockup 27 — progress strip scoped to `period === today`,
+list grouped PURELY by cadence (per-shift+daily → Today, weekly → This
+Week, monthly → This Month; deliberately not period-filtered, so a `daily`
+instance is always a "Today" thing by construction, matching how
+materialization itself buckets periods) — these are two DIFFERENT filters
+on purpose, not a bug: the progress strip is a bounded daily summary, the
+list below it is the full cadence bucket. Clock-out gains a non-blocking
+"You have N open tasks" banner (`PunchSuccessScreen.tsx`, spec's exact
+wording) — informational only, never blocks clock-out. The bottom-tab/rail
+`tasks` badge (`MobileShell`/`DesktopShell`, now `badges`-prop-driven from
+`AppShell.tsx` instead of a hardcoded demo dot) shows a real open-count for
+the first time — the Phase-0 placeholder's own comment ("no real data
+source until Phase 3") is now resolved; Desktop's still-hardcoded `shiftPool`
+dot was deliberately left untouched, a separate known gap.
+
+**Seed**: 9 task definitions matching mockup 28's example rows exactly
+(`restock-napkins`, `wipe-pos-screens`, `patio-umbrellas`, `walkin-temp-log`,
+`bar-mats-rinsed`, `espresso-deep-clean`, `rotate-wine-inventory`,
+`grease-trap-check`, `fire-extinguisher-inspection` — the last seeded
+`active: false`, matching the mockup's own dimmed row, so the Archive tab
+has something real to show). 12 `taskInstances` seeded as a realistic
+SPREAD of history across the week (some completed days ago, one missed,
+three genuinely still open "today") rather than artificially cramming
+everything into one day — a more honest demo of what a Sunday morning
+actually looks like than a same-day-only mix would have been. Uses the
+exact same deterministic instance-id formula the real materialization
+function computes, so a later real Cloud Scheduler run never collides with
+seeded data.
+
+**Verified against a live Auth+Firestore+Functions emulator** (real
+`httpsCallable`, not admin-SDK shortcuts): signed in as a GM — Settings →
+Tasks renders all three tabs correctly (Definitions' 8 active rows, Archive's
+1 inactive row, Completion's 3 today-scoped rows/tiles); signed in as a
+plain staff member — denied Settings → Tasks outright (access-denied
+screen), `/tasks` renders the real "My Tasks" list with a genuine
+department-broad-but-role-blind pool item, and attempting to complete a
+Bartender-scoped pool task as a Server correctly fails server-side
+(`permission-denied`) with a visible toast; signed in as an actual bartender
+— claims and completes that same instance successfully, confirmed via a
+direct Firestore read (`status: 'done'`, `assigneeEmployeeId`/`completedBy`
+set). `npm run build` (client + functions), 175 unit tests, i18n parity
+(1317 keys), 152 rules tests, 0 dirty denials all pass. Cloud Function unit
+tests were deliberately not written for `tasksScheduled.ts`/`taskActions.ts`/
+`tradeScheduled.ts` — these are Firestore-glue, matching this codebase's own
+established split (pure algorithmic modules like `fulfillment.ts`/
+`tradeEligibility.ts` get committed unit tests; Cloud Function glue gets
+live-emulator verification, same as `tradeActions.ts`/`punchActions.ts`
+before it, "no committed test file for Cloud Functions in this codebase").
 
 ---
 
@@ -553,14 +733,39 @@ reads, and leaves `status` (draft/published/etc.) untouched. Confirm whether
 `'traded'`/`'dropped'` should ever be written, and by what event, before they
 are used anywhere.
 
-**48h direct-trade expiry — informational only, confirmed.** No enforcement
-mechanism exists (matches the accepted pattern for the Thursday availability
-deadline). `isTradeExpired()` (`src/lib/db/trades.ts`) is display-only, for a
-future Shift Pool UI to render an expired offer as expired rather than still
-actionable. **TODO before Phase 3 ships**: add a Cloud Scheduler sweep that
-transitions expired open direct trades (`declined` or a dedicated `expired`
-status — not yet decided) once Phase 3's scheduled-function infrastructure
-exists for payroll period rollovers; track alongside that work, not before.
+**RESOLVED — 48h direct-trade expiry sweep, ruled by Rafa (Aug 2026), enforced
+in Phase 3(b).** This ruling was made once already, lost to a `/clear`, and
+had to be restated — recorded here so that never happens again: **decisions
+that aren't in PROGRESS.md don't exist.**
+
+- A dedicated **`'expired'`** literal was added to `Trade.status` — `declined`
+  is never reused for this. The distinction is audit-meaningful: a manager
+  reading trade history needs to tell "the recipient actively said no" apart
+  from "nobody acted before the window closed."
+- The sweep only expires trades in **`open`** status (an unclaimed direct
+  offer). **`pending-approval` never expires** via this mechanism — a claimed/
+  accepted trade sitting unapproved is a manager-reminder problem, not an
+  expiry problem; tracked as a Phase 6 notification item (`trade.awaiting-approval`),
+  not built here.
+- **Expiry instant = `min(trade.expiresAt, shift start time)`** — a direct
+  offer already past its 48h window OR whose shift has already started
+  (whichever comes first) is expired. The shift-start half needed a
+  restaurant-tz instant computed from the shift's own `date`/`startTime`, the
+  same class of computation as `availabilityHelpers.ts`'s deadline math.
+- Expired trades **notify the offerer** (`fromEmployeeId` ?? `postedBy`) via a
+  new `trade.expired` push category — see `functions/src/tradeScheduled.ts`.
+
+**Open question for Rafa — `traded`/`dropped` `ShiftStatus` values.**
+`src/types/models.ts`'s `ShiftStatus` union has carried `'traded'` and
+`'dropped'` since Phase 0/1 scaffolding, but neither spec text nor any mockup
+defines what sets them or what they mean structurally (mockup copy uses
+"dropped" only as an English verb, e.g. "Isaac Boynton dropped a shift" —
+not necessarily the enum literal). `approveTrade` deliberately does NOT set
+either: it updates `shift.employeeId` + `dirtySincePublish: true`, the same
+mechanism `scheduleOverride.ts` already uses and the republish flow already
+reads, and leaves `status` (draft/published/etc.) untouched. Confirm whether
+`'traded'`/`'dropped'` should ever be written, and by what event, before they
+are used anywhere.
 
 ---
 

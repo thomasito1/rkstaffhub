@@ -33,7 +33,17 @@ import type { Department, Trade, TradeEligibilitySnapshot, TradeStatus, TradeTyp
 import { isPermissionDenied, readOrNullIfDenied } from './errors'
 import { getShift } from './schedules'
 
-/** Direct offers only (mockup 18c) — advisory display window, not enforced (see PROGRESS.md's Phase 3 scheduled-sweep note). */
+/**
+ * Direct offers only (mockup 18c). Enforced server-side since Phase 3(b) by
+ * `functions/src/tradeScheduled.ts`'s sweep, which actually expires at
+ * `min(expiresAt, shift start)` — so the REAL expiry instant can be earlier
+ * than this fixed 48h window (a shift starting inside the 48h) or the sweep
+ * simply hasn't run yet by the time this client-side check fires. Either way
+ * `isTradeExpired()` below is a display-only stopgap for the gap between "the
+ * true instant has passed" and "the sweep already flipped `status`" — once it
+ * has, the real `status: 'expired'` renders correctly regardless of what this
+ * heuristic returns.
+ */
 const DIRECT_EXPIRY_MS = 48 * 60 * 60 * 1000
 
 export interface NewTradeInput {
@@ -86,11 +96,10 @@ function byCreatedDesc(a: Trade, b: Trade): number {
 }
 
 /**
- * True once a direct offer's 48h window has passed. Display-only: nothing
- * currently flips `status` on expiry (no enforcement mechanism exists yet —
- * scheduled against Phase 3's Cloud Scheduler work, see PROGRESS.md), so a
- * still-`open` expired offer must be rendered as expired client-side rather
- * than trusted at face value.
+ * True once a direct offer's 48h window has passed AND the sweep hasn't yet
+ * flipped `status` to `'expired'` (see `DIRECT_EXPIRY_MS`'s doc comment).
+ * Display-only — always prefer `trade.status === 'expired'` once real; this
+ * only covers the gap before the sweep runs.
  */
 export function isTradeExpired(trade: Trade, now: Date = new Date()): boolean {
   if (trade.type !== 'direct' || trade.status !== 'open') return false

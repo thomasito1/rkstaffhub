@@ -23,6 +23,17 @@
  * already answers — this badge only tells a manager whether they've built
  * enough shift cards for the day-part yet. Only a `cancelled` shift is
  * excluded; `dropped` is still a real slot, just unclaimed.
+ *
+ * A requirement line matches a shift on that shift's OWN assigned `roleId`
+ * only. `shiftRoles.canCoverRoleIds` (trade/override eligibility — spec §7,
+ * see tradeEligibility.ts) is never consulted here: a Bartender covering a
+ * Server's shift does not change that shift's `roleId`, and even if it did,
+ * cross-role coverage is a "who may work this slot" question, not a "does
+ * this slot count toward the template's headcount" one. Templates describe
+ * what's staffed (shift cards built, by their declared role), not what's
+ * substitutable — ruled by Rafa, Aug 2026, so Phase 5's prompt builder states
+ * this rule accurately rather than assuming coverage-eligible shifts of a
+ * different roleId satisfy a requirement line.
  */
 
 import { minutesOf } from './tradeEligibility'

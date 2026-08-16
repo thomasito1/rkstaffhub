@@ -72,6 +72,24 @@ service firebase.storage {
                    && request.resource.contentType.matches('image/.*');
     }
 
+    // Task completion photo proof (spec §10, mockup 27's "Photo required").
+    // Same shape as punch-selfies: the employee uploads directly (client-side
+    // compressed, same as the selfie convention) BEFORE calling
+    // completeTaskInstance — the callable only checks a photoPath STRING was
+    // supplied, so a stored, non-empty path here is the actual evidence, not
+    // a fabricated claim. Unlike a selfie this is proof-of-work, not an
+    // anti-buddy-punching control, so no freshness/upload-verification pass
+    // is needed server-side (see taskActions.ts's own doc comment).
+    match /task-photos/{employeeId}/{fileName} {
+      allow read: if signedIn()
+                  && (myEmployeeId() == employeeId || isManagerOrAbove());
+      allow create: if signedIn()
+                    && myEmployeeId() == employeeId
+                    && request.resource.size < 2 * 1024 * 1024
+                    && request.resource.contentType.matches('image/jpe?g');
+      allow update, delete: if false;
+    }
+
     match /{allPaths=**} {
       allow read, write: if false;
     }

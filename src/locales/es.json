@@ -965,7 +965,8 @@
       "permissions": "Permisos",
       "timeOff": "Tiempo libre",
       "shiftsAndTips": "Turnos y propinas",
-      "shiftTemplates": "Plantillas de turno"
+      "shiftTemplates": "Plantillas de turno",
+      "tasks": "Tareas"
     },
     "roles": {
       "title": "Puestos y jerarquía",
@@ -1074,6 +1075,109 @@
         "updateFailed": "No se pudo actualizar la plantilla. Intenta de nuevo.",
         "deleted": "{{name}} eliminada.",
         "deleteFailed": "No se pudo eliminar la plantilla. Intenta de nuevo."
+      }
+    },
+    "tasks": {
+      "title": "Tareas",
+      "subtitle": "Define tareas recurrentes y monitorea su cumplimiento",
+      "export": "Exportar",
+      "newTask": "Nueva tarea",
+      "errorBody": "No se pudieron cargar las tareas. Intenta de nuevo.",
+      "emptyTitle": "Aún no hay tareas",
+      "emptyBody": "Aún no hay tareas recurrentes. Agrega una para empezar a monitorear su cumplimiento.",
+      "activate": "Activar",
+      "deactivate": "Desactivar",
+      "tabs": {
+        "definitions": "Definiciones",
+        "completion": "Cumplimiento",
+        "archive": "Archivo"
+      },
+      "filters": {
+        "cadence": "Frecuencia",
+        "allCadences": "Todas las frecuencias",
+        "assignedTo": "Asignado a",
+        "searchPlaceholder": "Buscar tareas",
+        "activeOnly": "Solo activas"
+      },
+      "cadence": {
+        "per-shift": "Por turno",
+        "daily": "Diaria",
+        "weekly": "Semanal",
+        "monthly": "Mensual"
+      },
+      "columns": {
+        "taskEn": "Tarea (inglés)",
+        "taskEs": "Tarea (español)",
+        "cadence": "Frecuencia",
+        "assignedTo": "Asignado a",
+        "photoProof": "Foto de prueba",
+        "active": "Activa"
+      },
+      "activateConfirm": {
+        "title": "¿Activar esta tarea?",
+        "body": "\"{{title}}\" volverá a generar instancias según su frecuencia habitual."
+      },
+      "deactivateConfirm": {
+        "title": "¿Desactivar esta tarea?",
+        "body": "\"{{title}}\" dejará de generar nuevas instancias. Se conserva el historial anterior."
+      },
+      "toast": {
+        "created": "{{title}} agregada.",
+        "createFailed": "No se pudo crear la tarea. Intenta de nuevo.",
+        "updated": "{{title}} actualizada.",
+        "updateFailed": "No se pudo actualizar la tarea. Intenta de nuevo.",
+        "activated": "{{title}} activada.",
+        "deactivated": "{{title}} desactivada.",
+        "toggleFailed": "No se pudo actualizar esa tarea. Intenta de nuevo."
+      },
+      "modal": {
+        "newTitle": "Nueva tarea",
+        "editTitle": "Editar tarea",
+        "title": "Título (inglés)",
+        "titleEs": "Título (español)",
+        "description": "Descripción (inglés)",
+        "descriptionEs": "Descripción (español)",
+        "cadence": "Frecuencia",
+        "dueRule": "Vencimiento",
+        "dueRulePlaceholder": "p. ej. al final del turno, antes de las 5pm, último día del mes",
+        "assignTo": "Asignar a",
+        "assignToType": {
+          "role": "Puesto",
+          "department": "Departamento",
+          "employee": "Empleado"
+        },
+        "requiresPhoto": "Requiere foto de prueba",
+        "requiresPhotoHint": "Completar esta tarea requerirá adjuntar una foto.",
+        "titleRequired": "Se requiere un título en inglés y en español.",
+        "descriptionRequired": "Se requiere una descripción en inglés y en español.",
+        "dueRuleRequired": "Se requiere un vencimiento.",
+        "assignToRequired": "Selecciona al menos un puesto, departamento o empleado."
+      },
+      "completion": {
+        "completedToday": "Completadas hoy",
+        "percentComplete": "{{percent}}% completado",
+        "missedToday": "Incumplidas hoy",
+        "noneMissed": "No se incumplió nada hoy.",
+        "photoProofPending": "Fotos pendientes de revisión",
+        "awaitingReview": "En espera de revisión del gerente",
+        "unclaimed": "Sin reclamar",
+        "emptyTitle": "No hay tareas hoy",
+        "emptyBody": "Aún no se han generado instancias de tareas para hoy.",
+        "columns": {
+          "task": "Tarea",
+          "assignee": "Asignado a",
+          "status": "Estado",
+          "department": "Departamento"
+        }
+      },
+      "status": {
+        "open": "Pendiente",
+        "done": "Completada",
+        "missed": "Incumplida"
+      },
+      "archive": {
+        "emptyTitle": "No hay tareas archivadas",
+        "emptyBody": "Las tareas desactivadas aparecerán aquí."
       }
     }
   },
@@ -1210,7 +1314,9 @@
       "verifiedFooter": "Ambas marcaciones verificadas en {{name}}",
       "viewPunches": "Ver mis marcaciones",
       "pendingBadge": "Pendiente de sincronizar",
-      "pendingNote": "Esta marcación está guardada en tu dispositivo y se sincronizará cuando vuelvas a tener conexión."
+      "pendingNote": "Esta marcación está guardada en tu dispositivo y se sincronizará cuando vuelvas a tener conexión.",
+      "openTasksBanner_one": "Tienes {{count}} tarea pendiente",
+      "openTasksBanner_other": "Tienes {{count}} tareas pendientes"
     },
     "errors": {
       "clock-not-required": "No estás configurado/a para usar el reloj de tiempo.",
@@ -1375,6 +1481,10 @@
       "approved": {
         "title": "Cambio aprobado",
         "body": "{{approverName}} aprobó tu cambio con {{otherName}} para el {{dateLabel}}."
+      },
+      "expired": {
+        "title": "Oferta de cambio vencida",
+        "body": "Tu oferta de cambio del turno de {{roleName}} del {{dateLabel}} venció sin encontrar a nadie."
       }
     },
     "schedule": {
@@ -1391,6 +1501,12 @@
       "forgotten": {
         "title": "Marcaje abierto señalado",
         "body": "La entrada de {{employeeName}} del {{dateLabel}} sigue abierta después de 14 horas."
+      }
+    },
+    "task": {
+      "missed": {
+        "title": "Tarea no realizada",
+        "body": "\"{{taskTitle}}\" se marcó como no realizada para el {{dateLabel}}."
       }
     },
     "prompt": {
@@ -1558,6 +1674,34 @@
       "posted": "Publicado.",
       "tradeApproved": "Cambio aprobado.",
       "tradeDeclined": "Cambio rechazado."
+    }
+  },
+  "tasks": {
+    "myTasks": {
+      "title": "Mis tareas",
+      "filterButton": "Filtrar tareas",
+      "progress": "{{done}} de {{total}} completadas hoy",
+      "groupToday": "Hoy",
+      "groupWeek": "Esta semana",
+      "groupMonth": "Este mes",
+      "markDone": "Marcar \"{{title}}\" como hecha",
+      "doneAtTime": "Hecha a las {{time}}",
+      "doneOnDate": "Hecha el {{date}}",
+      "dueChip": "Vence {{dueRule}}",
+      "photoRequiredChip": "Foto requerida",
+      "takePhotoPrompt": "Toma una foto para completar",
+      "missedChip": "Incumplida",
+      "footerNote": "Las tareas por turno se reinician cuando termina tu turno.",
+      "emptyTitle": "No tienes tareas por ahora",
+      "emptyBody": "No tienes tareas asignadas. Vuelve a revisar más tarde.",
+      "toastCompleted": "Tarea completada",
+      "photoUploadError": "No se pudo subir la foto. Inténtalo de nuevo."
+    },
+    "errors": {
+      "generic": "Eso no funcionó. Inténtalo de nuevo.",
+      "notFound": "Esta tarea ya no existe.",
+      "noLongerAvailable": "Esta tarea ya no está disponible — puede que ya se haya completado.",
+      "notEligible": "No tienes permiso para completar esta tarea."
     }
   }
 }

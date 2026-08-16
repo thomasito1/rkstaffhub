@@ -59,6 +59,8 @@ import type {
   ShiftRole,
   ShiftTemplateRequirement,
   SkillLevel,
+  TaskCadence,
+  TaskInstanceStatus,
   TimeOffCategory,
   TimeOffStatus,
   WeekdayKey,
@@ -1159,47 +1161,61 @@ const req = (
   minSkillLevel: SkillLevel,
 ): ShiftTemplateRequirement => ({ roleId, count, minSkillLevel })
 
+/**
+ * Phase 3(a) rebuild (Aug 2026): the 14 hand-tuned per-day requirement lines
+ * above collapse to 4 shared PROFILES — one lunch + one dinner profile for
+ * "weekday" (Mon–Thu), one lunch + one dinner profile for "weekend"
+ * (Fri–Sun). `seedShiftTemplates()` still writes one document per (day ×
+ * day-part) — 14 documents, unchanged shape — only the REQUIREMENT VALUES
+ * now come from these 4 shared arrays instead of 14 distinct hand-tuned ones.
+ *
+ * Rafa approved this base structure (Aug 2026) with two explicit additions,
+ * each marked below where it appears.
+ *
+ * PROVISIONAL day split: Monday–Thursday get "weekday", Friday–Sunday get
+ * "weekend". This is Rafa's rough Fri–Sun-is-the-busy-stretch shape, but it
+ * has NOT been confirmed line-by-line — in particular, Friday LUNCH may be
+ * shaped much more like a weekday lunch (office-adjacent, not a dinner crowd)
+ * than a Friday DINNER is. Flagging this here rather than presenting the
+ * split as settled; ask Rafa before this drives a real staffing decision.
+ */
+const WEEKDAY_LUNCH: ShiftTemplateRequirement[] = [req('server', 2, 1), req('prep-cook', 1, 1)]
+const WEEKDAY_DINNER: ShiftTemplateRequirement[] = [
+  req('server', 2, 2),
+  req('hot-line-cook', 1, 2),
+  req('shift-supervisor', 1, 2),
+  req('host', 1, 1), // Rafa's addition, Aug 2026 — pending his day-split confirmation above
+]
+const WEEKEND_LUNCH: ShiftTemplateRequirement[] = [
+  req('server', 3, 1),
+  req('host', 1, 1),
+  req('prep-cook', 1, 2),
+]
+const WEEKEND_DINNER: ShiftTemplateRequirement[] = [
+  req('server', 4, 1),
+  req('server', 1, 3),
+  req('bartender', 2, 2),
+  req('host', 1, 1),
+  req('runner', 1, 1),
+  req('shift-supervisor', 1, 2),
+  req('hot-line-cook', 1, 3),
+  req('expo', 1, 1),
+  req('on-call-server', 1, 1), // Rafa's addition, Aug 2026
+]
+
+const WEEKDAY_PROFILE_DAYS: readonly WeekdayKey[] = ['mon', 'tue', 'wed', 'thu']
+
 const TEMPLATE_REQUIREMENTS: Record<
   WeekdayKey,
   { lunch: ShiftTemplateRequirement[]; dinner: ShiftTemplateRequirement[] }
-> = {
-  mon: {
-    lunch: [req('server', 1, 1), req('prep-cook', 1, 1)],
-    dinner: [req('server', 1, 2), req('shift-supervisor', 1, 2), req('hot-line-cook', 1, 2)],
-  },
-  tue: {
-    lunch: [req('server', 1, 1), req('prep-cook', 1, 1)],
-    dinner: [req('server', 1, 2), req('bartender', 1, 2), req('hot-line-cook', 1, 2)],
-  },
-  wed: {
-    lunch: [req('server', 2, 1), req('prep-cook', 1, 1)],
-    dinner: [req('server', 1, 2), req('shift-supervisor', 1, 2), req('hot-line-cook', 1, 2)],
-  },
-  thu: {
-    lunch: [req('server', 1, 1), req('prep-cook', 1, 1)],
-    dinner: [req('server', 2, 2), req('shift-supervisor', 1, 2), req('hot-line-cook', 1, 2)],
-  },
-  fri: {
-    lunch: [req('server', 2, 1), req('host', 1, 1), req('prep-cook', 1, 2)],
-    dinner: [
-      req('server', 3, 1), req('server', 1, 3), req('bartender', 2, 2),
-      req('host', 1, 1), req('shift-supervisor', 1, 2),
-      req('hot-line-cook', 1, 3), req('expo', 1, 1),
-    ],
-  },
-  sat: {
-    lunch: [req('server', 2, 1), req('host', 1, 1), req('prep-cook', 1, 2)],
-    dinner: [
-      req('server', 4, 1), req('server', 1, 3), req('bartender', 2, 2),
-      req('host', 1, 1), req('runner', 1, 1), req('shift-supervisor', 1, 2),
-      req('hot-line-cook', 1, 3), req('expo', 1, 1), req('dishwasher', 1, 1),
-    ],
-  },
-  sun: {
-    lunch: [req('server', 2, 1), req('host', 1, 1), req('runner', 1, 1)],
-    dinner: [req('server', 1, 2), req('bartender', 1, 2), req('hot-line-cook', 1, 2)],
-  },
-}
+> = Object.fromEntries(
+  WEEKDAY_KEYS.map((day) => [
+    day,
+    WEEKDAY_PROFILE_DAYS.includes(day)
+      ? { lunch: WEEKDAY_LUNCH, dinner: WEEKDAY_DINNER }
+      : { lunch: WEEKEND_LUNCH, dinner: WEEKEND_DINNER },
+  ]),
+) as Record<WeekdayKey, { lunch: ShiftTemplateRequirement[]; dinner: ShiftTemplateRequirement[] }>
 
 // ── timeOff (mockup 36) ──────────────────────────────────────────────────────
 // Dates are inclusive plain "YYYY-MM-DD" strings — how a person asks for time
@@ -1244,6 +1260,404 @@ const SEED_TIME_OFF: SeedTimeOff[] = [
     declineReason: 'Saturday coverage' },
   { id: 'to-2026-08-31-anthony', employeeNumber: '1047', startDate: '2026-08-31', endDate: '2026-08-31',
     category: 'paid', reason: 'Family event', status: 'approved', reviewedByNumber: TIME_OFF_REVIEWER },
+]
+
+// ── a second seeded week: Mon Aug 17 – Sun Aug 23 2026 ──────────────────────
+//
+// Phase 3(a): a week whose ONLY job is to demonstrate the shiftTemplates
+// fulfillment badge (met / unmet / partial) with real, honest data — it is
+// NOT held to week 1's labor-math/OT/conflict contract (that ruling, and
+// week 1's shifts themselves, are UNTOUCHED here; see PROGRESS.md's "Known
+// issues" writeup on the superseded mockup 11 numbers). No
+// assertLaborReconciles()-style check applies to this week and none should be
+// added — Rafa's ruling was specifically about week 1.
+//
+// Every shift below uses a REAL seeded employeeNumber, assigned only to a
+// roleId + requiredSkillLevel that employee's own `shiftRoles` entry actually
+// covers (skillLevel >= the shift's requiredSkillLevel) — no invented skills.
+// One role has no seeded holder at all: 'on-call-server' (see
+// TEMPLATE_REQUIREMENTS' WEEKEND_DINNER). Its line is satisfied with an OPEN
+// shift instead — computeWeekFulfillment() counts SLOTS CREATED, not slots
+// STAFFED (fulfillment.ts's own header comment), so an unassigned shift with
+// the right roleId/requiredSkillLevel satisfies the line exactly as an
+// assigned one would.
+//
+// Every RECURRING availability override from SEED_AVAILABILITY above rolls
+// forward into this week (that is what "recurring" means — see
+// seedAvailability()); `temporary` overrides do not, they are pinned to week
+// 1's weekId only. The assignments below were checked against every
+// recurring override still in force this week (Allison: Sun unavailable, Sat
+// partial 11:00–23:00; Emily: Wed unavailable; Micah: Mon+Tue unavailable,
+// Sat partial 10:00–15:00; Karla: Mon partial 09:00–15:00; Val: Wed partial
+// 11:00–16:00) so this week stays a clean fulfillment demo, not an
+// accidental second conflict week.
+//
+// RESULT, checked against the 4 profiles in TEMPLATE_REQUIREMENTS:
+//   - Every weekend (Fri/Sat/Sun) lunch AND dinner day-part is fully MET.
+//   - Every weekday (Mon–Thu) day-part is fully MET, with exactly TWO
+//     deliberate exceptions, each commented at the point of omission below:
+//       Wed dinner  — the host line (x1 @L1) is entirely UNMET (0 of 1).
+//       Thu dinner  — the server line (x2 @L2) is PARTIALLY met (1 of 2) —
+//                     the genuine partial-badge case the checkpoint asked for.
+//   Do not "fix" either gap — that is the point of this week.
+
+const SEED_WEEK2_ID = '2026-08-17'
+
+/** Mon→Sun dates of SEED_WEEK2_ID, in the same order as WEEKDAY_KEYS. */
+const SEED_WEEK2_DATES: Record<WeekdayKey, string> = {
+  mon: '2026-08-17',
+  tue: '2026-08-18',
+  wed: '2026-08-19',
+  thu: '2026-08-20',
+  fri: '2026-08-21',
+  sat: '2026-08-22',
+  sun: '2026-08-23',
+}
+
+/**
+ * Same shape as `SeedShift`, plus which day-part this line is staffing —
+ * needed only to build a collision-free doc id below (a couple of employees
+ * pick up a lunch AND a dinner shift the same day, non-overlapping times,
+ * same as a real split-shift week) — it is never written to the document
+ * itself; the builder derives day-part from time overlap, same as
+ * `computeWeekFulfillment` does.
+ */
+interface SeedShiftWeek2 extends SeedShift {
+  dayPart: 'lunch' | 'dinner'
+}
+
+const SEED_SHIFTS_WEEK2: SeedShiftWeek2[] = [
+  // ── Mon 17 — weekday profile, fully met ────────────────────────────────
+  { dayPart: 'lunch', employeeNumber: '1042', day: 'mon', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'lunch', employeeNumber: '1054', day: 'mon', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'lunch', employeeNumber: '1061', day: 'mon', startTime: '11:00', endTime: '15:00', roleId: 'prep-cook', requiredSkillLevel: 1, department: 'BOH', station: 'Prep' },
+  { dayPart: 'dinner', employeeNumber: '1041', day: 'mon', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 2, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1052', day: 'mon', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 2, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1058', day: 'mon', startTime: '17:00', endTime: '21:00', roleId: 'hot-line-cook', requiredSkillLevel: 2, department: 'BOH', station: 'Hot Line' },
+  { dayPart: 'dinner', employeeNumber: '1055', day: 'mon', startTime: '17:00', endTime: '21:00', roleId: 'shift-supervisor', requiredSkillLevel: 2, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1046', day: 'mon', startTime: '17:00', endTime: '21:00', roleId: 'host', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+
+  // ── Tue 18 — weekday profile, fully met ────────────────────────────────
+  { dayPart: 'lunch', employeeNumber: '1043', day: 'tue', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'lunch', employeeNumber: '1044', day: 'tue', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'lunch', employeeNumber: '1060', day: 'tue', startTime: '11:00', endTime: '15:00', roleId: 'prep-cook', requiredSkillLevel: 1, department: 'BOH', station: 'Prep' },
+  { dayPart: 'dinner', employeeNumber: '1052', day: 'tue', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 2, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1038', day: 'tue', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 2, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1048', day: 'tue', startTime: '17:00', endTime: '21:00', roleId: 'hot-line-cook', requiredSkillLevel: 2, department: 'BOH', station: 'Hot Line' },
+  { dayPart: 'dinner', employeeNumber: '1049', day: 'tue', startTime: '17:00', endTime: '21:00', roleId: 'shift-supervisor', requiredSkillLevel: 2, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1053', day: 'tue', startTime: '17:00', endTime: '21:00', roleId: 'host', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+
+  // ── Wed 19 — weekday profile. Lunch fully met.
+  { dayPart: 'lunch', employeeNumber: '1041', day: 'wed', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'lunch', employeeNumber: '1044', day: 'wed', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'lunch', employeeNumber: '1059', day: 'wed', startTime: '11:00', endTime: '15:00', roleId: 'prep-cook', requiredSkillLevel: 1, department: 'BOH', station: 'Prep' },
+  // Dinner: server / hot-line-cook / shift-supervisor lines all met below.
+  // DELIBERATE GAP — the WEEKDAY_DINNER host line (x1 @L1) is intentionally
+  // NOT staffed today: no host shift is scheduled for Wed dinner at all, so
+  // the builder's fulfillment badge reads 0 of 1 (fully UNMET), not a
+  // partial. This is the "omit the line entirely" case from the review
+  // checkpoint brief — do not add a host shift here to "fix" it.
+  { dayPart: 'dinner', employeeNumber: '1043', day: 'wed', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 2, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1045', day: 'wed', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 2, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1058', day: 'wed', startTime: '17:00', endTime: '21:00', roleId: 'hot-line-cook', requiredSkillLevel: 2, department: 'BOH', station: 'Hot Line' },
+  { dayPart: 'dinner', employeeNumber: '1049', day: 'wed', startTime: '17:00', endTime: '21:00', roleId: 'shift-supervisor', requiredSkillLevel: 2, department: 'FOH', station: 'Floor' },
+
+  // ── Thu 20 — weekday profile. Lunch fully met.
+  { dayPart: 'lunch', employeeNumber: '1054', day: 'thu', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'lunch', employeeNumber: '1042', day: 'thu', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'lunch', employeeNumber: '1060', day: 'thu', startTime: '11:00', endTime: '15:00', roleId: 'prep-cook', requiredSkillLevel: 1, department: 'BOH', station: 'Prep' },
+  // DELIBERATE GAP — the WEEKDAY_DINNER server line needs 2 @L2; only ONE is
+  // scheduled below. The builder's fulfillment badge reads 1 of 2 servers —
+  // a genuine PARTIAL state (have > 0, have < count), not a bare "0
+  // scheduled". This is the review checkpoint's primary demo case — do not
+  // add a second server shift here to "fix" it.
+  { dayPart: 'dinner', employeeNumber: '1052', day: 'thu', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 2, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1048', day: 'thu', startTime: '17:00', endTime: '21:00', roleId: 'hot-line-cook', requiredSkillLevel: 2, department: 'BOH', station: 'Hot Line' },
+  { dayPart: 'dinner', employeeNumber: '1049', day: 'thu', startTime: '17:00', endTime: '21:00', roleId: 'shift-supervisor', requiredSkillLevel: 2, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1046', day: 'thu', startTime: '17:00', endTime: '21:00', roleId: 'host', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+
+  // ── Fri 21 — weekend profile, fully met ────────────────────────────────
+  { dayPart: 'lunch', employeeNumber: '1042', day: 'fri', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'lunch', employeeNumber: '1045', day: 'fri', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'lunch', employeeNumber: '1054', day: 'fri', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'lunch', employeeNumber: '1053', day: 'fri', startTime: '11:00', endTime: '15:00', roleId: 'host', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'lunch', employeeNumber: '1059', day: 'fri', startTime: '11:00', endTime: '15:00', roleId: 'prep-cook', requiredSkillLevel: 2, department: 'BOH', station: 'Prep' },
+  { dayPart: 'dinner', employeeNumber: '1041', day: 'fri', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1044', day: 'fri', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1039', day: 'fri', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1038', day: 'fri', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1052', day: 'fri', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 3, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1043', day: 'fri', startTime: '17:00', endTime: '21:00', roleId: 'bartender', requiredSkillLevel: 2, department: 'FOH', station: 'Main Bar' },
+  { dayPart: 'dinner', employeeNumber: '1055', day: 'fri', startTime: '17:00', endTime: '21:00', roleId: 'bartender', requiredSkillLevel: 2, department: 'FOH', station: 'Main Bar' },
+  { dayPart: 'dinner', employeeNumber: '1046', day: 'fri', startTime: '17:00', endTime: '21:00', roleId: 'host', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1047', day: 'fri', startTime: '17:00', endTime: '21:00', roleId: 'runner', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1049', day: 'fri', startTime: '17:00', endTime: '21:00', roleId: 'shift-supervisor', requiredSkillLevel: 2, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1048', day: 'fri', startTime: '17:00', endTime: '22:00', roleId: 'hot-line-cook', requiredSkillLevel: 3, department: 'BOH', station: 'Hot Line' },
+  { dayPart: 'dinner', employeeNumber: '1058', day: 'fri', startTime: '17:00', endTime: '21:00', roleId: 'expo', requiredSkillLevel: 1, department: 'BOH', station: 'Pass' },
+  // No seeded employee holds the 'on-call-server' shiftRole — an OPEN shift
+  // satisfies this line instead (fulfillment counts slots created, not
+  // staffed; see the section header above).
+  { dayPart: 'dinner', day: 'fri', startTime: '17:00', endTime: '21:00', roleId: 'on-call-server', requiredSkillLevel: 1, department: 'FOH', station: 'On Call' },
+
+  // ── Sat 22 — weekend profile, fully met ────────────────────────────────
+  { dayPart: 'lunch', employeeNumber: '1044', day: 'sat', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'lunch', employeeNumber: '1043', day: 'sat', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'lunch', employeeNumber: '1045', day: 'sat', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'lunch', employeeNumber: '1039', day: 'sat', startTime: '11:00', endTime: '15:00', roleId: 'host', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'lunch', employeeNumber: '1060', day: 'sat', startTime: '11:00', endTime: '15:00', roleId: 'prep-cook', requiredSkillLevel: 2, department: 'BOH', station: 'Prep' },
+  { dayPart: 'dinner', employeeNumber: '1041', day: 'sat', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1042', day: 'sat', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1054', day: 'sat', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1038', day: 'sat', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1052', day: 'sat', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 3, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1043', day: 'sat', startTime: '17:30', endTime: '21:30', roleId: 'bartender', requiredSkillLevel: 2, department: 'FOH', station: 'Main Bar' },
+  { dayPart: 'dinner', employeeNumber: '1055', day: 'sat', startTime: '17:00', endTime: '21:00', roleId: 'bartender', requiredSkillLevel: 2, department: 'FOH', station: 'Main Bar' },
+  { dayPart: 'dinner', employeeNumber: '1046', day: 'sat', startTime: '17:00', endTime: '21:00', roleId: 'host', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1047', day: 'sat', startTime: '17:00', endTime: '21:00', roleId: 'runner', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1049', day: 'sat', startTime: '17:00', endTime: '21:00', roleId: 'shift-supervisor', requiredSkillLevel: 2, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1048', day: 'sat', startTime: '17:00', endTime: '22:00', roleId: 'hot-line-cook', requiredSkillLevel: 3, department: 'BOH', station: 'Hot Line' },
+  { dayPart: 'dinner', employeeNumber: '1058', day: 'sat', startTime: '17:00', endTime: '21:00', roleId: 'expo', requiredSkillLevel: 1, department: 'BOH', station: 'Pass' },
+  { dayPart: 'dinner', day: 'sat', startTime: '17:00', endTime: '21:00', roleId: 'on-call-server', requiredSkillLevel: 1, department: 'FOH', station: 'On Call' },
+
+  // ── Sun 23 — weekend profile, fully met ────────────────────────────────
+  { dayPart: 'lunch', employeeNumber: '1052', day: 'sun', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'lunch', employeeNumber: '1042', day: 'sun', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'lunch', employeeNumber: '1044', day: 'sun', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'lunch', employeeNumber: '1046', day: 'sun', startTime: '11:00', endTime: '15:00', roleId: 'host', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'lunch', employeeNumber: '1059', day: 'sun', startTime: '11:00', endTime: '15:00', roleId: 'prep-cook', requiredSkillLevel: 2, department: 'BOH', station: 'Prep' },
+  // Allison Rodriguez is recurring-unavailable all day Sunday (see
+  // SEED_AVAILABILITY above) — deliberately NOT scheduled today.
+  { dayPart: 'dinner', employeeNumber: '1042', day: 'sun', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1045', day: 'sun', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1054', day: 'sun', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1043', day: 'sun', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1038', day: 'sun', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 3, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1055', day: 'sun', startTime: '17:00', endTime: '21:00', roleId: 'bartender', requiredSkillLevel: 2, department: 'FOH', station: 'Main Bar' },
+  { dayPart: 'dinner', employeeNumber: '1044', day: 'sun', startTime: '17:30', endTime: '21:30', roleId: 'bartender', requiredSkillLevel: 2, department: 'FOH', station: 'Main Bar' },
+  { dayPart: 'dinner', employeeNumber: '1053', day: 'sun', startTime: '17:00', endTime: '21:00', roleId: 'host', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1047', day: 'sun', startTime: '17:00', endTime: '21:00', roleId: 'runner', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1049', day: 'sun', startTime: '17:00', endTime: '21:00', roleId: 'shift-supervisor', requiredSkillLevel: 2, department: 'FOH', station: 'Floor' },
+  { dayPart: 'dinner', employeeNumber: '1048', day: 'sun', startTime: '17:00', endTime: '22:00', roleId: 'hot-line-cook', requiredSkillLevel: 3, department: 'BOH', station: 'Hot Line' },
+  { dayPart: 'dinner', employeeNumber: '1058', day: 'sun', startTime: '17:00', endTime: '21:00', roleId: 'expo', requiredSkillLevel: 1, department: 'BOH', station: 'Pass' },
+  { dayPart: 'dinner', day: 'sun', startTime: '17:00', endTime: '21:00', roleId: 'on-call-server', requiredSkillLevel: 1, department: 'FOH', station: 'On Call' },
+]
+
+/** Deterministic and collision-free even on the two split-shift days (Isaac Sat, Kevin Sun each pick up a lunch AND a dinner shift). */
+function shiftDocIdWeek2(s: SeedShiftWeek2): string {
+  const who = s.employeeNumber ?? `open-${s.roleId}`
+  return `sh2-${s.day}-${s.dayPart}-${who}`
+}
+
+// ── tasks (spec §10, Phase 3(b)) ─────────────────────────────────────────────
+//
+// Nine initial task definitions. EN/ES titles are verbatim from mockup 28's
+// example rows (.superdesign/export/28-task-manager-desktop-en.html), which
+// draws the row but no description text — the descriptions below are
+// original content, written the way a manager would actually read them
+// inside the edit modal, not implied by the mockup.
+
+interface SeedTaskDefinition {
+  id: string
+  title: string
+  titleEs: string
+  description: string
+  descriptionEs: string
+  cadence: TaskCadence
+  assignTo: { type: 'role'; ids: string[] }
+  dueRule: string
+  requiresPhoto: boolean
+  active: boolean
+}
+
+const TASK_DEFINITIONS: SeedTaskDefinition[] = [
+  {
+    id: 'restock-napkins',
+    title: 'Restock server station napkins',
+    titleEs: 'Reabastecer servilletas de la estación',
+    description:
+      'Check every server station and refill the napkin holders so no one has to leave the floor mid-shift to find more.',
+    descriptionEs:
+      'Revisar cada estación de meseros y reponer los servilleteros para que nadie tenga que dejar el piso a mitad del turno a buscar más.',
+    cadence: 'per-shift',
+    assignTo: { type: 'role', ids: ['server'] },
+    dueRule: 'end of shift',
+    requiresPhoto: false,
+    active: true,
+  },
+  {
+    id: 'wipe-pos-screens',
+    title: 'Wipe down POS screens',
+    titleEs: 'Limpiar las pantallas del POS',
+    description:
+      'Wipe down every POS terminal screen and keypad to keep them sanitary and free of fingerprints and spills.',
+    descriptionEs:
+      'Limpiar la pantalla y el teclado de cada terminal de POS para mantenerlos higiénicos y libres de huellas y derrames.',
+    cadence: 'per-shift',
+    assignTo: { type: 'role', ids: ['server', 'host'] },
+    dueRule: 'end of shift',
+    requiresPhoto: false,
+    active: true,
+  },
+  {
+    id: 'patio-umbrellas',
+    title: 'Patio umbrellas down',
+    titleEs: 'Bajar las sombrillas de la terraza',
+    description: "Lower and secure every patio umbrella at close so they aren't damaged by overnight wind.",
+    descriptionEs:
+      'Bajar y asegurar todas las sombrillas de la terraza al cierre para que no se dañen con el viento durante la noche.',
+    cadence: 'daily',
+    assignTo: { type: 'role', ids: ['shift-supervisor'] },
+    dueRule: 'end of day',
+    requiresPhoto: true,
+    active: true,
+  },
+  {
+    id: 'walkin-temp-log',
+    title: 'Walk-in temp log',
+    titleEs: 'Registro de temperatura del refrigerador',
+    description: 'Record the walk-in cooler and freezer temperatures so any drift is caught early.',
+    descriptionEs:
+      'Registrar las temperaturas del refrigerador y el congelador del walk-in para detectar cualquier variación a tiempo.',
+    cadence: 'daily',
+    assignTo: { type: 'role', ids: ['kitchen-lead'] },
+    dueRule: 'end of day',
+    requiresPhoto: true,
+    active: true,
+  },
+  {
+    id: 'bar-mats-rinsed',
+    title: 'Bar mats rinsed',
+    titleEs: 'Enjuagar los tapetes de la barra',
+    description: 'Pull the rubber bar mats, rinse them down, and let them dry before closing the bar.',
+    descriptionEs: 'Sacar los tapetes de goma de la barra, enjuagarlos y dejarlos secar antes de cerrar la barra.',
+    cadence: 'daily',
+    assignTo: { type: 'role', ids: ['bartender'] },
+    dueRule: 'end of day',
+    requiresPhoto: false,
+    active: true,
+  },
+  {
+    id: 'espresso-deep-clean',
+    title: 'Deep clean espresso machine',
+    titleEs: 'Limpieza profunda de la máquina de espresso',
+    description: "Disassemble and deep clean the espresso machine's group heads, portafilters, and steam wand.",
+    descriptionEs:
+      'Desarmar y limpiar a fondo los cabezales, portafiltros y la varita de vapor de la máquina de espresso.',
+    cadence: 'weekly',
+    assignTo: { type: 'role', ids: ['barista'] },
+    dueRule: 'by Friday',
+    requiresPhoto: true,
+    active: true,
+  },
+  {
+    id: 'rotate-wine-inventory',
+    title: 'Rotate wine inventory',
+    titleEs: 'Rotar el inventario de vinos',
+    description: 'Rotate the wine inventory front-to-back and flag any bottles nearing their sell-by window.',
+    descriptionEs:
+      'Rotar el inventario de vinos de adelante hacia atrás y marcar las botellas cercanas a su fecha límite de venta.',
+    cadence: 'weekly',
+    assignTo: { type: 'role', ids: ['bartender'] },
+    dueRule: 'by Sunday',
+    requiresPhoto: false,
+    active: true,
+  },
+  {
+    id: 'grease-trap-check',
+    title: 'Grease trap service check',
+    titleEs: 'Revisión de la trampa de grasa',
+    description: "Inspect the grease trap and confirm it's within service before the scheduled pickup.",
+    descriptionEs: 'Inspeccionar la trampa de grasa y confirmar que esté en condiciones antes de la recolección programada.',
+    cadence: 'monthly',
+    assignTo: { type: 'role', ids: ['kitchen-lead'] },
+    dueRule: 'last day of month',
+    requiresPhoto: true,
+    active: true,
+  },
+  {
+    id: 'fire-extinguisher-inspection',
+    title: 'Fire extinguisher inspection',
+    titleEs: 'Inspección de extintores',
+    description: "Check every fire extinguisher's gauge and inspection tag, and note any that need service.",
+    descriptionEs: 'Revisar el manómetro y la etiqueta de inspección de cada extintor, y anotar cuáles necesitan servicio.',
+    cadence: 'monthly',
+    assignTo: { type: 'role', ids: ['manager-mod'] },
+    dueRule: 'last day of month',
+    requiresPhoto: true,
+    // Mockup 28 draws this row at reduced opacity with its Active toggle
+    // off — seeded inactive so Settings → Tasks → Archive has a real row.
+    // `activeDefinitions()` in functions/src/tasksScheduled.ts filters on
+    // `active == true`, so this definition materializes NO instances in a
+    // real run either — see SEED_TASK_INSTANCES below, which seeds none for it.
+    active: false,
+  },
+]
+
+/**
+ * A `role` assignTo resolves to whichever department that shiftRole belongs
+ * to — the same lookup `poolOrEmployeeCandidates()` does in
+ * functions/src/tasksScheduled.ts (only `assignTo.ids[0]` is consulted there
+ * for a multi-role line, e.g. wipe-pos-screens' [server, host]).
+ */
+function roleDepartment(roleId: string): Department {
+  return SHIFT_ROLES.find((r) => r.id === roleId)?.department ?? 'Admin'
+}
+
+// ── taskInstances (spec §10) ─────────────────────────────────────────────────
+//
+// A small, illustrative "today" slice — 12 instances mixing open/done/missed
+// across 8 of the 9 definitions (fire-extinguisher-inspection is inactive
+// and materializes nothing in the real system either, so it gets none here —
+// see the comment on that definition above). "Today" for this slice is
+// 2026-08-16 (Sunday) — the last day of the seeded week-1 range and, per this
+// session's own current date, the natural "today" for a review sitting.
+//
+// Every id below is built with the EXACT SAME formula the real
+// materializeDailyTasks/WeeklyTasks/MonthlyTasks functions use
+// (tasksScheduled.ts's baseInstance/perShiftCandidates/poolOrEmployeeCandidates:
+// per-shift `${taskDefId}_${weekId}_${shiftId}`, daily/weekly/monthly pool
+// `${taskDefId}_${period}`) specifically so a later real Cloud Scheduler run
+// only ever fills in what's missing around this data, never collides with it.
+const DEMO_TODAY = '2026-08-16'
+
+interface SeedTaskInstance {
+  id: string
+  taskDefId: string
+  /** "YYYY-MM-DD" for per-shift/daily, a weekId for weekly, "YYYY-MM" for monthly. */
+  period: string
+  /** Per-shift only — a real shift id from week 1's SEED_SHIFTS. */
+  shiftId?: string
+  assigneeEmployeeNumber?: string | null
+  status: TaskInstanceStatus
+  completedByNumber?: string | null
+  /** ISO instant — only set for 'done'. */
+  completedAt?: string
+}
+
+const SEED_TASK_INSTANCES: SeedTaskInstance[] = [
+  // per-shift — anchored to REAL published week-1 server shifts. Both
+  // per-shift definitions ride the same shifts: wipe-pos-screens' assignTo
+  // includes 'host' too, but week 1 has no host-roleId shift at all.
+  { id: 'restock-napkins_2026-08-10_sh-mon-1041', taskDefId: 'restock-napkins', period: '2026-08-10', shiftId: 'sh-mon-1041', assigneeEmployeeNumber: '1041', status: 'done', completedByNumber: '1041', completedAt: '2026-08-10T20:15:00-04:00' },
+  { id: 'restock-napkins_2026-08-10_sh-sat-1045', taskDefId: 'restock-napkins', period: '2026-08-15', shiftId: 'sh-sat-1045', assigneeEmployeeNumber: '1045', status: 'missed' },
+  { id: 'wipe-pos-screens_2026-08-10_sh-wed-1041', taskDefId: 'wipe-pos-screens', period: '2026-08-12', shiftId: 'sh-wed-1041', assigneeEmployeeNumber: '1041', status: 'done', completedByNumber: '1041', completedAt: '2026-08-12T19:40:00-04:00' },
+
+  // daily pools — one still 'open' today per definition (freshly
+  // materialized, unclaimed), plus one past instance each so the Completion
+  // dashboard already has history to show.
+  { id: 'patio-umbrellas_2026-08-16', taskDefId: 'patio-umbrellas', period: DEMO_TODAY, status: 'open' },
+  { id: 'patio-umbrellas_2026-08-15', taskDefId: 'patio-umbrellas', period: '2026-08-15', status: 'done', assigneeEmployeeNumber: '1055', completedByNumber: '1055', completedAt: '2026-08-15T23:10:00-04:00' },
+  { id: 'walkin-temp-log_2026-08-16', taskDefId: 'walkin-temp-log', period: DEMO_TODAY, status: 'open' },
+  { id: 'walkin-temp-log_2026-08-14', taskDefId: 'walkin-temp-log', period: '2026-08-14', status: 'missed' },
+  { id: 'bar-mats-rinsed_2026-08-16', taskDefId: 'bar-mats-rinsed', period: DEMO_TODAY, status: 'open' },
+  { id: 'bar-mats-rinsed_2026-08-11', taskDefId: 'bar-mats-rinsed', period: '2026-08-11', status: 'done', assigneeEmployeeNumber: '1044', completedByNumber: '1044', completedAt: '2026-08-11T20:05:00-04:00' },
+
+  // weekly pools — this week (weekId = SEED_WEEK_ID), one still open, one done.
+  { id: 'espresso-deep-clean_2026-08-10', taskDefId: 'espresso-deep-clean', period: SEED_WEEK_ID, status: 'open' },
+  { id: 'rotate-wine-inventory_2026-08-10', taskDefId: 'rotate-wine-inventory', period: SEED_WEEK_ID, status: 'done', assigneeEmployeeNumber: '1043', completedByNumber: '1043', completedAt: '2026-08-16T14:00:00-04:00' },
+
+  // monthly pool — this month, still in progress (not due till month-end).
+  { id: 'grease-trap-check_2026-08', taskDefId: 'grease-trap-check', period: '2026-08', status: 'open' },
 ]
 
 // ── writers ──────────────────────────────────────────────────────────────────
@@ -1818,6 +2232,61 @@ async function seedShiftTemplates(): Promise<number> {
 }
 
 /**
+ * The second seeded week (Mon Aug 17 – Sun Aug 23 2026) — see the section
+ * header above SEED_SHIFTS_WEEK2 for why it exists and what it deliberately
+ * does and doesn't demonstrate. Same published/live shape as `seedSchedule()`
+ * for week 1, so `computeWeekFulfillment` evaluates it identically; no labor
+ * reconciliation is computed or enforced for this week (that contract is
+ * week-1-only).
+ */
+async function seedScheduleWeek2(): Promise<{ shifts: number; open: number }> {
+  const scheduleRef = db.collection('schedules').doc(SEED_WEEK2_ID)
+
+  await scheduleRef.set({
+    weekId: SEED_WEEK2_ID,
+    status: 'published',
+    publishedAt: Timestamp.fromDate(new Date('2026-08-15T03:59:00Z')),
+    publishedBy: employeeDocId('1050'),
+    laborTargetPct: APP_SETTINGS.laborTargetPct,
+    aiDraftMeta: null,
+    // No manual sales projection for this week — it exists purely to exercise
+    // the fulfillment badge, not the labor footer (that's week 1's job).
+    projectedSales: null,
+    projectedSalesTotal: null,
+    locationId: null,
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
+  })
+
+  const shiftsRef = scheduleRef.collection('shifts')
+  const batch = db.batch()
+  let open = 0
+  for (const s of SEED_SHIFTS_WEEK2) {
+    if (!s.employeeNumber) open += 1
+    if (s.employeeNumber) employeeOrThrow(s.employeeNumber) // fail loudly on a typo'd employeeNumber
+    batch.set(shiftsRef.doc(shiftDocIdWeek2(s)), {
+      employeeId: s.employeeNumber ? employeeDocId(s.employeeNumber) : null,
+      date: SEED_WEEK2_DATES[s.day],
+      startTime: s.startTime,
+      endTime: s.endTime,
+      roleId: s.roleId,
+      requiredSkillLevel: s.requiredSkillLevel,
+      department: s.department,
+      station: s.station,
+      notes: s.notes ?? null,
+      isOnCall: s.isOnCall ?? false,
+      status: 'published',
+      locationId: null,
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    })
+  }
+  await batch.commit()
+
+  return { shifts: SEED_SHIFTS_WEEK2.length, open }
+}
+
+/**
  * Shift ids in the seeded week that overlap a request's inclusive date range —
  * §6 requires the approver to see what approving would break, and computing it
  * at approval time only would hide the damage until it was too late to plan
@@ -1858,6 +2327,75 @@ async function seedTimeOff(): Promise<{ docs: number; conflicts: number }> {
   }
   await batch.commit()
   return { docs: SEED_TIME_OFF.length, conflicts }
+}
+
+async function seedTasks(): Promise<number> {
+  const batch = db.batch()
+  for (const def of TASK_DEFINITIONS) {
+    const { id, ...rest } = def
+    batch.set(db.collection('tasks').doc(id), {
+      ...rest,
+      locationId: null,
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    })
+  }
+  await batch.commit()
+  return TASK_DEFINITIONS.length
+}
+
+/**
+ * Every field is denormalized from the definition AT THIS WRITE, exactly as
+ * the real materialization functions do (models.ts's own doc comment on
+ * `TaskInstance` — never re-read live later). `department` mirrors
+ * `perShiftCandidates()`'s and `poolOrEmployeeCandidates()`'s own derivation:
+ * the SHIFT's department for a per-shift instance, the role's department
+ * (via `roleDepartment()`) for a pool instance.
+ */
+async function seedTaskInstances(): Promise<{ open: number; done: number; missed: number }> {
+  const defById = new Map(TASK_DEFINITIONS.map((d) => [d.id, d]))
+  const shiftById = new Map(SEED_SHIFTS.map((s) => [shiftDocId(s), s]))
+
+  const batch = db.batch()
+  const counts = { open: 0, done: 0, missed: 0 }
+
+  for (const inst of SEED_TASK_INSTANCES) {
+    const def = defById.get(inst.taskDefId)
+    if (!def) throw new Error(`Seed task instance references unknown taskDefId "${inst.taskDefId}"`)
+    counts[inst.status] += 1
+
+    const assigneeEmployeeId = inst.assigneeEmployeeNumber
+      ? employeeDocId(employeeOrThrow(inst.assigneeEmployeeNumber).employeeNumber)
+      : null
+
+    const department: Department =
+      def.cadence === 'per-shift'
+        ? (inst.shiftId ? shiftById.get(inst.shiftId)?.department : undefined) ?? 'Admin'
+        : roleDepartment(def.assignTo.ids[0] ?? '')
+
+    batch.set(db.collection('taskInstances').doc(inst.id), {
+      taskDefId: def.id,
+      title: def.title,
+      titleEs: def.titleEs,
+      dueRule: def.dueRule,
+      requiresPhoto: def.requiresPhoto,
+      cadence: def.cadence,
+      period: inst.period,
+      shiftId: inst.shiftId ?? null,
+      assigneeEmployeeId,
+      status: inst.status,
+      completedBy: inst.completedByNumber ? employeeDocId(inst.completedByNumber) : null,
+      completedAt: inst.completedAt ? Timestamp.fromDate(new Date(inst.completedAt)) : null,
+      notes: null,
+      photoPath: null,
+      department,
+      locationId: null,
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    })
+  }
+  await batch.commit()
+  return counts
 }
 
 /** The reconciliation, printed so the mockup comparison is visible, not implied. */
@@ -1965,7 +2503,10 @@ async function main(): Promise<void> {
   const availability = await seedAvailability()
   const schedule = await seedSchedule()
   const templates = await seedShiftTemplates()
+  const scheduleWeek2 = await seedScheduleWeek2()
   const timeOff = await seedTimeOff()
+  const tasks = await seedTasks()
+  const taskInstances = await seedTaskInstances()
 
   const byRole = new Map<AccessRole, number>()
   for (const e of EMPLOYEES) byRole.set(e.accessRole, (byRole.get(e.accessRole) ?? 0) + 1)
@@ -2022,10 +2563,26 @@ async function main(): Promise<void> {
   console.log(
     `      shifts ${schedule.shifts} (${schedule.open} open)${schedule.removed > 0 ? ` · ${schedule.removed} stale removed` : ''}`,
   )
-  console.log('  shiftTemplates/*          ', templates, 'documents (7 days x 2 day-parts)')
+  console.log('  shiftTemplates/*          ', templates, 'documents (7 days x 2 day-parts, 4 shared profiles)')
+  console.log(`  schedules/${SEED_WEEK2_ID}      1 document (published) — fulfillment-badge demo week`)
+  console.log(
+    `      shifts ${scheduleWeek2.shifts} (${scheduleWeek2.open} open) · weekend fully met · Wed dinner host line 0/1 (deliberate) · Thu dinner server line 1/2 (deliberate)`,
+  )
   console.log('  timeOff/*                 ', timeOff.docs, 'documents')
   console.log(
     `      pending ${SEED_TIME_OFF.filter((t) => t.status === 'pending').length} · approved ${SEED_TIME_OFF.filter((t) => t.status === 'approved').length} · declined ${SEED_TIME_OFF.filter((t) => t.status === 'declined').length} · shift conflicts ${timeOff.conflicts}`,
+  )
+  console.log('  tasks/*                   ', tasks, 'documents')
+  console.log(
+    `      active ${TASK_DEFINITIONS.filter((d) => d.active).length} · inactive ${TASK_DEFINITIONS.filter((d) => !d.active).length}`,
+  )
+  console.log(
+    '  taskInstances/*           ',
+    SEED_TASK_INSTANCES.length,
+    'documents (demo "today" = ' + DEMO_TODAY + ')',
+  )
+  console.log(
+    `      open ${taskInstances.open} · done ${taskInstances.done} · missed ${taskInstances.missed}`,
   )
 
   printLabor(labor)

@@ -50,9 +50,11 @@ export type PushCategory =
   | 'trade.pool-drop'
   | 'trade.claimed'
   | 'trade.approved'
+  | 'trade.expired'
   | 'schedule.published'
   | 'schedule.republished'
   | 'punch.forgotten'
+  | 'task.missed'
 
 /** Only the fields the server reads. The employee document has many more. */
 export interface EmployeeDoc {
@@ -76,11 +78,12 @@ export interface ScheduleDoc {
   status?: string
 }
 
-/** Only the fields the override/trade callables need. */
+/** Only the fields the override/trade/task callables need. */
 export interface ShiftRoleDoc {
   canCoverRoleIds?: string[]
   name?: string
   nameEs?: string
+  department?: Department
 }
 
 /** Only the fields the override/trade callables need. */
@@ -96,7 +99,14 @@ export interface ShiftDoc {
 }
 
 export type TradeType = 'direct' | 'pool'
-export type TradeStatus = 'open' | 'claimed' | 'pending-approval' | 'approved' | 'declined' | 'cancelled'
+export type TradeStatus =
+  | 'open'
+  | 'claimed'
+  | 'pending-approval'
+  | 'approved'
+  | 'declined'
+  | 'cancelled'
+  | 'expired'
 
 /** Only the fields the trade action callables need. */
 export interface TradeDoc {
@@ -111,6 +121,7 @@ export interface TradeDoc {
   approvedBy?: string | null
   department?: Department
   eligibilitySnapshot?: { roleId: string; requiredSkillLevel: number }
+  expiresAt?: unknown
 }
 
 /** Only the fields the trade action callables need. */
@@ -177,4 +188,34 @@ export interface TipReportDoc {
   date?: string
   shiftId?: string | null
   amount?: number
+}
+
+export type TaskCadence = 'per-shift' | 'daily' | 'weekly' | 'monthly'
+
+/** Mirrors TaskDefinition (src/types/models.ts). */
+export interface TaskDefinitionDoc {
+  title?: string
+  titleEs?: string
+  cadence?: TaskCadence
+  assignTo?: { type: 'role' | 'department' | 'employee'; ids: string[] }
+  dueRule?: string
+  requiresPhoto?: boolean
+  active?: boolean
+}
+
+export type TaskInstanceStatus = 'open' | 'done' | 'missed'
+
+/** Mirrors TaskInstance (src/types/models.ts). */
+export interface TaskInstanceDoc {
+  taskDefId?: string
+  title?: string
+  titleEs?: string
+  dueRule?: string
+  requiresPhoto?: boolean
+  cadence?: TaskCadence
+  period?: string
+  shiftId?: string | null
+  assigneeEmployeeId?: string | null
+  status?: TaskInstanceStatus
+  department?: Department
 }

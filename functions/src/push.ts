@@ -39,12 +39,16 @@ function messageFor(locale: PushLocale, category: PushCategory): { title: string
       return locale.push.trade.claimed
     case 'trade.approved':
       return locale.push.trade.approved
+    case 'trade.expired':
+      return locale.push.trade.expired
     case 'schedule.published':
       return locale.push.schedule.published
     case 'schedule.republished':
       return locale.push.schedule.republished
     case 'punch.forgotten':
       return locale.push.punch.forgotten
+    case 'task.missed':
+      return locale.push.task.missed
   }
 }
 

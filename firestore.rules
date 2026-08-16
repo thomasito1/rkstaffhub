@@ -850,6 +850,80 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    // ── tasks (spec §10, Phase 3(b)) ───────────────────────────────────────────
+    // Definitions only. Nothing but the admin Task Manager screen (Settings →
+    // Tasks, `tasks.manage`) ever reads this collection directly — every
+    // materialized `taskInstance` denormalizes title/titleEs/dueRule/
+    // requiresPhoto at creation time (same reasoning as
+    // `TipReport.employeeAccessRole`'s denormalization note), so "My Tasks"
+    // and the completion dashboard never need to join back to a definition.
+    // That means there is no staff-facing read case to gate here at all.
+
+    match /tasks/{taskDefId} {
+      allow read, write: if hasPerm('tasks.manage');
+    }
+
+    // ── taskInstances (spec §10, Phase 3(b)) ──────────────────────────────────
+    // EVERY write is Cloud-Function-only, same shape as punches/tipReports
+    // above: materialization (`tasksScheduled.ts`) and completion
+    // (`completeTaskInstance`) both need to independently re-verify state
+    // (claim scope, missed-boundary timing) rather than trust a client write,
+    // and both run under the Admin SDK, which bypasses this rule entirely.
+    //
+    // READ mirrors `punches`' exact department-scoped shape, deliberately: an
+    // employee always sees their own assigned instances; a "my pool tasks"
+    // list additionally needs `tasks.complete` + a department match — the
+    // BROAD, PROVABLE boundary (list-query-safe per the Aug 14 2026 lesson:
+    // a rule branch reading a `resource.data` field the query doesn't
+    // constrain poisons the whole list). Precise role/employee eligibility to
+    // actually CLAIM a pool instance is re-verified server-side in
+    // `completeTaskInstance` against the live `TaskDefinition`, never trusted
+    // from this rule or from `TaskInstance.department` alone — same
+    // department-broad-list/precise-action-eligibility split as Shift Pool's
+    // "Up for grabs" browsing. `tasks.manage` (the admin dashboard) reads
+    // every department, unscoped.
+
+    match /taskInstances/{instanceId} {
+      function subjectEmployeeId() {
+        return resource != null && 'assigneeEmployeeId' in resource.data
+          ? resource.data.assigneeEmployeeId
+          : '__nobody__';
+      }
+
+      // Same list-query-safety shape as `punchDepartment()` above: the
+      // client pins `where('department', '==', actor.department)` for any
+      // caller who isn't `tasks.manage` (src/lib/db/taskInstances.ts) so this
+      // equality is provable across the whole result set.
+      function taskInstanceDepartment() {
+        return 'department' in resource.data ? resource.data.department : '__no_target_dept__';
+      }
+
+      // A "POOL" instance specifically — unclaimed (`assigneeEmployeeId ==
+      // null`), matching `trades`' own `mayReadTrade()` requiring `status ==
+      // 'open'` below (same file, further down) before granting a
+      // same-department non-party a read. Provable the same way: the client
+      // query pins `where('assigneeEmployeeId', '==', null)` for this exact
+      // case (src/lib/db/taskInstances.ts's `listMyTaskInstances`), so this
+      // equality is never unconstrained across the result set. WITHOUT this,
+      // any `tasks.complete` holder (effectively every employee) could read
+      // every instance in their own department, including ones already
+      // assigned to a named coworker — found by the Phase 3(b) rules-test
+      // pass (Aug 16 2026), fixed here, never shipped.
+      function isUnclaimedPoolInstance() {
+        return !('assigneeEmployeeId' in resource.data) || resource.data.assigneeEmployeeId == null;
+      }
+
+      function mayViewPoolInstance() {
+        return hasPerm('tasks.manage')
+          || (hasPerm('tasks.complete') && isUnclaimedPoolInstance() && myDepartment() == taskInstanceDepartment());
+      }
+
+      allow read: if hasIdentity()
+                  && (isSelf(subjectEmployeeId()) || mayViewPoolInstance());
+
+      allow create, update, delete: if false;
+    }
+
     // ── trades (spec §7, §17) ─────────────────────────────────────────────────
     // Unlike punches/tipReports, POSTING a trade risks nothing irreversible —
     // no shift reassignment happens until a manager approves — so create and

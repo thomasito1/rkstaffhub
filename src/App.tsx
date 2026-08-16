@@ -8,6 +8,7 @@ import { MorePage } from '@/pages/MorePage'
 import { SettingsShell } from '@/pages/settings/SettingsShell'
 import { RolesHierarchyPage } from '@/pages/settings/RolesHierarchyPage'
 import { ShiftTemplatesPage } from '@/pages/settings/ShiftTemplatesPage'
+import { TaskManagerPage } from '@/pages/settings/TaskManagerPage'
 import { TimeOffAdminPage } from '@/pages/settings/TimeOffAdminPage'
 import { TimeOffCalendarPage } from '@/pages/settings/TimeOffCalendarPage'
 import { ShiftsAndTipsPage } from '@/pages/settings/ShiftsAndTipsPage'
@@ -26,6 +27,7 @@ import { ScheduleEntryPage } from '@/pages/schedule/ScheduleEntryPage'
 import { WhosWorkingPage } from '@/pages/schedule/WhosWorkingPage'
 import { ShiftPoolPage } from '@/pages/shiftPool/ShiftPoolPage'
 import { ClockPage } from '@/pages/clock/ClockPage'
+import { MyTasksPage } from '@/pages/tasks/MyTasksPage'
 
 /**
  * Phase 0 routing.
@@ -84,7 +86,7 @@ export default function App() {
         />
         <Route path="time-off" element={<MyTimeOffPage />} />
         <Route path="shift-pool" element={<ShiftPoolPage />} />
-        <Route path="tasks" element={<PlaceholderPage titleKey="nav.tasks" phase={3} />} />
+        <Route path="tasks" element={<MyTasksPage />} />
         <Route path="hr" element={<PlaceholderPage titleKey="nav.hr" phase={4} />} />
         <Route
           path="reports"
@@ -98,6 +100,7 @@ export default function App() {
           />
           <Route path="roles" element={<RolesHierarchyPage />} />
           <Route path="shift-templates" element={<ShiftTemplatesPage />} />
+          <Route path="tasks" element={<TaskManagerPage />} />
           <Route
             path="permissions"
             element={<PlaceholderPage titleKey="settings.nav.permissions" phase={0} />}

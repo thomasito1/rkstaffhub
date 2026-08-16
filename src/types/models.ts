@@ -144,9 +144,11 @@ export type PushCategory =
   | 'trade.pool-drop'
   | 'trade.claimed'
   | 'trade.approved'
+  | 'trade.expired'
   | 'schedule.published'
   | 'schedule.republished'
   | 'punch.forgotten'
+  | 'task.missed'
 
 // ── shiftRoles/{roleId} ──────────────────────────────────────────────────────
 
@@ -549,6 +551,7 @@ export type TradeStatus =
   | 'approved'
   | 'declined'
   | 'cancelled'
+  | 'expired'
 
 /** Recomputed independently at claim/accept/approval time — never trusted from a stale snapshot (same reason ShiftModal recomputes eligibility live, spec §7). This is display/audit context only. */
 export interface TradeEligibilitySnapshot {
@@ -589,9 +592,12 @@ export interface Trade {
    * Direct offers only. Set to createdAt + 48h at creation (mockup 18c —
    * no written spec text covers this, inferred from the mockup's own
    * "expires in 48 hours" copy; there is no pending-prompt brief for 18a/b/c
-   * to cross-check it against). Purely advisory for display — nothing
-   * currently flips status on expiry; a still-`open` offer past this instant
-   * just reads as expired in the UI.
+   * to cross-check it against). Enforced server-side since Phase 3(b): the
+   * scheduled sweep (`functions/src/tradeScheduled.ts`) flips a still-`open`
+   * offer to `status: 'expired'` at `min(expiresAt, the shift's own start
+   * instant)` — see PROGRESS.md's "48h direct-trade expiry" ruling. Only
+   * `open` expires; `pending-approval` never does (a manager-reminder
+   * concern, not an expiry one).
    */
   expiresAt?: unknown
   locationId?: string | null
@@ -710,6 +716,104 @@ export interface TipReport {
    * (Aug 14 2026 fix — see the matching note on `Punch.department`).
    */
   employeeAccessRole?: AccessRole
+  locationId?: string | null
+  createdAt?: unknown
+  updatedAt?: unknown
+}
+
+// ── tasks/{taskDefId} ────────────────────────────────────────────────────────
+
+export type TaskCadence = 'per-shift' | 'daily' | 'weekly' | 'monthly'
+
+/**
+ * 'employee' pins a definition to specific people — every materialized
+ * instance is pre-assigned, nothing to claim. 'role'/'department' describe a
+ * POOL: instances materialize with `assigneeEmployeeId: null` and anyone in
+ * scope claims one via `completeTaskInstance` (spec §10: "claimable pool
+ * tasks for their role"). `ids` holds roleIds for 'role', a single
+ * `Department` for 'department', employeeIds for 'employee'.
+ */
+export interface TaskAssignTo {
+  type: 'role' | 'department' | 'employee'
+  ids: string[]
+}
+
+export interface TaskDefinition {
+  id: string
+  title: string
+  titleEs: string
+  description: string
+  descriptionEs: string
+  cadence: TaskCadence
+  assignTo: TaskAssignTo
+  /**
+   * Free-text display only, spec §3's own examples ("end-of-shift", "by 5pm",
+   * "last day of month"). NOT parsed to derive the missed-at boundary — that
+   * comes purely from `cadence` (see `functions/src/tasksScheduled.ts`'s
+   * per-cadence period-end logic) so a manager can phrase this however reads
+   * clearest without it needing to be machine-parseable.
+   */
+  dueRule: string
+  /**
+   * Mockup 27/28 addition (not spec §3 text) — resolved design-time addition,
+   * not a deviation: whether completing an instance of this task requires a
+   * photo. Gated overall by `AppSettings.featureFlags.taskPhotoProof` — if
+   * that flag is off, no task's photo requirement is enforced or shown,
+   * regardless of this field.
+   */
+  requiresPhoto: boolean
+  active: boolean
+  locationId?: string | null
+  createdAt?: unknown
+  updatedAt?: unknown
+}
+
+// ── taskInstances/{instanceId} ──────────────────────────────────────────────
+
+export type TaskInstanceStatus = 'open' | 'done' | 'missed'
+
+export interface TaskInstance {
+  id: string
+  taskDefId: string
+  /**
+   * Denormalized from the definition AT MATERIALIZATION TIME, never re-read
+   * live — editing or retiring a definition later must not rewrite an
+   * already-materialized instance's own history, the same reasoning as
+   * `TipReport.employeeAccessRole`'s denormalization note above.
+   */
+  title: string
+  titleEs: string
+  dueRule: string
+  requiresPhoto: boolean
+  cadence: TaskCadence
+  /**
+   * The period this instance covers: "YYYY-MM-DD" for per-shift/daily, the
+   * Mon-start `weekId` (matching `Schedule.weekId`) for weekly, "YYYY-MM" for
+   * monthly. Display/grouping only — the materialization function derives
+   * its own idempotent instance id from this, nothing else parses it back.
+   */
+  period: string
+  /** Per-shift only — the specific shift this instance was materialized against. */
+  shiftId?: string | null
+  /** null = unclaimed pool instance (role/department assignTo). Set at materialization for 'employee' assignTo, or by `completeTaskInstance` when a pool task is claimed. */
+  assigneeEmployeeId: string | null
+  status: TaskInstanceStatus
+  completedBy?: string | null
+  completedAt?: unknown
+  notes?: string | null
+  photoPath?: string | null
+  /**
+   * Denormalized from the definition's `assignTo` at materialization time —
+   * the ONE field `firestore.rules` needs to scope a staff member's "my
+   * pool tasks" list query to their own department, the exact same
+   * provable-list-query shape as `Punch.department` (Aug 14 2026 fix).
+   * Precise role/department eligibility to actually CLAIM/complete an
+   * instance is re-verified server-side in `completeTaskInstance` against the
+   * live `TaskDefinition`, never trusted from this — mirroring the Shift
+   * Pool precedent (department-broad list visibility, precise eligibility
+   * enforced only at the point of action, not at the point of listing).
+   */
+  department: Department
   locationId?: string | null
   createdAt?: unknown
   updatedAt?: unknown

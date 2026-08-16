@@ -39,6 +39,8 @@ export const COLLECTIONS = {
   punches: 'punches',
   tipReports: 'tipReports',
   availability: 'availability',
+  tasks: 'tasks',
+  taskInstances: 'taskInstances',
 } as const
 
 /** `settings/{APP_SETTINGS_ID}` — mirrors src/lib/db/settings.ts's constant. */

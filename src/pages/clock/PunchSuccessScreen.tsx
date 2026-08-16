@@ -28,6 +28,7 @@ export function PunchSuccessScreen({
   hoursWorked,
   tipsAmount,
   pendingSync,
+  openTaskCount,
   onDone,
 }: {
   punchType: 'in' | 'out'
@@ -51,6 +52,13 @@ export function PunchSuccessScreen({
   /** Clock-out only, tipped employees only. */
   tipsAmount: number | null
   pendingSync: boolean
+  /**
+   * Clock-out only (spec §10: "Per-shift tasks surface during clock-out
+   * ('You have 2 open tasks') but don't block clock-out"). `null` when the
+   * best-effort task-count fetch hasn't resolved (or failed) — never shown,
+   * and never treated as zero.
+   */
+  openTaskCount: number | null
   onDone: () => void
 }): JSX.Element {
   const { t, i18n } = useTranslation()
@@ -138,6 +146,14 @@ export function PunchSuccessScreen({
           ) : null}
         </div>
       </div>
+
+      {punchType === 'out' && openTaskCount !== null && openTaskCount > 0 ? (
+        <div className="mt-4 flex items-center gap-2 rounded-card-lg border border-line bg-warning-tint px-4 py-3">
+          <p className="text-meta font-medium text-warning">
+            {t('clock.success.openTasksBanner', { count: openTaskCount })}
+          </p>
+        </div>
+      ) : null}
 
       {pendingSync ? (
         <p className="mt-4 text-center text-chip text-ink-muted">{t('clock.success.pendingNote')}</p>

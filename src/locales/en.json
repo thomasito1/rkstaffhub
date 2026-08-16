@@ -965,7 +965,8 @@
       "permissions": "Permissions",
       "timeOff": "Time off",
       "shiftsAndTips": "Shifts & tips",
-      "shiftTemplates": "Shift templates"
+      "shiftTemplates": "Shift templates",
+      "tasks": "Tasks"
     },
     "roles": {
       "title": "Roles & hierarchy",
@@ -1074,6 +1075,109 @@
         "updateFailed": "Couldn't update the template. Try again.",
         "deleted": "{{name}} deleted.",
         "deleteFailed": "Couldn't delete the template. Try again."
+      }
+    },
+    "tasks": {
+      "title": "Tasks",
+      "subtitle": "Define recurring tasks and track completion",
+      "export": "Export",
+      "newTask": "New task",
+      "errorBody": "Couldn't load tasks. Try again.",
+      "emptyTitle": "No tasks yet",
+      "emptyBody": "No recurring tasks yet. Add one to start tracking completion.",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "tabs": {
+        "definitions": "Definitions",
+        "completion": "Completion",
+        "archive": "Archive"
+      },
+      "filters": {
+        "cadence": "Cadence",
+        "allCadences": "All cadences",
+        "assignedTo": "Assigned to",
+        "searchPlaceholder": "Search tasks",
+        "activeOnly": "Active only"
+      },
+      "cadence": {
+        "per-shift": "Per-shift",
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "monthly": "Monthly"
+      },
+      "columns": {
+        "taskEn": "Task (English)",
+        "taskEs": "Tarea (Spanish)",
+        "cadence": "Cadence",
+        "assignedTo": "Assigned to",
+        "photoProof": "Photo proof",
+        "active": "Active"
+      },
+      "activateConfirm": {
+        "title": "Activate this task?",
+        "body": "\"{{title}}\" will start generating instances again on its normal cadence."
+      },
+      "deactivateConfirm": {
+        "title": "Deactivate this task?",
+        "body": "\"{{title}}\" will stop generating new instances. Past history is kept."
+      },
+      "toast": {
+        "created": "{{title}} added.",
+        "createFailed": "Couldn't create the task. Try again.",
+        "updated": "{{title}} updated.",
+        "updateFailed": "Couldn't update the task. Try again.",
+        "activated": "{{title}} activated.",
+        "deactivated": "{{title}} deactivated.",
+        "toggleFailed": "Couldn't update that task. Try again."
+      },
+      "modal": {
+        "newTitle": "New task",
+        "editTitle": "Edit task",
+        "title": "Title (English)",
+        "titleEs": "Title (Spanish)",
+        "description": "Description (English)",
+        "descriptionEs": "Description (Spanish)",
+        "cadence": "Cadence",
+        "dueRule": "Due",
+        "dueRulePlaceholder": "e.g. end of shift, by 5pm, last day of month",
+        "assignTo": "Assign to",
+        "assignToType": {
+          "role": "Role",
+          "department": "Department",
+          "employee": "Employee"
+        },
+        "requiresPhoto": "Requires photo proof",
+        "requiresPhotoHint": "Completing this task will require attaching a photo.",
+        "titleRequired": "An English and Spanish title are both required.",
+        "descriptionRequired": "An English and Spanish description are both required.",
+        "dueRuleRequired": "A due rule is required.",
+        "assignToRequired": "Select at least one role, department or employee."
+      },
+      "completion": {
+        "completedToday": "Completed today",
+        "percentComplete": "{{percent}}% complete",
+        "missedToday": "Missed today",
+        "noneMissed": "Nothing missed today.",
+        "photoProofPending": "Photo proof pending",
+        "awaitingReview": "Awaiting manager review",
+        "unclaimed": "Unclaimed",
+        "emptyTitle": "No tasks today",
+        "emptyBody": "No task instances have materialized for today yet.",
+        "columns": {
+          "task": "Task",
+          "assignee": "Assignee",
+          "status": "Status",
+          "department": "Department"
+        }
+      },
+      "status": {
+        "open": "Open",
+        "done": "Done",
+        "missed": "Missed"
+      },
+      "archive": {
+        "emptyTitle": "No archived tasks",
+        "emptyBody": "Deactivated tasks will show up here."
       }
     }
   },
@@ -1210,7 +1314,9 @@
       "verifiedFooter": "Both punches verified at {{name}}",
       "viewPunches": "View my punches",
       "pendingBadge": "Pending sync",
-      "pendingNote": "This punch is saved on your device and will sync once you're back online."
+      "pendingNote": "This punch is saved on your device and will sync once you're back online.",
+      "openTasksBanner_one": "You have {{count}} open task",
+      "openTasksBanner_other": "You have {{count}} open tasks"
     },
     "errors": {
       "clock-not-required": "You are not set up to use the time clock.",
@@ -1375,6 +1481,10 @@
       "approved": {
         "title": "Trade approved",
         "body": "{{approverName}} approved your trade with {{otherName}} for {{dateLabel}}."
+      },
+      "expired": {
+        "title": "Trade offer expired",
+        "body": "Your {{dateLabel}} {{roleName}} shift trade offer expired without a match."
       }
     },
     "schedule": {
@@ -1391,6 +1501,12 @@
       "forgotten": {
         "title": "Open punch flagged",
         "body": "{{employeeName}}'s clock-in from {{dateLabel}} is still open after 14 hours."
+      }
+    },
+    "task": {
+      "missed": {
+        "title": "Task missed",
+        "body": "\"{{taskTitle}}\" was marked missed for {{dateLabel}}."
       }
     },
     "prompt": {
@@ -1558,6 +1674,34 @@
       "posted": "Posted.",
       "tradeApproved": "Trade approved.",
       "tradeDeclined": "Trade declined."
+    }
+  },
+  "tasks": {
+    "myTasks": {
+      "title": "My tasks",
+      "filterButton": "Filter tasks",
+      "progress": "{{done}} of {{total}} done today",
+      "groupToday": "Today",
+      "groupWeek": "This Week",
+      "groupMonth": "This Month",
+      "markDone": "Mark \"{{title}}\" done",
+      "doneAtTime": "Done {{time}}",
+      "doneOnDate": "Done {{date}}",
+      "dueChip": "Due {{dueRule}}",
+      "photoRequiredChip": "Photo required",
+      "takePhotoPrompt": "Take a photo to complete",
+      "missedChip": "Missed",
+      "footerNote": "Per-shift tasks reset when your shift ends.",
+      "emptyTitle": "No tasks right now",
+      "emptyBody": "You don't have any tasks assigned. Check back later.",
+      "toastCompleted": "Task completed",
+      "photoUploadError": "Couldn't upload photo. Try again."
+    },
+    "errors": {
+      "generic": "That didn't go through. Try again.",
+      "notFound": "This task no longer exists.",
+      "noLongerAvailable": "This task is no longer available — it may already be done.",
+      "notEligible": "You're not eligible to complete this task."
     }
   }
 }

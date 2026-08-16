@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { EmptyState, useToast } from '@/components/ui'
 import { RequirePermission } from '@/components/guards/RouteGuards'
 import { useAuth } from '@/lib/auth/AuthProvider'
+import { listMyTaskInstances } from '@/lib/db'
 import { formatDate, formatTime } from '@/lib/format'
 import { checkGeofence, MAX_PLAUSIBLE_ACCURACY_METERS } from '@/lib/geofence'
 import { queuePunch } from '@/lib/offlineQueue/punchQueue'
@@ -101,6 +102,11 @@ function ClockScreen(): JSX.Element {
   const [busy, setBusy] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [geofence, setGeofence] = useState<GeofenceStatus>({ state: 'checking', secondsAgo: 0 })
+  // Best-effort "you have N open tasks" banner (spec §10) — surfaced on the
+  // clock-out success screen only. `null` until a fresh count resolves; reset
+  // at the start of every new punch attempt so a stale count never survives
+  // into a different flow.
+  const [openTaskCount, setOpenTaskCount] = useState<number | null>(null)
 
   useOfflineQueueSync(
     useCallback(() => {
@@ -154,6 +160,7 @@ function ClockScreen(): JSX.Element {
   async function handlePrimaryAction() {
     if (!employee || !data.settings || busy) return
     setBusy(true)
+    setOpenTaskCount(null)
     const punchType: 'in' | 'out' = data.openPunch ? 'out' : 'in'
     try {
       const punchId = mintPunchId()
@@ -267,6 +274,15 @@ function ClockScreen(): JSX.Element {
       })
       void data.refreshOpenPunch()
       void data.refreshQueuedCount()
+
+      // Spec §10: "You have N open tasks" on the clock-out success screen —
+      // informational only, never blocks or delays the success screen above.
+      // Best-effort: a failed fetch just means no banner, never an error.
+      if (punchType === 'out') {
+        void listMyTaskInstances(employee.id, employee.department)
+          .then((instances) => setOpenTaskCount(instances.filter((i) => i.status === 'open').length))
+          .catch(() => {})
+      }
     } catch (err) {
       const code = punchRejectionCode(err)
       if (code) {
@@ -417,6 +433,7 @@ function ClockScreen(): JSX.Element {
           hoursWorked={hoursWorked}
           tipsAmount={step.tipsAmount}
           pendingSync={step.pendingSync}
+          openTaskCount={step.punchType === 'out' ? openTaskCount : null}
           onDone={goHome}
         />
       </div>

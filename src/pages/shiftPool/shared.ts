@@ -52,6 +52,7 @@ export function tradeStatusTone(status: TradeStatus): PillTone {
       return 'approved'
     case 'declined':
     case 'cancelled':
+    case 'expired':
       return 'declined'
     default:
       return 'neutral'

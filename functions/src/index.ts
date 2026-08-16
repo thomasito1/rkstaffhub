@@ -30,6 +30,17 @@
  *                                            design (punches.edit, below-level)
  *   checkForgottenClockOuts  scheduled · flags (never closes) a 14h+ open
  *                                            punch and notifies managers
+ *   sweepExpiredTrades     scheduled · hourly; flips a still-open direct
+ *                                            offer to 'expired' at
+ *                                            min(expiresAt, shift start)
+ *   materializeDailyTasks/
+ *   materializeWeeklyTasks/
+ *   materializeMonthlyTasks  scheduled · §10 taskInstances materialization,
+ *                                            each first sweeps the PRIOR
+ *                                            period's still-open instances to
+ *                                            'missed' before creating new ones
+ *   completeTaskInstance   tasks.complete · claims (if pool) + marks an
+ *                                            instance done, atomically
  *
  * Region is the default us-central1, matching `getFunctions(app)` in
  * `src/lib/firebase.ts` — the client passes no region, so changing it here
@@ -54,3 +65,6 @@ export { onTradeCreated } from './tradeTriggers'
 export { clockIn, clockOut, manualPunch, editPunch, editTipReport } from './punchActions'
 export { checkForgottenClockOuts } from './punchScheduled'
 export { submitAvailability } from './availabilityActions'
+export { sweepExpiredTrades } from './tradeScheduled'
+export { materializeDailyTasks, materializeWeeklyTasks, materializeMonthlyTasks } from './tasksScheduled'
+export { completeTaskInstance } from './taskActions'

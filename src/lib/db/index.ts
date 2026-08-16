@@ -34,3 +34,8 @@ export * from './tradeApprovals'
 // src/lib/timeClock/punchActions.ts.
 export * from './punches'
 export * from './tipReports'
+
+// Phase 3(b) — tasks (spec §10). taskInstances is reads only —
+// completeTaskInstance is a Cloud Function, see src/lib/tasks/taskActions.ts.
+export * from './tasks'
+export * from './taskInstances'
