@@ -11,6 +11,7 @@ import {
   Pill,
   useToast,
 } from '@/components/ui'
+import { Can } from '@/components/guards/RouteGuards'
 import { useAuth } from '@/lib/auth/AuthProvider'
 import {
   archiveEmployee,
@@ -32,6 +33,7 @@ import type {
   ShiftRole,
 } from '@/types/models'
 
+import { DisciplineLadderWidget } from './components/DisciplineLadderWidget'
 import { PermissionOverridesEditor } from './components/PermissionOverridesEditor'
 import { ShiftRoleChips, ShiftRolesEditor } from './components/ShiftRolesEditor'
 
@@ -643,7 +645,23 @@ export function EmployeeProfilePage({
         </nav>
       </section>
 
-      {tab !== 'details' ? (
+      {tab === 'disciplinary' ? (
+        <div className="mx-auto max-w-3xl rounded-card border border-line bg-page p-6">
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <h2 className="text-section font-semibold text-ink">{t('people.tabs.disciplinary')}</h2>
+            <Can permission="discipline.issue">
+              <Button onClick={() => navigate(`/settings/discipline?employeeId=${employee.id}`)}>
+                {t('people.discipline.manageLink')}
+              </Button>
+            </Can>
+          </div>
+          <DisciplineLadderWidget
+            employeeId={employee.id}
+            isSelf={false}
+            enabled={belowLevel && can('discipline.view')}
+          />
+        </div>
+      ) : tab !== 'details' ? (
         <EmptyState
           illustration="calendar"
           title={t(`people.tabs.${tab}`)}

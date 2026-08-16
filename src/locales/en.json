@@ -48,7 +48,8 @@
     "yes": "Yes",
     "no": "No",
     "english": "English",
-    "spanish": "Spanish"
+    "spanish": "Spanish",
+    "remove": "Remove"
   },
   "status": {
     "pending": "Pending",
@@ -562,7 +563,7 @@
       "documentsTitle": "My documents",
       "documentsEmptyTitle": "No documents yet",
       "standingTitle": "My standing",
-      "standingSubtitle": "Progressive discipline · resets after 12 months without an incident.",
+      "standingSubtitle": "Progressive discipline based on the actions on file.",
       "standingEmptyTitle": "Nothing on your record"
     },
     "import": {
@@ -614,6 +615,23 @@
       "doneBody": "Created {{created}}. Skipped {{skipped}}.",
       "importAnother": "Import another file",
       "goToRoster": "Go to the roster"
+    },
+    "discipline": {
+      "emptyTitle": "Nothing on record",
+      "emptyBody": "No disciplinary actions are on file.",
+      "noLadderConfigured": "No escalation ladder has been configured yet.",
+      "actionsCount_one": "{{count}} action on file",
+      "actionsCount_other": "{{count}} actions on file",
+      "currentStepLabel": "Current step",
+      "belowFirstStep": "No formal step reached yet.",
+      "nextStepLabel": "Next step",
+      "topOfLadder": "At the highest configured step.",
+      "pendingSignatureTitle": "Needs your signature",
+      "pendingSignatureBody_one": "You have {{count}} disciplinary action waiting for your signature.",
+      "pendingSignatureBody_other": "You have {{count}} disciplinary actions waiting for your signature.",
+      "reviewAndSign": "Review and sign",
+      "signedToast": "Signed. Thanks for confirming.",
+      "manageLink": "Manage in Disciplinary"
     }
   },
   "conflicts": {
@@ -632,6 +650,12 @@
     "overrideReasonLabel": "Reason for override",
     "overrideReasonPlaceholder": "e.g., the only other qualified person called in sick",
     "overrideReasonHelp": "Required. Recorded in the audit log with your name."
+  },
+  "ai": {
+    "errors": {
+      "unknownEmployee": "This shift was proposed for an employee that couldn't be found — it needs manual review.",
+      "noMatchingRequirement": "This proposed shift didn't match a shift-template requirement and was skipped."
+    }
   },
   "weekdays": {
     "long": {
@@ -785,7 +809,8 @@
     "card": {
       "ariaLabel": "{{role}} shift, {{start}} to {{end}}",
       "onCall": "On-call shift",
-      "open": "Unassigned"
+      "open": "Unassigned",
+      "aiNoteAriaLabel": "AI-flagged, needs review: {{reason}}"
     },
     "footer": {
       "labor": "Labor",
@@ -883,6 +908,31 @@
       "met": "Requirements met",
       "unmet": "Requirements not met",
       "requirementLine": "{{count}}× {{role}} (min L{{level}}) — have {{have}}"
+    },
+    "ai": {
+      "generateButton": "Generate with AI",
+      "generating": "Generating…",
+      "banner": {
+        "title": "AI draft — review required",
+        "subtitle": "Not visible to staff until you publish.",
+        "provenance": "Generated {{date}} using {{provider}} · {{model}}",
+        "invalidCount_one": "{{count}} shift needs review",
+        "invalidCount_other": "{{count}} shifts need review",
+        "regenerateLabel": "Adjust and regenerate",
+        "regeneratePlaceholder": "e.g. give Robin Saturday off, heavier bar coverage Friday",
+        "regenerateButton": "Regenerate with instructions",
+        "regenerating": "Regenerating…",
+        "instructionsRequired": "Add instructions to regenerate."
+      },
+      "error": {
+        "rateLimited": "Too many AI generations recently — try again in a few minutes.",
+        "notReady": "AI generation isn't available for this week right now. Make sure an AI provider is configured in Settings → AI providers, and that this week isn't already published.",
+        "generic": "AI generation couldn't complete. Try again, or contact an Owner if this keeps happening."
+      },
+      "toast": {
+        "generated": "AI draft generated — review it before publishing.",
+        "regenerated": "AI draft regenerated — review it before publishing."
+      }
     }
   },
   "more": {
@@ -967,7 +1017,10 @@
       "shiftsAndTips": "Shifts & tips",
       "shiftTemplates": "Shift templates",
       "tasks": "Tasks",
-      "payroll": "Payroll"
+      "payroll": "Payroll",
+      "policies": "Policy library",
+      "discipline": "Discipline",
+      "ai": "AI providers"
     },
     "roles": {
       "title": "Roles & hierarchy",
@@ -1201,6 +1254,7 @@
       "nextPeriod": "Next period",
       "selectPeriod": "Select pay period",
       "periodOrdinal": "{{frequency}} · Period {{index}} of {{total}}",
+      "payDate": "Pay date: {{date}}",
       "frequency": {
         "weekly": "Weekly",
         "biweekly": "Biweekly",
@@ -1293,6 +1347,164 @@
         "periodNotFound": "That pay period no longer exists.",
         "reasonRequired": "A reason is required.",
         "exportFailed": "Couldn't export this period. Try again."
+      }
+    },
+    "policyLibrary": {
+      "title": "Policy library",
+      "subtitle": "Policies, handbooks and onboarding documents",
+      "newPolicy": "New policy",
+      "newVersion": "New version",
+      "searchPlaceholder": "Search policies",
+      "filterCategory": "Category",
+      "allCategories": "All categories",
+      "showOlderVersions_one": "{{count}} older version",
+      "showOlderVersions_other": "{{count}} older versions",
+      "hideOlderVersions": "Hide older versions",
+      "versionMeta": "v{{version}} · updated {{date}}",
+      "olderVersionLine": "v{{version}} · {{date}}",
+      "errorBody": "Couldn't load the policy library. Try again.",
+      "emptyTitle": "No policies yet",
+      "emptyBody": "Create the first policy or handbook section for staff to read and sign.",
+      "categories": {
+        "handbook": "Handbook",
+        "policy": "Policy",
+        "onboarding": "Onboarding",
+        "other": "Other"
+      },
+      "badges": {
+        "signatureRequired": "Signature required"
+      },
+      "modal": {
+        "newTitle": "New policy",
+        "newVersionTitle": "New version",
+        "newVersionNotice": "Saving creates a new version of this policy. The previous version's text stays exactly as it was — anyone who already signed it keeps a valid signature for that version, and only the CURRENT version will ask for a new signature.",
+        "title": "Title (English)",
+        "titleEs": "Title (Spanish)",
+        "titleEsPlaceholder": "Optional — English is shown until this is filled in",
+        "body": "Body (English)",
+        "bodyEs": "Body (Spanish)",
+        "bodyEsPlaceholder": "Optional — English is shown until this is filled in",
+        "category": "Category",
+        "activeFrom": "Effective date",
+        "requiresSignature": "Requires signature",
+        "saveVersion": "Save new version",
+        "titleRequired": "Title is required.",
+        "bodyRequired": "Body text is required.",
+        "activeFromRequired": "An effective date is required."
+      },
+      "toast": {
+        "created": "\"{{name}}\" created.",
+        "createFailed": "Couldn't create that policy. Try again.",
+        "versioned": "New version of \"{{name}}\" created.",
+        "versionFailed": "Couldn't save that new version. Try again."
+      }
+    },
+    "discipline": {
+      "title": "Disciplinary",
+      "subtitle": "Progressive discipline actions and records",
+      "viewingNotice": "You're viewing disciplinary records for employees below your access level. Owners see every record.",
+      "searchEmployeesPlaceholder": "Search employees",
+      "noBelowLevelEmployees": "There's no one below your access level to view records for.",
+      "emptySelectionTitle": "Select an employee",
+      "emptySelectionBody": "Choose someone from the list to see their disciplinary history and issue a new action.",
+      "errorTitle": "Couldn't load this screen",
+      "errorBody": "Couldn't load disciplinary records. Try again.",
+      "form": {
+        "title": "New disciplinary action",
+        "employeeLabel": "Employee",
+        "priorCountNote": "{{name}} has {{count}} prior counted action(s) on file.",
+        "typeLabel": "Action type",
+        "dateLabel": "Date of incident",
+        "policyRefsLabel": "Policy references",
+        "addPolicy": "+ Add policy",
+        "narrativeLabel": "Narrative",
+        "narrativeCount": "{{count}} / {{max}}",
+        "refusedToggleTitle": "Refused to sign",
+        "refusedToggleBody": "Turn on if the employee declines to sign. A witness is then required.",
+        "witnessLabel": "Witness",
+        "witnessPlaceholder": "Select a witness",
+        "submit": "Create and send for signature",
+        "submitRefused": "Create and record refusal",
+        "submitting": "Saving…",
+        "errors": {
+          "typeRequired": "Choose an action type.",
+          "dateRequired": "A date is required.",
+          "narrativeRequired": "Narrative is required.",
+          "witnessRequired": "A witness is required to record a refusal."
+        }
+      },
+      "toast": {
+        "issued": "Disciplinary action created.",
+        "refused": "Recorded as refused to sign."
+      },
+      "ladder": {
+        "title": "{{name}} · Discipline ladder",
+        "subtitle": "Progressive discipline based on the actions on file.",
+        "empty": "No escalation ladder has been configured yet.",
+        "noActions": "No disciplinary actions on file for this employee.",
+        "atStep": "Currently at",
+        "belowFirstStep": "No formal step reached yet",
+        "nextStep": "Next step",
+        "topOfLadder": "At the highest configured step — no further step is set."
+      },
+      "history": {
+        "title": "History",
+        "empty": "No disciplinary actions on file for this employee.",
+        "awaitingSignature": "Awaiting the employee's own signature",
+        "recordRefusal": "Record refused to sign",
+        "emailPendingNotice": "Email not sent yet — it'll retry.",
+        "emailedTo": "Emailed to {{email}}"
+      },
+      "refuseModal": {
+        "title": "Record refused to sign",
+        "body": "{{name}} declined to sign this {{type}}. Confirm the witness who observed the refusal.",
+        "witnessLabel": "Witness",
+        "confirm": "Confirm refusal",
+        "cancel": "Cancel"
+      },
+      "error": {
+        "belowLevelRequired": "You may only act on a record for someone below your access level.",
+        "alreadyResolved": "This action has already been resolved.",
+        "notFound": "That disciplinary action no longer exists.",
+        "invalidArgument": "Fill in every required field before submitting."
+      }
+    },
+    "aiProviders": {
+      "title": "AI providers",
+      "subtitle": "Choose the model that generates schedule drafts",
+      "securityNote": "API keys are encrypted at rest and never sent to the browser. Only owners can view or change them.",
+      "errorBody": "Couldn't load AI provider settings. Try again.",
+      "active": "Active",
+      "notConfigured": "Not configured",
+      "notYetUsed": "Not yet used",
+      "connected": "Connected",
+      "connectedLastUsed": "Connected · last used {{date}}",
+      "addKey": "Add key",
+      "replace": "Replace",
+      "model": "Model",
+      "apiKey": "API key",
+      "baseUrl": "Base URL",
+      "apiKeyPlaceholder": "Paste your API key",
+      "baseUrlPlaceholder": "https://api.example.com/v1",
+      "customModelPlaceholder": "e.g. llama-3-70b",
+      "keyMasked": "•••• {{last4}}",
+      "setActive": "Make this the active provider",
+      "providers": {
+        "anthropic": { "name": "Anthropic", "description": "Claude models" },
+        "openai": { "name": "OpenAI", "description": "GPT models" },
+        "google": { "name": "Google", "description": "Gemini models" },
+        "custom": { "name": "Custom", "description": "Any OpenAI-compatible endpoint" }
+      },
+      "validation": {
+        "modelRequired": "Choose a model.",
+        "apiKeyRequired": "Enter an API key.",
+        "endpointRequired": "Enter the endpoint's base URL."
+      },
+      "toast": {
+        "configured": "{{provider}} key saved.",
+        "configureFailed": "Couldn't save that key. Try again.",
+        "activated": "{{provider}} is now the active provider.",
+        "activateFailed": "Couldn't switch the active provider. Try again."
       }
     }
   },
@@ -1818,6 +2030,96 @@
       "notFound": "This task no longer exists.",
       "noLongerAvailable": "This task is no longer available — it may already be done.",
       "notEligible": "You're not eligible to complete this task."
+    }
+  },
+  "hr": {
+    "stepIndicator": "Step {{step}} of {{total}}",
+    "hub": {
+      "title": "HR hub",
+      "subtitle": "Policies, handbooks and signatures",
+      "groupNeedsSignature": "Needs your signature",
+      "groupAll": "All policies",
+      "versionLabel": "Version {{version}}",
+      "emptyTitle": "Nothing here yet",
+      "emptyBody": "There are no policies published yet. Check back later.",
+      "status": {
+        "needs-signature": "Needs signature",
+        "needs-resign": "Needs re-signing",
+        "signed": "Signed"
+      }
+    },
+    "read": {
+      "back": "Back",
+      "meta": "Version {{version}} · effective {{date}} · {{minutes}} min read",
+      "langEn": "EN",
+      "langEs": "ES",
+      "noSpanishFallback": "No Spanish version of this document yet — showing English.",
+      "scrollToContinue": "Scroll to the end to continue",
+      "continueToSign": "I've read this — continue",
+      "done": "Done"
+    },
+    "sign": {
+      "back": "Back",
+      "title": "Sign document",
+      "heading": "Sign to acknowledge",
+      "acknowledgement": "By signing, you confirm that you have read and understood \"{{title}}\" (v{{version}}, effective {{date}}).",
+      "employeeMeta": "Employee #{{number}}",
+      "canvasLabel": "Draw your signature",
+      "clear": "Clear",
+      "undo": "Undo",
+      "useYourFinger": "Use your finger",
+      "consent": "I agree that this drawn signature is the legal equivalent of my handwritten signature.",
+      "timestampNotice": "Will be signed {{date}} at {{time}}.",
+      "submit": "Sign and submit",
+      "submitting": "Submitting…",
+      "cancel": "Cancel",
+      "error": {
+        "generic": "That didn't go through. Try again.",
+        "invalidSignature": "Draw your signature before submitting.",
+        "notFound": "This policy no longer exists.",
+        "notSignedIn": "Sign in again to continue."
+      }
+    },
+    "success": {
+      "title": "Signed",
+      "subtitle": "A signed copy was emailed to you and saved to your profile.",
+      "versionLabel": "Version {{version}}",
+      "signedBy": "Signed by",
+      "date": "Date",
+      "time": "Time",
+      "effective": "Effective",
+      "reference": "Reference",
+      "emailedTo": "Emailed to {{email}}",
+      "emailPending": "We'll email your copy shortly — it hasn't gone out yet.",
+      "stillNeedsTitle": "Still needs your signature",
+      "signNext": "Sign the next document",
+      "done": "Done"
+    },
+    "disciplineSign": {
+      "title": "Sign disciplinary record",
+      "acknowledgement": "By signing, you confirm you have reviewed this {{type}} dated {{date}} and understand its contents.",
+      "error": {
+        "invalidSignature": "Draw your signature before submitting.",
+        "notOwnTarget": "You may only sign your own disciplinary action.",
+        "alreadyResolved": "This action has already been resolved.",
+        "notFound": "This disciplinary action no longer exists."
+      }
+    }
+  },
+  "discipline": {
+    "types": {
+      "verbal-warning": "Verbal warning",
+      "written-warning": "Written warning",
+      "writeup": "Write-up",
+      "final-warning": "Final warning",
+      "suspension": "Suspension",
+      "termination-note": "Termination note"
+    },
+    "status": {
+      "draft": "Draft",
+      "issued": "Issued",
+      "signed": "Signed",
+      "refused-to-sign": "Refused to sign"
     }
   }
 }

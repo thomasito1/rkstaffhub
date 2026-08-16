@@ -63,6 +63,17 @@ service firebase.storage {
       allow write: if false; // Cloud Function only.
     }
 
+    // The raw signature-canvas PNG behind a signed-pdfs entry (spec §12).
+    // Written server-side only, from submitSignature's decoded payload —
+    // there is no client-upload-then-verify step here (unlike punch-selfies)
+    // since the signature bytes arrive directly in the callable's own
+    // payload, small enough to not need a separate Storage round trip.
+    match /signature-images/{employeeId}/{fileName} {
+      allow read: if signedIn()
+                  && (myEmployeeId() == employeeId || isManagerOrAbove());
+      allow write: if false; // Cloud Function only.
+    }
+
     // Employee profile photos.
     match /profile-photos/{employeeId}/{fileName} {
       allow read: if signedIn();

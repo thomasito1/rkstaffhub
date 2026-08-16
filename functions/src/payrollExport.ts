@@ -33,6 +33,7 @@ import { centsToCsvString } from './money'
 import { bucketPunchesIntoDailyHours, type PunchLike } from './payroll/dailyHours'
 import { workweekRangeCoveringPeriod } from './payroll/overtime'
 import { computePayrollRow, type PayPeriodFrequency } from './payroll/payrollRows'
+import { payDateForPeriod } from './payroll/periods'
 import { isoDateOfInstant } from './payrollHelpers'
 import type { CompensationDoc, EmployeeDoc, PayPeriodDoc, PunchDoc } from './model'
 
@@ -58,7 +59,7 @@ interface ExportRow {
   salaryAmount: string // dollars string or ''
 }
 
-function toGenericCsv(rows: ExportRow[], periodLabel: string): string {
+function toGenericCsv(rows: ExportRow[], periodLabel: string, payDate: string): string {
   const header = [
     'employeeNumber',
     'name',
@@ -70,6 +71,7 @@ function toGenericCsv(rows: ExportRow[], periodLabel: string): string {
     'tips',
     'salaryAmount',
     'period',
+    'payDate',
   ]
   const lines = rows.map((r) =>
     csvLine([
@@ -83,13 +85,14 @@ function toGenericCsv(rows: ExportRow[], periodLabel: string): string {
       r.tips,
       r.salaryAmount,
       periodLabel,
+      payDate,
     ]),
   )
   return [csvLine(header), ...lines].join('\n')
 }
 
 /** Best-effort Gusto hours-import shape — see file header caveat. */
-function toGustoCsv(rows: ExportRow[], periodStart: string, periodEnd: string): string {
+function toGustoCsv(rows: ExportRow[], periodStart: string, periodEnd: string, payDate: string): string {
   const header = [
     'Employee ID',
     'Employee Name',
@@ -99,6 +102,7 @@ function toGustoCsv(rows: ExportRow[], periodStart: string, periodEnd: string): 
     'Additional Earnings',
     'Period Start',
     'Period End',
+    'Pay Date',
   ]
   const lines = rows.map((r) =>
     csvLine([
@@ -110,13 +114,14 @@ function toGustoCsv(rows: ExportRow[], periodStart: string, periodEnd: string): 
       r.salaryAmount,
       periodStart,
       periodEnd,
+      payDate,
     ]),
   )
   return [csvLine(header), ...lines].join('\n')
 }
 
 /** Best-effort ADP hours-import shape — see file header caveat. */
-function toAdpCsv(rows: ExportRow[], periodStart: string, periodEnd: string): string {
+function toAdpCsv(rows: ExportRow[], periodStart: string, periodEnd: string, payDate: string): string {
   const header = [
     'Employee File Number',
     'Employee Name',
@@ -126,6 +131,7 @@ function toAdpCsv(rows: ExportRow[], periodStart: string, periodEnd: string): st
     'Other Earnings',
     'Pay Period Start',
     'Pay Period End',
+    'Check Date',
   ]
   const lines = rows.map((r) =>
     csvLine([
@@ -137,6 +143,7 @@ function toAdpCsv(rows: ExportRow[], periodStart: string, periodEnd: string): st
       String(Number(r.tips || '0') + Number(r.salaryAmount || '0')),
       periodStart,
       periodEnd,
+      payDate,
     ]),
   )
   return [csvLine(header), ...lines].join('\n')
@@ -276,12 +283,13 @@ export const exportPayPeriodCsv = onCall<ExportPayPeriodCsvRequest>(
     }
 
     const periodLabel = `${period.startDate}_${period.endDate}`
+    const payDate = payDateForPeriod(period.startDate)
     const csv =
       variant === 'gusto'
-        ? toGustoCsv(rows, period.startDate, period.endDate)
+        ? toGustoCsv(rows, period.startDate, period.endDate, payDate)
         : variant === 'adp'
-          ? toAdpCsv(rows, period.startDate, period.endDate)
-          : toGenericCsv(rows, periodLabel)
+          ? toAdpCsv(rows, period.startDate, period.endDate, payDate)
+          : toGenericCsv(rows, periodLabel, payDate)
 
     const fileName = `payroll_${periodLabel}_${variant}${isDraft ? '_DRAFT' : ''}.csv`
 

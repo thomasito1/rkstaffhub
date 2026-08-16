@@ -227,18 +227,14 @@ describe('auditLog is append-only from the server', () => {
   })
 })
 
-describe('later-phase collections are denied by default', () => {
-  it('denies reads of collections no phase has enabled yet', async () => {
-    // schedules/availability/shiftTemplates/timeOff moved OUT of this list when
-    // Phase 1 scheduling rules landed (scheduling.rules.test.ts); punches/
-    // trades/tipReports moved out when Phase 2 landed
-    // (punchesTipsTrades.rules.test.ts); tasks/taskInstances moved out when
-    // Phase 3(b) landed (tasks.rules.test.ts) — even an owner reading a
-    // NONEXISTENT doc there now gets a real rule verdict (allowed, since
-    // owner holds tasks.manage) rather than the old blanket deny, so those
-    // five no longer belong in this list.
-    const owner = ctx('uid-emp-owner', 'emp-owner', 'owner')
-    await assertFails(getDoc(doc(owner, 'policies/policy-1')))
-    await assertFails(getDoc(doc(owner, 'disciplinaryActions/action-1')))
-  })
-})
+// "later-phase collections are denied by default" (a describe block that
+// once lived here) is gone, not just emptied: schedules/availability/
+// shiftTemplates/timeOff moved out when Phase 1 landed, punches/trades/
+// tipReports when Phase 2 landed, tasks/taskInstances when Phase 3(b)
+// landed, payPeriods when Phase 3(c) landed, and policies/
+// disciplinaryActions/signatures/disciplinaryLadder when Phase 4 landed
+// (see disciplinary.rules.test.ts / policies.rules.test.ts) — every
+// collection this app defines now has a real rule, so there was nothing
+// left for this test to assert. If a future phase adds a new collection
+// before its rules exist, recreate a test in this shape rather than assume
+// Firestore's own "no matching rule ⇒ deny" needs no coverage at all.

@@ -2,13 +2,17 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 
-import { Button, EmptyState, FilterSelect } from '@/components/ui'
+import { Button, EmptyState, FilterSelect, useToast } from '@/components/ui'
 import { RequirePermission } from '@/components/guards/RouteGuards'
+import { generateAiSchedule } from '@/lib/ai/aiActions'
 import { useAuth } from '@/lib/auth/AuthProvider'
 import { addDaysToIsoDate } from '@/lib/deadlines'
 import { formatDate, weekIdFor } from '@/lib/format'
+import { useAiSchedulingEnabled } from '@/pages/settings/AiProvidersPage'
 import type { Department, Shift } from '@/types/models'
 
+import { aiErrorMessage } from './components/aiErrorMessage'
+import { AiDraftBanner } from './components/AiDraftBanner'
 import { DayPartFulfillmentRow } from './components/DayPartFulfillmentRow'
 import { LaborFooter } from './components/LaborFooter'
 import { PublishModal } from './components/PublishModal'
@@ -50,6 +54,7 @@ function ScheduleBuilderScreen(): JSX.Element {
   const { t, i18n } = useTranslation()
   const lang = i18n.language
   const { can } = useAuth()
+  const toast = useToast()
 
   const [now] = useState(() => new Date())
   const thisWeekId = useMemo(() => weekIdFor(now), [now])
@@ -58,10 +63,41 @@ function ScheduleBuilderScreen(): JSX.Element {
   const [department, setDepartment] = useState<string>(ALL)
   const [modal, setModal] = useState<ModalTarget | null>(null)
   const [publishOpen, setPublishOpen] = useState(false)
+  const [generatingDraft, setGeneratingDraft] = useState(false)
 
   const canCreate = can('schedule.create')
   const canEditExisting = can('schedule.edit')
   const canPublish = can('schedule.publish')
+  const canGenerate = can('ai.generateSchedule')
+  const aiSchedulingEnabled = useAiSchedulingEnabled()
+
+  // Spec §13 / functions/src/ai/generate.ts: the server itself refuses to run
+  // against an already-live week — hide the entry point rather than invite a
+  // doomed request. A week with no schedule doc yet (never generated or
+  // published) is treated as draft.
+  const weekIsLive = data.schedule?.status === 'published' || data.schedule?.status === 'republished'
+  // Once a draft already has an AI draft, a bare "Generate with AI" (no
+  // instructions) would ADD more shifts on top rather than replace them —
+  // functions/src/ai/generate.ts only clears prior `aiGenerated` shifts when
+  // `instructions` is present (guardrail #6). The banner's own "regenerate
+  // with instructions" box is the correct way to iterate on an existing
+  // draft, so the toolbar button steps aside once one exists — matching
+  // mockup 13, which never shows both controls at the same time.
+  const showGenerateButton =
+    canGenerate && aiSchedulingEnabled === true && !weekIsLive && !data.schedule?.aiDraftMeta
+
+  async function handleGenerateDraft(): Promise<void> {
+    setGeneratingDraft(true)
+    try {
+      await generateAiSchedule(data.weekId)
+      toast.show({ tone: 'success', message: t('scheduleBuilder.ai.toast.generated') })
+      await data.reload()
+    } catch (err) {
+      toast.show({ tone: 'error', message: aiErrorMessage(t, err) })
+    } finally {
+      setGeneratingDraft(false)
+    }
+  }
 
   const weekRangeLabel = useMemo(() => {
     const first = data.weekDates[0]
@@ -171,6 +207,15 @@ function ScheduleBuilderScreen(): JSX.Element {
               {t('scheduleBuilder.warningCount', { count: warningCount })}
             </button>
           ) : null}
+          {showGenerateButton ? (
+            <Button
+              variant="secondary"
+              disabled={generatingDraft}
+              onClick={() => void handleGenerateDraft()}
+            >
+              {generatingDraft ? t('scheduleBuilder.ai.generating') : t('scheduleBuilder.ai.generateButton')}
+            </Button>
+          ) : null}
           {canPublish ? (
             <Button variant="primary" onClick={() => setPublishOpen(true)}>
               {t('scheduleBuilder.publishButton')}
@@ -230,6 +275,15 @@ function ScheduleBuilderScreen(): JSX.Element {
             {t('scheduleBuilder.pushPending.banner', { count: pushPendingCount })}
           </p>
         </div>
+      ) : null}
+
+      {data.schedule?.aiDraftMeta && canGenerate && aiSchedulingEnabled ? (
+        <AiDraftBanner
+          weekId={data.weekId}
+          meta={data.schedule.aiDraftMeta}
+          lang={lang}
+          onGenerated={data.reload}
+        />
       ) : null}
 
       {data.loading ? (

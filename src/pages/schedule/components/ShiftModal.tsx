@@ -196,6 +196,18 @@ export function ShiftModal({
       station: station.trim() ? station.trim() : null,
       notes: notes.trim() ? notes.trim() : null,
       isOnCall,
+      // A manager saving through this modal is, by definition, the "manual
+      // edit" the doc comments on Shift.aiValidationNote/aiGenerated
+      // (src/types/models.ts) describe: the note is stale the moment a human
+      // resolves the shift (assigned or left open on purpose), and the shift
+      // must stop carrying `aiGenerated: true` so a later "regenerate with
+      // instructions" (guardrail #6) preserves it instead of deleting it as
+      // still-AI-authored. `createShift`'s own payload builder (src/lib/db/
+      // schedules.ts) does not forward these two keys for a brand-new shift,
+      // so this only takes effect on `updateShift` — exactly the case that
+      // matters here.
+      aiValidationNote: null,
+      aiGenerated: false,
     }
   }
 

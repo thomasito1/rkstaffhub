@@ -42,10 +42,26 @@ export const COLLECTIONS = {
   tasks: 'tasks',
   taskInstances: 'taskInstances',
   payPeriods: 'payPeriods',
+  policies: 'policies',
+  signatures: 'signatures',
+  disciplinaryActions: 'disciplinaryActions',
+  disciplinaryLadder: 'disciplinaryLadder',
+  shiftTemplates: 'shiftTemplates',
+  /**
+   * Emulator/dev-only stand-in for Google Secret Manager (spec §13, Phase
+   * 5) — see `functions/src/ai/secrets.ts`. The leading underscore signals
+   * "not real production data"; `firestore.rules` denies every client
+   * unconditionally, same as `auditLog`.
+   */
+  devSecrets: '_devSecrets',
 } as const
 
 /** `settings/{APP_SETTINGS_ID}` — mirrors src/lib/db/settings.ts's constant. */
 export const APP_SETTINGS_ID = 'app'
+/** `settings/{AI_SETTINGS_ID}` (spec §13) — mirrors src/lib/db/aiSettings.ts's constant. */
+export const AI_SETTINGS_ID = 'aiProviders'
+/** `settings/{AI_RATE_LIMIT_ID}` — the cost-guard rolling window (functions/src/ai/rateLimit.ts). Never read by a client. */
+export const AI_RATE_LIMIT_ID = 'aiRateLimit'
 
 /** Sensitive subdocuments — see the deviation note atop firestore.rules. */
 export const PRIVATE = {

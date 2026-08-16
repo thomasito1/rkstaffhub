@@ -43,3 +43,19 @@ export * from './taskInstances'
 // Phase 3(c) — payroll (spec §11). Reads only — lock/unlock/export are
 // Cloud Functions, see src/lib/payroll/payrollActions.ts.
 export * from './payPeriods'
+
+// Phase 4 — HR: policy library + signatures (spec §12). `policies` writes
+// (createPolicyFamily/createPolicyVersion) go straight through this module,
+// gated by firestore.rules' `policies.manage` permission — no Cloud Function
+// needed for policy CRUD. `signatures` is reads only — submitSignature is a
+// Cloud Function, see src/lib/hr/hrActions.ts.
+export * from './policies'
+export * from './signatures'
+export * from './disciplinaryActions'
+export * from './disciplinaryLadder'
+export * from './disciplinaryActionsAdmin'
+
+// Phase 5 — AI scheduling (spec §13). Metadata only, reads only —
+// configureAiProvider/setActiveAiProvider/generateAiSchedule are Cloud
+// Functions, see src/lib/ai/aiActions.ts.
+export * from './aiSettings'

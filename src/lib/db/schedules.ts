@@ -158,6 +158,12 @@ function toShift(
     department: (d.department as Department) ?? 'FOH',
     station: (d.station as string | null) ?? null,
     notes: (d.notes as string | null) ?? null,
+    // Spec §13 (Phase 5 AI scheduling) — both written by `generateAiSchedule`
+    // (functions/src/ai/generate.ts) and read by the schedule builder's AI
+    // banner/open-shift badge. Omitted here before Phase 5, every AI-authored
+    // shift would silently read back as an ordinary manual one.
+    aiValidationNote: (d.aiValidationNote as Shift['aiValidationNote']) ?? null,
+    aiGenerated: d.aiGenerated === true,
     isOnCall: d.isOnCall === true,
     status: SHIFT_STATUSES.includes(status) ? status : 'draft',
     locationId: (d.locationId as string | null) ?? null,

@@ -77,9 +77,63 @@ export interface EmployeeDoc {
   tipsRequired?: boolean
 }
 
-/** Only the fields the publish callable needs. */
+/** Only the fields the publish/AI-generation callables need. */
 export interface ScheduleDoc {
+  weekId?: string
   status?: string
+  laborTargetPct?: number | null
+  aiDraftMeta?: AiDraftMetaDoc | null
+}
+
+/** Only the fields the AI-generation callable needs (spec §13, Phase 5). */
+export interface AvailabilityDoc {
+  employeeId?: string
+  weekId?: string
+  type?: 'recurring' | 'temporary'
+  days?: Record<string, { status: 'available' | 'unavailable' | 'partial'; from?: string | null; to?: string | null }>
+  status?: string
+}
+
+/** Only the fields the AI-generation callable needs. */
+export interface ShiftTemplateDoc {
+  dayOfWeek?: string
+  startTime?: string
+  endTime?: string
+  requirements?: { roleId: string; count: number; minSkillLevel: number }[]
+  profileKey?: string
+  dateRange?: { startDate: string; endDate: string } | null
+}
+
+export type AiProviderName = 'anthropic' | 'openai' | 'google' | 'custom'
+
+export interface AiDraftMetaDoc {
+  provider: string
+  model: string
+  generatedAt: unknown
+  promptSummary: string
+  instructions?: string | null
+  tokensUsed?: { input: number; output: number } | null
+  invalidShiftCount?: number
+}
+
+/** Only the fields the AI callables need — never the key itself (see functions/src/ai/secrets.ts). */
+export interface AiProviderConfigDoc {
+  provider: AiProviderName
+  model: string
+  keyLast4: string
+  secretRef: string
+  endpoint?: string | null
+  connected: boolean
+  lastUsedAt?: unknown | null
+  configuredBy: string
+  createdAt?: unknown
+  updatedAt?: unknown
+}
+
+export interface AiSettingsDoc {
+  active: AiProviderName | null
+  providers: Partial<Record<AiProviderName, AiProviderConfigDoc>>
+  updatedAt?: unknown
 }
 
 /** Only the fields the override/trade/task callables need. */
@@ -90,7 +144,7 @@ export interface ShiftRoleDoc {
   department?: Department
 }
 
-/** Only the fields the override/trade callables need. */
+/** Only the fields the override/trade/AI-generation callables need. */
 export interface ShiftDoc {
   employeeId?: string | null
   date?: string
@@ -99,6 +153,11 @@ export interface ShiftDoc {
   roleId?: string
   requiredSkillLevel?: number
   department?: Department
+  station?: string | null
+  notes?: string | null
+  aiValidationNote?: { messageKey: string; params?: Record<string, string | number> } | null
+  aiGenerated?: boolean
+  isOnCall?: boolean
   status?: string
 }
 
@@ -130,6 +189,7 @@ export interface TradeDoc {
 
 /** Only the fields the trade action callables need. */
 export interface TimeOffDoc {
+  employeeId?: string
   startDate?: string
   endDate?: string
   status?: string
@@ -162,9 +222,10 @@ export function displayName(employee: EmployeeDoc): string {
   return [first, last].filter(Boolean).join(' ')
 }
 
-/** Only the fields the punch/tip callables need. */
+/** Only the fields the punch/tip/AI-generation callables need. */
 export interface AppSettingsDoc {
   geofence?: { lat: number; lng: number; radiusMeters: number }
+  laborTargetPct?: number | null
   payPeriod?: {
     frequency?: 'weekly' | 'biweekly' | 'semimonthly'
     startDay?: string
@@ -252,4 +313,81 @@ export interface PayPeriodDoc {
   exportedAt?: unknown
   exportedBy?: string | null
   exportFileName?: string | null
+}
+
+export type PolicyCategory = 'handbook' | 'policy' | 'onboarding' | 'other'
+
+/** Mirrors Policy (src/types/models.ts). */
+export interface PolicyDoc {
+  familyId?: string
+  title?: string
+  titleEs?: string
+  bodyMarkdown?: string
+  bodyMarkdownEs?: string
+  version?: number
+  category?: PolicyCategory
+  requiresSignature?: boolean
+  activeFrom?: string
+  isCurrent?: boolean
+}
+
+export type SignatureTargetType = 'policy' | 'disciplinaryAction'
+
+/** Mirrors Signature (src/types/models.ts). */
+export interface SignatureDoc {
+  employeeId?: string
+  targetType?: SignatureTargetType
+  targetId?: string
+  policyVersion?: number | null
+  signatureImagePath?: string
+  signedAt?: unknown
+  pdfStoragePath?: string | null
+  emailedTo?: string | null
+  emailedAt?: unknown
+  emailPending?: boolean
+  emailPendingAt?: unknown
+  language?: 'en' | 'es'
+}
+
+export type DisciplinaryActionType =
+  | 'verbal-warning'
+  | 'written-warning'
+  | 'writeup'
+  | 'final-warning'
+  | 'suspension'
+  | 'termination-note'
+
+export type DisciplinaryActionStatus = 'draft' | 'issued' | 'signed' | 'refused-to-sign'
+
+/** Mirrors DisciplinaryAction (src/types/models.ts). */
+export interface DisciplinaryActionDoc {
+  employeeId?: string
+  type?: DisciplinaryActionType
+  date?: string
+  issuedBy?: string
+  policyRefs?: string[]
+  narrative?: string
+  signatureId?: string | null
+  status?: DisciplinaryActionStatus
+  refusedWitnessEmployeeId?: string | null
+  refusedAt?: unknown
+  employeeAccessRole?: AccessRole
+  pdfStoragePath?: string | null
+  emailedTo?: string | null
+  emailedAt?: unknown
+  emailPending?: boolean
+  emailPendingAt?: unknown
+}
+
+export interface DisciplinaryLadderStepDoc {
+  order: number
+  type: DisciplinaryActionType
+  thresholdCount: number
+  consequenceText: string
+  consequenceTextEs: string
+}
+
+/** Mirrors DisciplinaryLadder (src/types/models.ts). */
+export interface DisciplinaryLadderDoc {
+  steps?: DisciplinaryLadderStepDoc[]
 }

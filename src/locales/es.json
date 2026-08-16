@@ -48,7 +48,8 @@
     "yes": "Sí",
     "no": "No",
     "english": "Inglés",
-    "spanish": "Español"
+    "spanish": "Español",
+    "remove": "Quitar"
   },
   "status": {
     "pending": "Pendiente",
@@ -562,7 +563,7 @@
       "documentsTitle": "Mis documentos",
       "documentsEmptyTitle": "Todavía no hay documentos",
       "standingTitle": "Mi situación",
-      "standingSubtitle": "Disciplina progresiva · se reinicia tras 12 meses sin incidentes.",
+      "standingSubtitle": "Disciplina progresiva según las acciones en el expediente.",
       "standingEmptyTitle": "No hay nada en tu expediente"
     },
     "import": {
@@ -614,6 +615,23 @@
       "doneBody": "Creados: {{created}}. Omitidos: {{skipped}}.",
       "importAnother": "Importar otro archivo",
       "goToRoster": "Ir a la lista"
+    },
+    "discipline": {
+      "emptyTitle": "Nada en el expediente",
+      "emptyBody": "No hay acciones disciplinarias registradas.",
+      "noLadderConfigured": "Todavía no se ha configurado una escalera de consecuencias.",
+      "actionsCount_one": "{{count}} acción en el expediente",
+      "actionsCount_other": "{{count}} acciones en el expediente",
+      "currentStepLabel": "Nivel actual",
+      "belowFirstStep": "Todavía no se ha alcanzado ningún nivel formal.",
+      "nextStepLabel": "Siguiente nivel",
+      "topOfLadder": "En el nivel más alto configurado.",
+      "pendingSignatureTitle": "Necesita tu firma",
+      "pendingSignatureBody_one": "Tienes {{count}} acción disciplinaria esperando tu firma.",
+      "pendingSignatureBody_other": "Tienes {{count}} acciones disciplinarias esperando tu firma.",
+      "reviewAndSign": "Revisar y firmar",
+      "signedToast": "Firmado. Gracias por confirmar.",
+      "manageLink": "Gestionar en Disciplina"
     }
   },
   "conflicts": {
@@ -632,6 +650,12 @@
     "overrideReasonLabel": "Motivo de la excepción",
     "overrideReasonPlaceholder": "P. ej., la única otra persona calificada llamó enferma",
     "overrideReasonHelp": "Obligatorio. Se registra en el historial de auditoría con tu nombre."
+  },
+  "ai": {
+    "errors": {
+      "unknownEmployee": "Este turno se propuso para un empleado que no se pudo encontrar — necesita revisión manual.",
+      "noMatchingRequirement": "Este turno propuesto no coincidió con ningún requisito de plantilla de turno y fue omitido."
+    }
   },
   "weekdays": {
     "long": {
@@ -785,7 +809,8 @@
     "card": {
       "ariaLabel": "Turno de {{role}}, de {{start}} a {{end}}",
       "onCall": "Turno de guardia",
-      "open": "Sin asignar"
+      "open": "Sin asignar",
+      "aiNoteAriaLabel": "Marcado por la IA, necesita revisión: {{reason}}"
     },
     "footer": {
       "labor": "Mano de obra",
@@ -883,6 +908,31 @@
       "met": "Requisitos cumplidos",
       "unmet": "Requisitos no cumplidos",
       "requirementLine": "{{count}}× {{role}} (mín. N{{level}}) — hay {{have}}"
+    },
+    "ai": {
+      "generateButton": "Generar con IA",
+      "generating": "Generando…",
+      "banner": {
+        "title": "Borrador de IA — requiere revisión",
+        "subtitle": "No visible para el personal hasta que publiques.",
+        "provenance": "Generado {{date}} usando {{provider}} · {{model}}",
+        "invalidCount_one": "{{count}} turno necesita revisión",
+        "invalidCount_other": "{{count}} turnos necesitan revisión",
+        "regenerateLabel": "Ajustar y regenerar",
+        "regeneratePlaceholder": "p. ej. dale el sábado libre a Robin, más cobertura de barra el viernes",
+        "regenerateButton": "Regenerar con instrucciones",
+        "regenerating": "Regenerando…",
+        "instructionsRequired": "Agrega instrucciones para regenerar."
+      },
+      "error": {
+        "rateLimited": "Demasiadas generaciones de IA recientemente — intenta de nuevo en unos minutos.",
+        "notReady": "La generación con IA no está disponible para esta semana en este momento. Verifica que haya un proveedor de IA configurado en Configuración → Proveedores de IA, y que esta semana no esté ya publicada.",
+        "generic": "La generación con IA no pudo completarse. Inténtalo de nuevo, o contacta a un propietario si esto sigue ocurriendo."
+      },
+      "toast": {
+        "generated": "Borrador de IA generado — revísalo antes de publicar.",
+        "regenerated": "Borrador de IA regenerado — revísalo antes de publicar."
+      }
     }
   },
   "more": {
@@ -967,7 +1017,10 @@
       "shiftsAndTips": "Turnos y propinas",
       "shiftTemplates": "Plantillas de turno",
       "tasks": "Tareas",
-      "payroll": "Nómina"
+      "payroll": "Nómina",
+      "policies": "Biblioteca de políticas",
+      "discipline": "Disciplina",
+      "ai": "Proveedores de IA"
     },
     "roles": {
       "title": "Puestos y jerarquía",
@@ -1201,6 +1254,7 @@
       "nextPeriod": "Período siguiente",
       "selectPeriod": "Seleccionar período de pago",
       "periodOrdinal": "{{frequency}} · Período {{index}} de {{total}}",
+      "payDate": "Fecha de pago: {{date}}",
       "frequency": {
         "weekly": "Semanal",
         "biweekly": "Quincenal",
@@ -1293,6 +1347,164 @@
         "periodNotFound": "Ese período de pago ya no existe.",
         "reasonRequired": "Se requiere un motivo.",
         "exportFailed": "No se pudo exportar este período. Intenta de nuevo."
+      }
+    },
+    "policyLibrary": {
+      "title": "Biblioteca de políticas",
+      "subtitle": "Políticas, manuales y documentos de incorporación",
+      "newPolicy": "Nueva política",
+      "newVersion": "Nueva versión",
+      "searchPlaceholder": "Buscar políticas",
+      "filterCategory": "Categoría",
+      "allCategories": "Todas las categorías",
+      "showOlderVersions_one": "{{count}} versión anterior",
+      "showOlderVersions_other": "{{count}} versiones anteriores",
+      "hideOlderVersions": "Ocultar versiones anteriores",
+      "versionMeta": "v{{version}} · actualizado {{date}}",
+      "olderVersionLine": "v{{version}} · {{date}}",
+      "errorBody": "No se pudo cargar la biblioteca de políticas. Intenta de nuevo.",
+      "emptyTitle": "Todavía no hay políticas",
+      "emptyBody": "Crea la primera política o sección del manual para que el personal la lea y firme.",
+      "categories": {
+        "handbook": "Manual",
+        "policy": "Política",
+        "onboarding": "Incorporación",
+        "other": "Otro"
+      },
+      "badges": {
+        "signatureRequired": "Requiere firma"
+      },
+      "modal": {
+        "newTitle": "Nueva política",
+        "newVersionTitle": "Nueva versión",
+        "newVersionNotice": "Guardar crea una nueva versión de esta política. El texto de la versión anterior se mantiene exactamente igual — quien ya la firmó conserva una firma válida para esa versión, y solo la versión ACTUAL pedirá una nueva firma.",
+        "title": "Título (inglés)",
+        "titleEs": "Título (español)",
+        "titleEsPlaceholder": "Opcional — se muestra en inglés hasta que se complete",
+        "body": "Contenido (inglés)",
+        "bodyEs": "Contenido (español)",
+        "bodyEsPlaceholder": "Opcional — se muestra en inglés hasta que se complete",
+        "category": "Categoría",
+        "activeFrom": "Fecha de vigencia",
+        "requiresSignature": "Requiere firma",
+        "saveVersion": "Guardar nueva versión",
+        "titleRequired": "El título es obligatorio.",
+        "bodyRequired": "El contenido es obligatorio.",
+        "activeFromRequired": "Se requiere una fecha de vigencia."
+      },
+      "toast": {
+        "created": "\"{{name}}\" creada.",
+        "createFailed": "No se pudo crear esa política. Intenta de nuevo.",
+        "versioned": "Nueva versión de \"{{name}}\" creada.",
+        "versionFailed": "No se pudo guardar la nueva versión. Intenta de nuevo."
+      }
+    },
+    "discipline": {
+      "title": "Disciplina",
+      "subtitle": "Acciones disciplinarias progresivas y su historial",
+      "viewingNotice": "Estás viendo expedientes disciplinarios de empleados por debajo de tu nivel de acceso. Los dueños ven todos los expedientes.",
+      "searchEmployeesPlaceholder": "Buscar empleados",
+      "noBelowLevelEmployees": "No hay nadie por debajo de tu nivel de acceso para ver sus expedientes.",
+      "emptySelectionTitle": "Selecciona un empleado",
+      "emptySelectionBody": "Elige a alguien de la lista para ver su historial disciplinario y emitir una nueva acción.",
+      "errorTitle": "No se pudo cargar esta pantalla",
+      "errorBody": "No se pudieron cargar los expedientes disciplinarios. Inténtalo de nuevo.",
+      "form": {
+        "title": "Nueva acción disciplinaria",
+        "employeeLabel": "Empleado",
+        "priorCountNote": "{{name}} tiene {{count}} acción(es) previa(s) contabilizada(s) en su expediente.",
+        "typeLabel": "Tipo de acción",
+        "dateLabel": "Fecha del incidente",
+        "policyRefsLabel": "Políticas relacionadas",
+        "addPolicy": "+ Agregar política",
+        "narrativeLabel": "Descripción",
+        "narrativeCount": "{{count}} / {{max}}",
+        "refusedToggleTitle": "Se negó a firmar",
+        "refusedToggleBody": "Actívalo si el empleado se niega a firmar. Se requerirá un testigo.",
+        "witnessLabel": "Testigo",
+        "witnessPlaceholder": "Selecciona un testigo",
+        "submit": "Crear y enviar para firma",
+        "submitRefused": "Crear y registrar negativa",
+        "submitting": "Guardando…",
+        "errors": {
+          "typeRequired": "Elige un tipo de acción.",
+          "dateRequired": "Se requiere una fecha.",
+          "narrativeRequired": "Se requiere una descripción.",
+          "witnessRequired": "Se requiere un testigo para registrar una negativa."
+        }
+      },
+      "toast": {
+        "issued": "Acción disciplinaria creada.",
+        "refused": "Registrada como negativa a firmar."
+      },
+      "ladder": {
+        "title": "{{name}} · Escalera disciplinaria",
+        "subtitle": "Disciplina progresiva según las acciones en el expediente.",
+        "empty": "Todavía no se ha configurado una escalera de consecuencias.",
+        "noActions": "Este empleado no tiene acciones disciplinarias en su expediente.",
+        "atStep": "Actualmente en",
+        "belowFirstStep": "Todavía no se ha alcanzado ningún nivel formal",
+        "nextStep": "Siguiente nivel",
+        "topOfLadder": "En el nivel más alto configurado — no hay un siguiente nivel definido."
+      },
+      "history": {
+        "title": "Historial",
+        "empty": "Este empleado no tiene acciones disciplinarias en su expediente.",
+        "awaitingSignature": "Pendiente de la firma del propio empleado",
+        "recordRefusal": "Registrar negativa a firmar",
+        "emailPendingNotice": "El correo aún no se ha enviado — se reintentará.",
+        "emailedTo": "Enviado por correo a {{email}}"
+      },
+      "refuseModal": {
+        "title": "Registrar negativa a firmar",
+        "body": "{{name}} se negó a firmar esta {{type}}. Confirma quién fue testigo de la negativa.",
+        "witnessLabel": "Testigo",
+        "confirm": "Confirmar negativa",
+        "cancel": "Cancelar"
+      },
+      "error": {
+        "belowLevelRequired": "Solo puedes actuar sobre el expediente de alguien por debajo de tu nivel de acceso.",
+        "alreadyResolved": "Esta acción ya fue resuelta.",
+        "notFound": "Esa acción disciplinaria ya no existe.",
+        "invalidArgument": "Completa todos los campos requeridos antes de enviar."
+      }
+    },
+    "aiProviders": {
+      "title": "Proveedores de IA",
+      "subtitle": "Elige el modelo que genera los borradores de horario",
+      "securityNote": "Las claves de API se cifran en reposo y nunca se envían al navegador. Solo los dueños pueden verlas o cambiarlas.",
+      "errorBody": "No se pudo cargar la configuración de proveedores de IA. Inténtalo de nuevo.",
+      "active": "Activo",
+      "notConfigured": "Sin configurar",
+      "notYetUsed": "Aún sin uso",
+      "connected": "Conectado",
+      "connectedLastUsed": "Conectado · último uso {{date}}",
+      "addKey": "Agregar clave",
+      "replace": "Reemplazar",
+      "model": "Modelo",
+      "apiKey": "Clave de API",
+      "baseUrl": "URL base",
+      "apiKeyPlaceholder": "Pega tu clave de API",
+      "baseUrlPlaceholder": "https://api.example.com/v1",
+      "customModelPlaceholder": "p. ej. llama-3-70b",
+      "keyMasked": "•••• {{last4}}",
+      "setActive": "Convertir en el proveedor activo",
+      "providers": {
+        "anthropic": { "name": "Anthropic", "description": "Modelos Claude" },
+        "openai": { "name": "OpenAI", "description": "Modelos GPT" },
+        "google": { "name": "Google", "description": "Modelos Gemini" },
+        "custom": { "name": "Personalizado", "description": "Cualquier endpoint compatible con OpenAI" }
+      },
+      "validation": {
+        "modelRequired": "Elige un modelo.",
+        "apiKeyRequired": "Ingresa una clave de API.",
+        "endpointRequired": "Ingresa la URL base del endpoint."
+      },
+      "toast": {
+        "configured": "Clave de {{provider}} guardada.",
+        "configureFailed": "No se pudo guardar esa clave. Inténtalo de nuevo.",
+        "activated": "{{provider}} ahora es el proveedor activo.",
+        "activateFailed": "No se pudo cambiar el proveedor activo. Inténtalo de nuevo."
       }
     }
   },
@@ -1818,6 +2030,96 @@
       "notFound": "Esta tarea ya no existe.",
       "noLongerAvailable": "Esta tarea ya no está disponible — puede que ya se haya completado.",
       "notEligible": "No tienes permiso para completar esta tarea."
+    }
+  },
+  "hr": {
+    "stepIndicator": "Paso {{step}} de {{total}}",
+    "hub": {
+      "title": "Centro de RR. HH.",
+      "subtitle": "Políticas, manuales y firmas",
+      "groupNeedsSignature": "Requiere tu firma",
+      "groupAll": "Todas las políticas",
+      "versionLabel": "Versión {{version}}",
+      "emptyTitle": "Todavía no hay nada aquí",
+      "emptyBody": "Todavía no se han publicado políticas. Vuelve más tarde.",
+      "status": {
+        "needs-signature": "Requiere firma",
+        "needs-resign": "Requiere volver a firmar",
+        "signed": "Firmado"
+      }
+    },
+    "read": {
+      "back": "Atrás",
+      "meta": "Versión {{version}} · vigente desde {{date}} · {{minutes}} min de lectura",
+      "langEn": "EN",
+      "langEs": "ES",
+      "noSpanishFallback": "Todavía no hay versión en español de este documento — mostrando en inglés.",
+      "scrollToContinue": "Desplázate hasta el final para continuar",
+      "continueToSign": "Lo he leído — continuar",
+      "done": "Listo"
+    },
+    "sign": {
+      "back": "Atrás",
+      "title": "Firmar documento",
+      "heading": "Firma para confirmar",
+      "acknowledgement": "Al firmar, confirmas que has leído y entendido \"{{title}}\" (v{{version}}, vigente desde {{date}}).",
+      "employeeMeta": "Empleado #{{number}}",
+      "canvasLabel": "Dibuja tu firma",
+      "clear": "Borrar",
+      "undo": "Deshacer",
+      "useYourFinger": "Usa tu dedo",
+      "consent": "Acepto que esta firma dibujada es el equivalente legal de mi firma manuscrita.",
+      "timestampNotice": "Se firmará el {{date}} a las {{time}}.",
+      "submit": "Firmar y enviar",
+      "submitting": "Enviando…",
+      "cancel": "Cancelar",
+      "error": {
+        "generic": "Eso no funcionó. Inténtalo de nuevo.",
+        "invalidSignature": "Dibuja tu firma antes de enviar.",
+        "notFound": "Esta política ya no existe.",
+        "notSignedIn": "Vuelve a iniciar sesión para continuar."
+      }
+    },
+    "success": {
+      "title": "Firmado",
+      "subtitle": "Se te envió una copia firmada por correo y se guardó en tu perfil.",
+      "versionLabel": "Versión {{version}}",
+      "signedBy": "Firmado por",
+      "date": "Fecha",
+      "time": "Hora",
+      "effective": "Vigente desde",
+      "reference": "Referencia",
+      "emailedTo": "Enviado por correo a {{email}}",
+      "emailPending": "Enviaremos tu copia en breve — todavía no se ha enviado.",
+      "stillNeedsTitle": "Todavía requiere tu firma",
+      "signNext": "Firmar el siguiente documento",
+      "done": "Listo"
+    },
+    "disciplineSign": {
+      "title": "Firmar expediente disciplinario",
+      "acknowledgement": "Al firmar, confirmas que revisaste esta {{type}} con fecha {{date}} y que entiendes su contenido.",
+      "error": {
+        "invalidSignature": "Dibuja tu firma antes de enviar.",
+        "notOwnTarget": "Solo puedes firmar tu propia acción disciplinaria.",
+        "alreadyResolved": "Esta acción ya fue resuelta.",
+        "notFound": "Esta acción disciplinaria ya no existe."
+      }
+    }
+  },
+  "discipline": {
+    "types": {
+      "verbal-warning": "Amonestación verbal",
+      "written-warning": "Amonestación escrita",
+      "writeup": "Reporte formal",
+      "final-warning": "Advertencia final",
+      "suspension": "Suspensión",
+      "termination-note": "Nota de despido"
+    },
+    "status": {
+      "draft": "Borrador",
+      "issued": "Emitida",
+      "signed": "Firmada",
+      "refused-to-sign": "Se negó a firmar"
     }
   }
 }

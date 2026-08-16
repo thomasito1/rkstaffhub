@@ -6,8 +6,20 @@
  * reads, no writes, no permission checks. This is the ONE place that answers
  * "what's required vs. what's covered" for a shiftTemplate's day-part — the
  * schedule builder renders its badge from this, and Phase 5's AI scheduler
- * (spec §13) is meant to consume the SAME computation for its prompt context
- * rather than reimplementing the requirement/coverage math independently.
+ * (`functions/src/ai/generate.ts`) imports this SAME module for its prompt
+ * context rather than reimplementing the requirement/coverage math
+ * independently — `functions/src/lib/scheduling/fulfillment.ts` is a plain
+ * symlink to this file, mirroring `src/lib/scheduling/`'s own directory
+ * shape under `functions/src/` (same trick as `tradeEligibility.ts`'s
+ * existing symlink, extended: this file's relative import of
+ * `../../types/models` only resolves correctly because the mirrored
+ * location keeps the same relative distance to a matching
+ * `functions/src/types/models.ts` symlink — that's why this file uses a
+ * relative import instead of the `@/types/models` alias Vite resolves on
+ * the client: a bare alias specifier survives `tsc`'s type-checking but is
+ * never rewritten in the emitted CommonJS, so it would 404 at runtime in
+ * functions' plain `tsc`-then-`node` build, which has no bundler to resolve
+ * it).
  *
  * A requirement line is checked against the FULL pool of same-day-part
  * shifts for its roleId, independently of every other line — not a
@@ -37,8 +49,8 @@
  */
 
 import { minutesOf } from './tradeEligibility'
-import type { ShiftStatus, SkillLevel, WeekdayKey } from '@/types/models'
-import { WEEKDAY_KEYS } from '@/types/models'
+import type { ShiftStatus, SkillLevel, WeekdayKey } from '../../types/models'
+import { WEEKDAY_KEYS } from '../../types/models'
 
 export interface RequirementLike {
   roleId: string

@@ -1,15 +1,20 @@
 # PROGRESS — RK StaffHub
 
-**Current phase: Phase 3 — Shift templates + Tasks + Payroll** (spec §19)
-Phase 0, Phase 1, and Phase 2 complete and reviewed.
-Last updated: Aug 16, 2026 — **Phase 3 complete**: 3(c) (pay periods + payroll
-workshop) done, closing out Phase 3 alongside a final service-map rework that
-supersedes 3(b)'s provisional weekday/weekend template split. Per-workweek
-FLSA overtime allocated to semimonthly periods, integer-cents money
-throughout, `payroll.view` tightened to Owner/GM only, period lock/unlock
-with the audit guarantee, generic/Gusto/ADP CSV export, and a four-profile
-service map (Weekday Lunch, Brunch, Weekday-shape Dinner, Weekend Dinner)
-with the first dated-variant (seasonal hours) feature on `shiftTemplates`.
+**Current phase: Phase 5 — AI scheduling assistant** (spec §19)
+Phases 0, 1, 2, 3, and 4 complete and reviewed.
+Last updated: Aug 16, 2026 — **Phase 5 complete, stopped for review**: AI
+provider key vault (Secret Manager, metadata-only settings doc, client
+never sees key material), a generation pipeline that assembles context
+through the SAME shared conflicts/fulfillment engines the schedule builder
+already uses (no reimplementation), a strict JSON contract, real
+conflicts-engine validation of every proposed shift (invalid → open shift
+with a translated reason), draft-only output with an `aiDraftMeta` banner
+(never auto-publishes), a provider interface with real Anthropic/OpenAI/
+Google/custom implementations, regenerate-with-instructions (replaces the
+prior AI-authored draft, preserves manual edits), and a cost guard (token
+usage on the audit entry, rate-limited callable). See "Phase 5 status"
+below for the full write-up, including how the entire pipeline was proven
+live end-to-end without a real paid API key.
 
 Phases are sequential. Do not build later-phase features early, even scaffolding.
 
@@ -483,6 +488,517 @@ contents. `npm run build` (client + functions), 211 unit tests, i18n parity
 
 ---
 
+## Payroll amendments — Aug 16, 2026 (post-Phase-3-acceptance, run in parallel with Phase 4)
+
+Two items Rafa raised after accepting Phase 3, explicitly **not blocking**
+Phase 4 — both landed before this checkpoint.
+
+**1. Semimonthly period convention recut.** Superseded A3's original
+convention (6th–20th / 21st–5th cuts, same pay dates). New ruling: periods
+are **calendar 1st–15th and 16th–end-of-month**, pay dates **20th** (for
+1–15) and **5th of the following month** (for 16–EOM). `src/lib/payroll/periods.ts`
+(new, TDD — 11 tests, explicit month-end edge cases: 28/29/30/31-day
+months, February) is the actual source of truth now — pure and
+date-agnostic, symlinked into `functions/src/payroll/periods.ts`.
+`AppSettings.payPeriod`'s `semimonthlyDays`/comment is now descriptive
+only, not load-bearing (nothing in the period-generation path reads it).
+`payDateForPeriod()` is wired into the Workshop header and all three CSV
+export variants. **`splitOvertimeForWorkweek`/`allocateHoursToPeriod`
+needed zero changes** — confirmed date-agnostic exactly as designed,
+proven by re-running the OT-boundary proof under the new convention (below).
+
+**2. Bartender on every service (Rafa's ruling).** `bartender ×1 @L2`
+added to `WEEKDAY_LUNCH`, `BRUNCH`, and `WEEKDAY_DINNER`'s requirement
+arrays (`scripts/seed.ts`). `WEEKEND_DINNER` unchanged — it already carries
+`bartender ×2 @L2`. L2 was proposed (solo-coverage argument) and confirmed
+by Rafa via `AskUserQuestion`. Side effect, accepted not fixed: week 2's
+(Aug 17–23) already-seeded weekday-lunch/brunch/weekday-dinner shifts have
+no bartender line, so the new requirement reads UNMET there for every such
+day-part — not "fixed" because doing so would mean touching week 2's frozen
+shift data.
+
+**3. OT-boundary proof relocated.** Marisol Peña's real-punches OT proof
+(5×9h, 45h/week, prep-cook) moved from Aug 17–23 (which no longer straddles
+any period boundary under the new 1–15/16-EOM convention — it now falls
+entirely inside one period) to **Mon Sept 14 – Fri Sept 18, 2026**, the
+first Mon–Sun workweek after Aug 10–23 (both permanently frozen) that
+genuinely straddles a 15th/16th boundary. Verified live in the Workshop, not
+just unit-tested: the Sept 1–15 period shows **18.0 regular / 0.0 OT**
+(Mon+Tue, 18h, workweek cumulative still under 40) and the Sept 16–30
+period shows **22.0 regular / 5.0 OT** (Wed+Thu+4h of Fri regular, 5h of
+Fri OT) — sums to the workweek's true 40 regular / 5 OT exactly, split
+across the new boundary correctly. Pay dates render correctly alongside:
+"Pay date: Sep 20, 2026" for the 1–15 period, "Pay date: Oct 5, 2026" for
+the 16–30 period.
+
+**Reseeded pay periods**: `2026-07-01` (exported), `2026-07-16` (locked),
+`2026-09-01` (open), `2026-09-16` (open) — no Aug period is seeded (Aug
+10–23 no longer straddles anything and carries no pay-affecting punches of
+its own).
+
+Verified: `npm run typecheck`, `npm run build` (client + functions), 232
+unit tests, i18n parity, live Workshop review (both periods, both the
+regular/OT split and the payDate line) — all clean.
+
+---
+
+## Phase 4 status (spec §19's checklist)
+
+| Item | Status |
+| --- | --- |
+| Data model: `policies`, `signatures`, `disciplinaryActions`, `disciplinaryLadder` | ✅ Done |
+| `firestore.rules`: disciplinary sensitive trio, policy version-immutability, signature scoping | ✅ Done |
+| `issueDisciplinaryAction` + `recordRefusedToSign` Cloud Functions, audited | ✅ Done |
+| Mail transport interface + logged local stub | ✅ Done |
+| Signature capture → PDF → email, audit-style guarantee | ✅ Done |
+| Escalation ladder — pure computation (TDD) | ✅ Done |
+| Policy Library UI (admin) + staff read/sign flow | ✅ Done |
+| Disciplinary admin UI + signature canvas + profile ladder widget | ✅ Done |
+| Rules tests: disciplinary trio, policy immutability, signature scoping | ✅ Done |
+| Seed data: sample policies, one disciplinary action, ladder config | ✅ Done |
+
+**Guardrails, as ruled by Rafa, and how each was implemented:**
+
+1. **"Disciplinary = most sensitive class: full trio, strict below-level (no
+   peer-file reads), staff read only their own actions/ladder/documents."**
+   `disciplinaryActions`/`signatures` deny client create/update/delete
+   outright, on every role including Owner (Cloud-Function-only). Reads:
+   `isSelf` OR a `discipline.view` holder whose `employeeAccessRole in
+   viewableDisciplineRoles(myRole())` — a **membership** check against a
+   denormalized field (same list-query-provability pattern established Aug
+   14 for `tipReports`, now reused a third time), never a rank comparison,
+   since a rank comparison can't be proven for a `list` request. Tested
+   tier-by-tier: a peer Manager/GM/Supervisor cannot read another's
+   record — confirmed with `assertFails`, not just reasoned about.
+   **One deliberate, spec-verified exception**: `viewableDisciplineRoles('owner')`
+   includes `'owner'` itself, matching spec §4's "Owners see all" (no
+   below-level carve-out for Owner), and mirroring `canAccessSensitive()`'s
+   existing Owner bypass everywhere else in this ruleset (compensation, tip
+   reports, permission overrides). This was verified against the spec text
+   before writing the test, not assumed.
+2. **"Issuing actions is a §17 mutation via callable with the audit
+   guarantee; refused-to-sign recorded with witness, audited."**
+   `issueDisciplinaryAction`/`recordRefusedToSign` (`functions/src/disciplinaryActions.ts`)
+   both write a `discipline.issue` `auditLog` entry as a best-effort
+   follow-up (never rolling back an already-committed action if the audit
+   write fails — `markAuditPending`, same two-step shape as
+   `recordScheduleOverride`). A refusal requires a real witness
+   `employeeId`, is terminal (no re-issue), and gets the SAME PDF/email
+   treatment as a real signature even though no `Signature` document exists
+   for it (`pdfStoragePath`/`emailedTo`/`emailedAt`/`emailPending` fields
+   live directly on `DisciplinaryAction` for this reason).
+3. **"Signature→PDF→email server-side; email gets the audit-style
+   guarantee... Build against a mail-transport interface with a logged
+   local stub; production transport joins the deploy checklist alongside
+   the VAPID key."** `functions/src/mail/transport.ts` (interface) +
+   `loggedStubTransport.ts` (dev/emulator default, logs via
+   `logger.info`, always "succeeds") + `index.ts` (`getMailTransport()`
+   singleton — the one swap point for a real provider later). `submitSignature`
+   generates a PDF (`functions/src/hr/pdf.ts`, `pdfkit`) and emails a copy;
+   a failed send never rolls back the signature and never silently
+   vanishes — it flags `emailPending`/`emailPendingAt` on the record, the
+   same `pushPending`/`auditPending` pattern already established for push
+   and audit writes. **Added to the deploy checklist below, alongside the
+   VAPID key** — no real transport was built or configured this phase.
+4. **"Policies versioned and immutable-once-signed: signatures bind to
+   exact version text; edits create new versions and resurface signature
+   requirements."** `createPolicyVersion` (`src/lib/db/policies.ts`)
+   always creates a NEW document (`version: previous.version + 1`) and
+   flips only the old version's `isCurrent` to `false` — enforced
+   server-side by a `firestore.rules` field-level lock (the `policies`
+   update rule allows only `{isCurrent, updatedAt}` to change, nothing
+   else, ever). A signature records the exact `policyVersion` it was signed
+   against, so an employee who signed v1 shows as needing to re-sign once
+   v2 becomes current — automatic, not a separate reminder mechanism.
+   **A real rules bug found and fixed** during the rules-test pass: the
+   `policies` update rule originally used `request.resource.data.diff(resource.data)`,
+   which throws when `resource` is null (a brand-new document, or certain
+   denied-create paths) — replaced with explicit per-field equality checks,
+   the same idiom `firestore.rules`' own `employees` block already uses for
+   exactly this reason. Verified: 239/239 rules tests pass after the fix,
+   no behavior change for any already-passing case.
+5. **"Escalation ladder is config: thresholds + EN/ES consequence copy in
+   `disciplinaryLadder`, profile widget computes from logged actions."**
+   `src/lib/hr/disciplinaryLadder.ts`'s `computeLadderPosition` (pure, TDD,
+   10 tests) is a single ORDERED ladder, not independent per-type counters:
+   each step's `thresholdCount` is the CUMULATIVE count of all
+   `issued`/`signed`/`refused-to-sign` actions (never `draft`) at which that
+   step's consequence takes effect; `currentStep` is the highest-order step
+   reached, `nextStep` the one after. Both `MyProfilePage.tsx` (self) and
+   `EmployeeProfilePage.tsx` (viewing a below-level employee, only —
+   omitted entirely for a peer/above, not shown as an error) render the
+   SAME widget (`DisciplineLadderWidget`) against the SAME computation.
+   Verified live: seeded 1-action employee showed "No formal step reached
+   yet, next: written warning"; issuing a second action live flipped it to
+   "Currently at: Written warning, next: write-up," matching the seeded
+   4-step config exactly.
+6. **"PDFs and signature flow render in the employee's language where ES
+   exists, EN fallback noted on the document."** `submitSignature`
+   resolves the employee's own `language`, falls back to English when no
+   Spanish policy body exists, and stamps a visible fallback note on the
+   generated PDF/read screen rather than silently substituting.
+
+**Two design decisions worth flagging (CLAUDE.md's conflict rule — spec/
+ruling wins over mockup where they differ):**
+
+- **Signing a disciplinary action can only happen from the employee's own
+  profile.** `submitSignature` throws `hr/not-own-target` for a
+  `disciplinaryAction` target unless the caller IS that action's employee —
+  an admin session can never complete it on someone else's behalf. The
+  admin screen (mockup 31) therefore shows "Awaiting the employee's own
+  signature" (no button) for an `issued` action, and offers only "Record
+  refused to sign."
+- **Mockup 31's "Save as draft" button was omitted** — `issueDisciplinaryAction`
+  has no draft-creation path server-side (issuing is the mutation; there is
+  no intermediate unsaved state to persist). Mockup's ladder copy claiming
+  actions "reset after 12 months" was also NOT implemented (`computeLadderPosition`
+  has no time decay) and the placeholder copy was corrected in both locales
+  rather than propagate a false claim about real behavior.
+
+**Deliberately out of scope this phase, not gaps:**
+
+- **A "my signed documents" archive** (a list of past signed PDFs on the
+  employee's own profile) — `MyProfilePage.tsx`'s existing "My documents"
+  card is still Phase-4 scaffolding, unwired to the new `Signature`/PDF
+  data. Flagged in that file's own comment. A reasonable, small follow-up:
+  the underlying data (`listMySignatures`, `pdfStoragePath`) already
+  exists; only the list UI itself doesn't.
+- **An admin-side "N unsigned" compliance chip** on the Policy Library list
+  (mockup 29 draws one) — not buildable without an admin-facing
+  ALL-employees signature listing, which `src/lib/db/signatures.ts`
+  deliberately doesn't expose (`listMySignatures(employeeId)` is
+  self-scoped only, matching the same per-employee query shape
+  `disciplinaryActions` needs for list-query-provability). Extending it was
+  out of scope for this pass.
+- **Onboarding packets** (spec §12's sub-feature of bundling policies for a
+  new hire's first-day signing) — the signature-tracking infrastructure
+  built this phase covers most of what it needs, but no dedicated bundling
+  UI was built. Smaller follow-on, not attempted this pass.
+
+**Seed data**: 3 `policies` (Employee Handbook and Food Safety & Sanitation
+require signature; Attendance & Punctuality does not — all bilingual,
+version 1), 1 `disciplinaryActions` doc (Allison Rodriguez, verbal-warning,
+`issued`), 1 `disciplinaryLadder` singleton (4 steps: written-warning@2 →
+writeup@3 → final-warning@4 → suspension@5, EN/ES consequence copy). The
+ladder's specific thresholds/copy are illustrative, matching the
+`disciplinaryLadder.test.ts` fixture shape — **confirm the real numbers
+with Rafa before relying on them** (see "Open questions" below, replacing
+the old placeholder item 4).
+
+**Verified against a live Auth+Firestore+Functions emulator**, real
+`httpsCallable`s, covering the full loop end to end: as Denise (GM) —
+issued a new written-warning against Allison Rodriguez, ladder widget
+updated live (1→2 actions, "Currently at: Written warning, next:
+write-up"); used "Record refused to sign" with a witness on that action —
+status flipped to `refused-to-sign`, email fired (visible "Emailed to
+allison.rodriguez@example.com"). Signed out, signed in as Allison (staff) —
+`/settings/discipline` correctly refused ("You don't have access to this");
+her own profile showed "Needs your signature" for the older seeded
+verbal-warning; drew and submitted a signature via the canvas — status
+flipped to `signed`, confirmed from Denise's admin view afterward. Verified
+the "Manage in Disciplinary" cross-link preselects the employee. Verified
+as Armando (manager) that his below-level employee picker excludes peer
+managers/GM/owners, and that a peer manager's profile shows no
+"Disciplinary" tab at all. Separately, Policy Library: created a policy as
+Denise, created a new version of it (old version collapsed into an
+expandable history row); as a staff employee (Micah Lozon), read the
+Employee Handbook, signed it, landed on the success receipt, confirmed the
+handbook re-sorted into "Signed."
+
+**Full verification gate, run cold immediately before this checkpoint**:
+`npm run typecheck`, `npm run build` (client + functions), `npm run
+functions:build`, 232 unit tests (16 files), `npm run test:rules:emulated`
+(239 rules tests, 8 files, 0 failures), `npm run i18n:check` (1580 keys,
+en/es parity) — all clean. Additionally spot-checked live via Playwright
+against seeded emulator data: Settings nav correctly shows/hides "Policy
+library"/"Discipline" tabs by permission, both new admin routes and the
+staff HR hub render with zero console errors, and the Payroll Workshop's
+new payDate line + regular/OT split render correctly across the recut
+period boundary (see "Payroll amendments" above).
+
+---
+
+## How to review Phase 4
+
+Same emulator+seed setup as prior phases — `npm run emulators` (terminal
+1), `npm run seed` (terminal 2), `npm run dev` (terminal 3).
+
+| Route | What to check | Compare against |
+| --- | --- | --- |
+| `/settings/policies` | As Denise Lasarte (GM): create a policy, then create a new version of it (confirm the old version collapses into an expandable history row, not overwritten) | mockup 29 |
+| `/hr` | As any staff member (e.g. Micah Lozon, Allison Rodriguez): see current policies split into "Needs your signature" vs. the rest; read one, sign via the canvas, confirm the success receipt and the re-sort into "Signed" | mockups 30a/30b/30c |
+| `/settings/discipline` | As Denise or Armando: pick a below-level employee, issue a disciplinary action, then either sign it as that employee (log in as them) or record a witnessed refusal | mockup 31 |
+| `/profile` (any employee with a disciplinary action on file) | "My standing" card: ladder position, next-step consequence text, and a "Review and sign" prompt for any action still `issued` | spec §12's guardrail #5 |
+| Below-level boundary | Confirm a peer manager's profile shows NO "Disciplinary" tab at all (not an error state — the tab itself is omitted) | spec §4 |
+| `/settings/payroll` | Step through the Sep 1–15 and Sep 16–30 periods; confirm Marisol Peña's regular/OT split sums correctly across the boundary and the payDate line reads Sep 20 / Oct 5 | "Payroll amendments" above |
+
+**Known limits, not gaps** (see "Phase 4 status" above for the full list):
+no "my signed documents" archive UI yet (data already exists); no
+admin-side "N unsigned" compliance chip (needs a new, out-of-scope
+all-employees signature query); no onboarding-packet bundling UI.
+
+**Open item for you**: the seeded 4-step escalation ladder
+(written-warning@2 → writeup@3 → final-warning@4 → suspension@5) is
+illustrative, matching the test fixture shape, not a number you gave —
+confirm the real thresholds/consequence copy before this ladder governs a
+real employee. See spec §21 item 4 was tracking this as unresolved;
+consider it now built-but-unconfirmed rather than unbuilt.
+
+---
+
+## Phase 5 status (spec §19's checklist)
+
+| Item | Status |
+| --- | --- |
+| Provider key vault: Secret Manager + metadata-only settings doc | ✅ Done |
+| Generation context assembly via the shared conflicts/fulfillment engines | ✅ Done |
+| Strict JSON contract + real conflicts-engine validation per shift | ✅ Done |
+| Draft-only output, `aiDraftMeta` + banner, never auto-publish | ✅ Done |
+| Provider interface: Anthropic/OpenAI/Google/custom implementations | ✅ Done |
+| Regenerate-with-instructions through the same validation | ✅ Done |
+| Cost guard: token usage on the audit entry, rate-limited callable | ✅ Done |
+| Settings → AI providers UI (mockup 34) | ✅ Done |
+| Schedule builder AI-draft banner + generate/regenerate UI (mockup 13) | ✅ Done |
+| Rules tests: key-vault gating, dev-secret-store lockdown, rate-limit lockdown | ✅ Done |
+| Seed data: a demo AI-draft week + a configured-but-inactive provider | ✅ Done |
+
+**Guardrails, as ruled by Rafa, and how each was implemented:**
+
+1. **"Keys via callable into Secret Manager; metadata-only settings doc; client
+   never sees key material. Settings UI per mockup 34."** `configureAiProvider`/
+   `setActiveAiProvider` (`functions/src/ai/configureProvider.ts`) are the ONLY
+   writers of `settings/aiProviders` — `firestore.rules` denies every client
+   write on it outright, and a read is gated on `ai.configureKeys` (Owner-only
+   by default, per spec §4's own text excluding GM from this specific key —
+   confirmed intentional, not a bug, before building against it). The key
+   itself is resolved server-side via a `SecretStore` interface
+   (`functions/src/ai/secrets.ts`) and NEVER appears in any callable response —
+   only `keyLast4` does. **Dev/emulator caveat, matching the mail-transport
+   precedent from Phase 4**: there is no Secret Manager emulator, so
+   `getSecretStore()` returns `FirestoreDevSecretStore` today (stores the raw
+   key in `_devSecrets/{name}`, a collection `firestore.rules` denies to every
+   client unconditionally — the client-never-sees-it property still holds, only
+   the "real Secret Manager encryption" claim doesn't). `GcpSecretManagerStore`
+   is fully written and ready — swapping the constructor in `getSecretStore()`
+   is the ONE change needed at deploy time, added to the deploy checklist below
+   alongside the VAPID key and the real mail transport.
+2. **"Server-side generation assembling context... importing the shared
+   eligibility and fulfillment engines — no reimplementation."** `computeWeekFulfillment`/
+   `resolveActiveTemplatesForDate` (`src/lib/scheduling/fulfillment.ts`) and
+   `findConflicts`/`isAssignable` (`src/lib/scheduling/conflicts.ts`) are
+   imported UNMODIFIED into the generation callable — not duplicated. This
+   required a new sharing mechanism, since neither module was symlinked into
+   `functions/` before this phase (only `tradeEligibility.ts` was): both files
+   are now ALSO symlinked at a MIRRORED path under `functions/src/lib/
+   scheduling/` (matching their real relative position under `src/lib/
+   scheduling/`), alongside a new `functions/src/types/models.ts` symlink —
+   `fulfillment.ts`'s own `@/types/models` import was changed to a relative
+   `../../types/models` (a bare `@/` alias survives `tsc`'s type-checking but
+   is never rewritten in the emitted CommonJS, so it would 404 at runtime in
+   functions' plain `tsc`-then-`node` build, which has no bundler). Verified
+   empirically, not just reasoned about: built the compiled output and ran
+   `require()` against it directly in Node, confirming both `computeWeekFulfillment`
+   and `findConflicts` execute correctly from the compiled `functions/lib/`
+   tree with real inputs, before writing a single line of the callable itself.
+   This mirrored-symlink trick is now available for any future phase needing
+   to share a `src/lib/scheduling/*` or `src/types/models.ts`-dependent pure
+   module across the build boundary.
+3. **"Strict JSON contract; every shift validated by the real conflicts
+   engine; invalid → open shift with reason."** `src/lib/ai/contract.ts`'s
+   `parseAiResponse` rejects anything that isn't well-formed JSON matching the
+   exact `{shifts: [...], rationale: string}` shape (tolerating a markdown code
+   fence, a common instruction-following quirk across all three providers) —
+   a provider that can't produce valid JSON gets NO draft at all, not a
+   partial one. `src/lib/ai/validateShifts.ts`'s `validateGeneratedShifts` then
+   runs every syntactically-valid proposed shift through the REAL
+   `findConflicts` — "invalid" means BLOCKED (`!isAssignable`), matching the
+   conflicts engine's own severity vocabulary exactly: a `warn`-only issue
+   (projected overtime, a partial-availability mismatch) is accepted as-is,
+   because a human building the schedule by hand is allowed to do the same
+   thing with just a visible flag. Only a genuine block demotes a proposed
+   assignment to an open shift with a reason — stored as `Shift.aiValidationNote:
+   {messageKey, params}` (the SAME shape as `Conflict`), not a pre-rendered
+   string, so CLAUDE.md's i18n rule holds even for machine-generated warnings;
+   the builder renders it through `t()` exactly like every other conflict
+   warning. A proposed (date, roleId) pair with no matching resolved
+   requirement line at all is a hallucination, not a validation failure — it
+   is DROPPED entirely, never written as a document, since there's no real
+   department/skill data to build one from. **A real bug found by the TDD
+   pass, not shipped**: the first draft of `validateGeneratedShifts` never set
+   a distinct `id` on the candidate shift it builds for `findConflicts` — with
+   every candidate AND every stored "other shift" alike carrying `id:
+   undefined`, `findConflicts`' own self-exclusion check (`s.id !== shift.id`)
+   spuriously matched every comparison as "the same shift," so double-booking
+   detection silently never fired at all. Fixed with a synthetic
+   `__candidate_${index}__` id before any test ever ran against real
+   double-booked input.
+4. **"Draft only with aiDraftMeta and banner; publish stays the existing
+   audited callable. Never auto-publish."** `generateAiSchedule` refuses to run
+   at all against an already-published/republished week (`failed-precondition`)
+   and never calls `recordSchedulePublish` or touches `Schedule.status` beyond
+   defaulting a brand-new week to `'draft'`. `AiDraftMeta` (provider, model,
+   generatedAt, promptSummary, instructions, tokensUsed, invalidShiftCount) is
+   written to the schedule doc and rendered in a banner
+   (`AiDraftBanner.tsx`) mirroring the existing `auditPending`/`pushPending`
+   banner treatment exactly. The banner has NO publish shortcut of its own —
+   Publish stays the unmodified `PublishModal`/`canPublish` flow.
+5. **"Provider interface with Anthropic/OpenAI/Google implementations,
+   active-provider from settings, typed graceful failures."** `LlmProvider`
+   (`functions/src/ai/providers/types.ts`) is implemented by real
+   `fetch`-based REST calls to each provider's own API (`AnthropicProvider`,
+   `OpenAiProvider`, `GoogleProvider`) plus a fourth `CustomProvider` for
+   spec's own "other/custom slot" — no heavy SDK dependencies (Node 20's
+   global `fetch` was enough), matching this codebase's minimal-dependencies
+   habit. **Judgment call, not a spec requirement**: the custom provider
+   assumes an OpenAI-compatible `/chat/completions` shape (the closest thing
+   to a de facto standard among self-hosted/proxy LLM servers) — confirm with
+   Rafa before a real custom integration depends on this. A typed
+   `AiProviderError` (`code: 'auth' | 'rate-limit' | 'network' |
+   'invalid-response' | 'unknown'`) is thrown by every implementation and
+   mapped to a clear `HttpsError` in the callable, never a raw provider stack
+   trace reaching the client.
+6. **"Regenerate-with-instructions passes manager free-text through the same
+   validation."** One callable serves both a fresh generation and a
+   regenerate call — the only difference is whether `instructions` is
+   present, so a regenerate can never skip a check a fresh generation would
+   have run. A NEW field, `Shift.aiGenerated: boolean`, marks every shift a
+   generation call created (assigned or open-with-reason alike); a regenerate
+   call deletes every still-`draft` shift carrying it BEFORE generating
+   fresh, so an instruction like "give Robin Saturday off" can actually UNDO
+   a prior AI assignment rather than only ever layering more on top — while a
+   manager's own manual edits (never carrying this flag) are always
+   preserved. **A real bug found and fixed while building the UI, not shipped**:
+   `src/lib/db/schedules.ts`'s `toShift()` never read `aiValidationNote`/
+   `aiGenerated` off the Firestore document at all, so every AI-authored shift
+   silently lost that data on the way to the client — the whole feature would
+   have been inert regardless of how correct the backend was. A second,
+   related fix: `ShiftModal.tsx`'s save path now explicitly clears both fields
+   when a manager manually edits an AI-flagged shift, matching the fields' own
+   documented contract — without it, a manually-corrected shift stayed
+   eligible for silent deletion by a later regenerate call.
+7. **"Cost guard: token usage logged to the audit entry; rate-limit the
+   generation callable."** Every `ai.generate` `auditLog` entry's `after`
+   carries `tokensUsed` (input/output) alongside provider/model and
+   assigned/open/rejected counts — verified live with REAL numbers from an
+   actual HTTP round-trip (see below), not just a hardcoded shape.
+   `functions/src/ai/rateLimit.ts` enforces a restaurant-wide (not
+   per-employee — the real cost driver is total spend) rolling-window cap via
+   a transactional Firestore counter at `settings/aiRateLimit`, denied to
+   every client. **The threshold (5 calls / 10 minutes) is a starting guess,
+   not a number Rafa gave us** — spec §13 says "rate-limit" without a number;
+   flagged below, tune once real usage data exists.
+
+**Proven live, end to end, WITHOUT a real paid API key.** No Anthropic/
+OpenAI/Google credentials exist in this environment, so the full generation
+pipeline was proven against a REAL HTTP endpoint instead of a stub swapped
+into the provider registry: configured the `custom` provider (Settings → AI
+providers, as Rafa/Owner) pointing at a throwaway local Node HTTP server
+returning a canned-but-shaped OpenAI-compatible response, then used the
+schedule builder's real "Regenerate with instructions" box against it. This
+exercised the ENTIRE real code path — no test-only backdoor, no mocked
+registry entry: real context assembly, a real prompt reaching the real
+`fetch` call, real strict-JSON parsing, real conflict validation (which
+correctly caught and flagged a genuine double-booking the canned response
+introduced), a real batch delete-then-write of the draft's shifts, and a
+real audit entry with real token counts (1234 input / 321 output, exactly
+what the test server returned). Confirmed via the running UI: the prior
+AI-authored Monday shifts were removed, new Friday shifts appeared (one
+correctly assigned, two correctly demoted to open with a translated
+"Already scheduled 11:00–15:00 that day" reason), the banner updated to
+`custom · canned-test-model` with the canned rationale text, and the
+`aiScheduling` feature flag / `ai.generateSchedule` permission gating both
+held (button absent on a published week; tab/route absent for non-Owner
+roles on the separate AI-providers settings page). Zero console errors
+throughout. **Still open**: nobody has verified an ACTUAL Anthropic/OpenAI/
+Google response survives the pipeline — the request-shaping and
+response-parsing code for each is written against each provider's
+documented API shape but has never round-tripped against a real key. Confirm
+this the first time a real key is entered, per the deploy checklist below.
+
+**Deliberately out of scope this phase, not gaps:**
+
+- **Data-informed headcount suggestions and full labor analytics** — already
+  ruled out for Phase 5 specifically in Phase 3(c)'s "Accepted spec
+  deviations" A4 (a Phase 5 AI-scheduler capability was named there
+  preemptively; it remains a human-reviewed suggestion surfaced in the
+  template editor, never built into `shiftTemplates` itself, and this phase
+  didn't change that ruling).
+- **A live "test connection" button** on the AI providers screen (mockup 34
+  draws one) — there is no cheap way to validate a key without spending a
+  real token against the real provider, and `connected` already flips to
+  `true` automatically the first time a real generation call succeeds, which
+  is a more honest signal than a synthetic ping call would be.
+- **Per-employee (rather than restaurant-wide) rate limiting** — the actual
+  cost driver is total API spend, not who's calling; a per-employee limit
+  would be more complex for no real protection this app's scale needs.
+
+**Seed data**: `settings/aiProviders` seeded configured-but-INACTIVE
+(Anthropic, model `claude-opus-5`, `keyLast4: 'DEMO'`) with NO value in
+`_devSecrets` — a reviewer who activates it and tries to generate gets a
+clean, real "could not read secret" failure rather than a fake success, by
+design. A third demo week, **Mon Aug 24 – Sun Aug 30, 2026** (verified to
+not overlap any frozen week), carries a populated `aiDraftMeta` and 6
+`aiGenerated: true` shifts, one demoted to open with a real `aiValidationNote`
+(`conflicts.skillTooLow`), for reviewing the draft banner and open-shift
+badge without needing to run a real generation first.
+
+**Full verification gate, run cold immediately before this checkpoint**:
+`npm run typecheck`, `npm run build` (client + functions), `npm run
+functions:build`, 273 unit tests (21 files, +41 for the new `src/lib/ai/*`
+pure modules), `npm run test:rules:emulated` (290 rules tests, 9 files, 0
+failures, +51 for Phase 5), `npm run i18n:check` (1635 keys, en/es parity) —
+all clean. Plus the full live end-to-end pipeline proof described above,
+run personally via Playwright against a fresh seed and a real local HTTP
+endpoint standing in for a paid provider.
+
+---
+
+## Deploy checklist addition — Phase 5
+
+Added to the existing "Deploy checklist" section below (VAPID key, real
+mail transport): **swap `getSecretStore()`'s default** (`functions/src/ai/
+secrets.ts`) from `FirestoreDevSecretStore` to the already-written
+`GcpSecretManagerStore` before any real API key is ever entered in
+production — until that swap happens, "keys are encrypted at rest via
+Secret Manager" is not yet true, even though "keys never reach the
+browser" already is. Also: **the first real key entered, for any provider,
+should be smoke-tested with an actual "Generate with AI" call** before
+relying on it — the request/response shaping for each provider is written
+against its documented API, not yet proven against a live response (see
+"Still open" above). The rate-limit threshold (5 calls / 10 minutes,
+`functions/src/ai/rateLimit.ts`) and the `custom` provider's
+OpenAI-compatible-endpoint assumption (`functions/src/ai/providers/custom.ts`)
+are both judgment calls, not numbers/decisions Rafa gave — confirm both
+before they matter for real usage or a real custom integration.
+
+---
+
+## How to review Phase 5
+
+Same emulator+seed setup as prior phases — `npm run emulators` (terminal
+1), `npm run seed` (terminal 2), `npm run dev` (terminal 3).
+
+| Route | What to check | Compare against |
+| --- | --- | --- |
+| `/settings/ai` | As Rafa or Tom (Owner): see the seeded Anthropic card (configured, inactive); add/replace a key for another provider; switch which one is active. As Denise (GM) or any Manager: tab absent, route denied | mockup 34 |
+| `/schedule`, week of **Aug 24–30, 2026** | The seeded AI-draft banner (rationale, provider/model, generated-at, "1 shift needs review"); the open bartender shift's AI-flagged badge with its translated reason on hover | mockup 13 |
+| `/schedule`, any week | "Generate with AI" button present for a Manager+ on a draft week with NO existing `aiDraftMeta`; absent on an already-published week (e.g. Aug 10–16) or once a draft already exists (use the banner's regenerate box instead) | spec §13 |
+| Regenerate flow | Type instructions in the banner's box on the Aug 24–30 week and submit — with the seeded provider inactive/keyless, expect a clean "could not read secret" style failure toast, not a crash; this IS the correct behavior without a real key configured | guardrail #6 |
+
+**Known limits, not gaps** (see "Phase 5 status" above for the full list):
+no live "test connection" button; per-employee rate limiting was
+deliberately not built; a real provider response has never round-tripped
+through this pipeline (only a canned local HTTP stand-in has, proving the
+code path but not any specific provider's actual output shape).
+
+**Open items for you**: (1) the custom-provider OpenAI-compatible-endpoint
+assumption needs your confirmation before a real custom integration depends
+on it; (2) the 5-per-10-minutes rate limit is a placeholder pending real
+cost data; (3) swap the dev secret store for real Secret Manager before
+deploy, per the checklist above.
+
+---
+
 ## How to review Phase 2
 
 Same emulator+seed setup as Phase 0/1 (see "How to run" below) — `nvm use`,
@@ -526,8 +1042,9 @@ this phase, none new).
 
 ## Deploy checklist (real Firebase project, not emulators)
 
-Steps required before push notifications work against a real deployment —
-not needed for emulator-based dev/review, only for the first real deploy:
+Steps required before push notifications / signed-document emails work
+against a real deployment — not needed for emulator-based dev/review, only
+for the first real deploy:
 
 1. **`VITE_FIREBASE_VAPID_KEY`** (`.env.example` currently blank). Firebase
    console → Project Settings → Cloud Messaging tab → Web Push certificates
@@ -537,6 +1054,18 @@ not needed for emulator-based dev/review, only for the first real deploy:
    whole push pipeline (server send, ZenZap stub, offline queue) is built
    and verified against the emulator, but a token can't be issued for a
    real deployment until this one credential is filled in.
+2. **Real mail transport** (Phase 4). `functions/src/mail/index.ts`'s
+   `getMailTransport()` currently always returns `LoggedStubMailTransport`
+   (`functions/src/mail/loggedStubTransport.ts`) — it logs the message via
+   `logger.info` and reports success, so signed-document/disciplinary-record
+   emails never actually leave the box against a real deployment. Swap this
+   one factory for a real `MailTransport` implementation (SendGrid, SES,
+   Postmark, whatever Rafa picks) before signatures/disciplinary actions are
+   used against real employees who expect a real inbox copy. The
+   `emailPending` guarantee still holds either way (a real transport's
+   failures surface exactly the same as the stub's), but the stub never
+   fails, so this gap won't announce itself — it has to be swapped
+   deliberately, not discovered by a missing-email complaint.
 
 Other confirm-on-site items (geofence radius/coordinates, selfie retention)
 are tracked in "Open questions for Rafa" below, not duplicated here — this
@@ -1150,7 +1679,14 @@ From spec §21, to confirm when each phase reaches them:
 1. Geofence radius default 150 m — confirm on-site.
 2. Selfie retention 13 months — confirm.
 3. Staff see their own hourly rate — spec says yes; **implemented as yes**.
-4. Exact escalation ladder steps/thresholds — needed for Phase 4.
+4. **Exact escalation ladder steps/thresholds — now BUILT but UNCONFIRMED,
+   not unbuilt.** Phase 4 seeded an illustrative 4-step ladder
+   (written-warning@2 → writeup@3 → final-warning@4 → suspension@5, EN/ES
+   copy) matching the test fixture shape, since the mechanism
+   (`computeLadderPosition`) needed real numbers to seed against and none
+   were given. Confirm the real thresholds/consequence copy in
+   `disciplinaryLadder` before this governs a real employee — see Phase 4
+   status above.
 5. Skill levels fixed at 1–3 — confirm 3 tiers is enough. Now load-bearing: with
    `minSkillLevelToCover` gone, a shift's `requiredSkillLevel` is the *only*
    skill bar in the eligibility check.

@@ -47,6 +47,15 @@ const IDENTICAL_OK = new Set([
   'shiftsAndTips.editModal.charCount', // "{{count}} / {{max}}" — punctuation only, no words.
   'settings.payroll.columns.total', // "Total" is identical in Spanish.
   'settings.payroll.exportVariant.adp.title', // "ADP Run" is a product name, not translated.
+  'settings.policyLibrary.olderVersionLine', // "v{{version}} · {{date}}" — punctuation only, no words.
+  'hr.read.langEn', // "EN" language-toggle abbreviation, identical in Spanish.
+  'hr.read.langEs', // "ES" language-toggle abbreviation, identical in Spanish.
+  'settings.discipline.form.narrativeCount', // "{{count}} / {{max}}" — punctuation only, no words.
+  'settings.aiProviders.baseUrlPlaceholder', // Example URL, not translated.
+  'settings.aiProviders.keyMasked', // "•••• {{last4}}" — punctuation + placeholder only, no words.
+  'settings.aiProviders.providers.anthropic.name', // "Anthropic" is a proper noun.
+  'settings.aiProviders.providers.openai.name', // "OpenAI" is a proper noun.
+  'settings.aiProviders.providers.google.name', // "Google" is a proper noun.
 ])
 
 const en = flatten(load('en.json'))

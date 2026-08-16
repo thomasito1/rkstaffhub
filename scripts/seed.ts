@@ -43,20 +43,28 @@ import { getAuth, type Auth } from 'firebase-admin/auth'
 import { FieldValue, Timestamp, getFirestore, type Firestore } from 'firebase-admin/firestore'
 
 import { ROLE_DEFAULTS } from '@/lib/permissions/defaults'
+import { periodIdForDate, semimonthlyPeriodForDate } from '@/lib/payroll/periods'
 import { WEEKDAY_KEYS } from '@/types/models'
 import type {
   AccessRole,
+  AiDraftMeta,
+  AiProviderConfig,
+  AiSettings,
   AppSettings,
   AvailabilityDay,
   AvailabilityStatus,
   AvailabilityType,
   Department,
+  DisciplinaryActionStatus,
+  DisciplinaryActionType,
+  DisciplinaryLadderStep,
   EmployeeShiftRole,
   EmployeeStatus,
   EmploymentType,
   Language,
   PayPeriodStatus,
   PermissionKey,
+  PolicyCategory,
   ShiftRole,
   ShiftTemplateDateRange,
   ShiftTemplateRequirement,
@@ -136,10 +144,22 @@ const APP_SETTINGS: AppSettings = {
   availabilityDeadline: { day: 'thursday', time: '23:59' },
   publishDeadline: { day: 'friday', time: '23:59' },
   laborTargetPct: 40,
-  // RESOLVED (Rafa, Aug 13 2026): semimonthly, paid on the 5th and the 20th.
+  // RESOLVED (Rafa, Aug 13 2026, boundary convention SUPERSEDED by a later
+  // Aug 2026 ruling — see below): semimonthly, paid on the 5th and the 20th.
   // Schedule weeks stay Mon–Sun (scheduleWeekStart above); startDay anchors the
   // workweek, not the pay period. Mockups 26 and 35 show a biweekly Aug 3–16
   // period — visual-only where they differ from this.
+  //
+  // SUPERSEDING RULING (Rafa, Aug 2026): periods are the calendar halves
+  // 1st–15th and 16th–end-of-month (this REPLACES the original 6th–20th /
+  // 21st–5th boundary this comment used to describe) — paid on the 20th (for
+  // 1–15) and the 5th of the FOLLOWING month (for 16–EOM). `semimonthlyDays`
+  // below is still `[5, 20]` because those two numbers are still the correct
+  // PAY dates; only the period BOUNDARIES moved, not the pay calendar.
+  // `src/lib/payroll/periods.ts` (`semimonthlyPeriodForDate` /
+  // `periodIdForDate`) is the actual date-agnostic source of truth for period
+  // boundaries — this field is descriptive/UI-facing only and is never read
+  // to derive a boundary at runtime.
   //
   // Phase 3 trap: FLSA overtime is per workweek (>40 hrs Mon–Sun), and a
   // semimonthly period cuts through workweeks at both ends. Compute OT per
@@ -156,6 +176,38 @@ const APP_SETTINGS: AppSettings = {
     address: RESTAURANT_ADDRESS,
     timezone: 'America/New_York',
   },
+}
+
+// ── settings/aiProviders (spec §13, Phase 5) ────────────────────────────────
+//
+// Seeded CONFIGURED-BUT-INACTIVE: an Anthropic provider entry exists (so
+// Settings → AI providers has something real to render — model, masked key,
+// "configured by") but `active` is `null`, so `generateAiSchedule` refuses to
+// run against it until a human explicitly activates it from the UI.
+//
+// DELIBERATE: `secretRef` below points at `ai-provider-anthropic` — the exact
+// name `functions/src/ai/configureProvider.ts`'s `configureAiProvider` would
+// itself generate for this provider — but this seed NEVER writes a matching
+// value into `_devSecrets/ai-provider-anthropic`. `DevSecretStore.read()`
+// (functions/src/ai/secrets.ts) throws "no value stored for ..." when the
+// doc is missing, so a reviewer who activates this provider and clicks
+// "Generate with AI" gets a clean, honest failure — not a silent wrong-looking
+// success and not a real (or even real-shaped) credential sitting in a seed
+// script that gets committed to git.
+const AI_PROVIDER_ANTHROPIC: AiProviderConfig = {
+  provider: 'anthropic',
+  model: 'claude-opus-5',
+  keyLast4: 'DEMO',
+  secretRef: 'ai-provider-anthropic',
+  endpoint: null,
+  connected: false,
+  lastUsedAt: null,
+  configuredBy: employeeDocId('1030'), // Rafa — owner, holds ai.configureKeys
+}
+
+const AI_SETTINGS: Omit<AiSettings, 'id' | 'updatedAt'> = {
+  active: null,
+  providers: { anthropic: AI_PROVIDER_ANTHROPIC },
 }
 
 // ── shiftRoles ───────────────────────────────────────────────────────────────
@@ -1186,19 +1238,27 @@ const req = (
   minSkillLevel: SkillLevel,
 ): ShiftTemplateRequirement => ({ roleId, count, minSkillLevel })
 
-const WEEKDAY_LUNCH: ShiftTemplateRequirement[] = [req('server', 2, 1), req('prep-cook', 1, 1)]
+const WEEKDAY_LUNCH: ShiftTemplateRequirement[] = [
+  req('server', 2, 1),
+  req('prep-cook', 1, 1),
+  req('bartender', 1, 2), // Rafa's ruling, Aug 2026: bartender on every service
+]
 const BRUNCH: ShiftTemplateRequirement[] = [
   req('server', 2, 1),
   req('host', 1, 1),
   req('barista', 1, 1), // verified real seeded shiftRoles id (Karla Ceballos holds it, L2)
   req('prep-cook', 1, 1),
+  req('bartender', 1, 2), // Rafa's ruling, Aug 2026: bartender on every service
 ]
 const WEEKDAY_DINNER: ShiftTemplateRequirement[] = [
   req('server', 2, 2),
   req('hot-line-cook', 1, 2),
   req('shift-supervisor', 1, 2),
   req('host', 1, 1), // Rafa's earlier addition, Aug 2026 — kept
+  req('bartender', 1, 2), // Rafa's ruling, Aug 2026: bartender on every service
 ]
+// WEEKEND_DINNER is unchanged by the "bartender on every service" ruling — it
+// already carries req('bartender', 2, 2) below.
 const WEEKEND_DINNER: ShiftTemplateRequirement[] = [
   req('server', 4, 1),
   req('server', 1, 3),
@@ -1398,19 +1458,36 @@ const SEED_TIME_OFF: SeedTimeOff[] = [
 //                     the genuine partial-badge case the checkpoint asked for.
 //   Do not "fix" either gap — that is the point of this week.
 //
-// OT / PAY-PERIOD-SPLIT DEMO (Rafa's ruling, Phase 3(c)) — Marisol Peña
-// (employeeNumber 1060, prep-cook L2) works five 9-hour prep-cook shifts,
-// Mon–Fri (09:00–18:00 each day), covering the Weekday Lunch prep-cook line
-// on all five days. 5 x 9h = 45 hours for this Mon-start workweek, comfortably
-// over the 40h FLSA threshold. She does NOT work Sat/Sun this week — that
-// keeps her hours isolated to a clean Mon–Fri stack rather than muddying the
-// Brunch/Weekend-Dinner met/unmet picture. `seedOTEmployeePunches()` below
-// writes a real in/out `punches` pair for each of these five shifts, closely
-// matching their scheduled times, so the payroll Workshop (which reads real
-// punch data, not shifts) has something to compute against. This same
-// Mon Aug 17 – Sun Aug 23 workweek straddles the Aug 20/21 semimonthly
-// period boundary (see SEED_PAY_PERIODS below) — proving the per-workweek-
-// then-allocate-to-periods split the spec calls for.
+// NOTE (later ruling, Aug 2026): "bartender on every service" added a
+// req('bartender', 1, 2) line to WEEKDAY_LUNCH, BRUNCH, and WEEKDAY_DINNER
+// (see those constants above) AFTER the "fully MET" result above was
+// written. No shift below assigns a bartender outside Weekend Dinner (Fri/
+// Sat, unaffected — it already required bartenders), so every weekday-lunch,
+// brunch, and weekday-dinner day-part this week now also reads UNMET on that
+// one bartender line specifically. This is a known, accepted side effect of
+// the bartender ruling, not a bug — fixing it would mean adding shifts to
+// this week, which the OT/pay-period relocation work below is expressly
+// forbidden from doing.
+//
+// OT / PAY-PERIOD-SPLIT DEMO — RELOCATED. This week used to also carry
+// Marisol Peña's (employeeNumber 1060, prep-cook L2) five 9-hour OT-proof
+// shifts (Mon–Fri, 09:00–18:00), because under the OLD 6th–20th/21st–5th
+// semimonthly convention this Mon Aug 17 – Sun Aug 23 workweek straddled the
+// Aug 20/21 period boundary. Rafa's later Aug 2026 ruling replaced that
+// convention with calendar-half periods (1st–15th / 16th–end-of-month — see
+// APP_SETTINGS.payPeriod above and src/lib/payroll/periods.ts), under which
+// Aug 17–23 falls entirely INSIDE the single Aug 16–31 period — it no longer
+// straddles anything, so it stopped proving the per-workweek-then-allocate-
+// to-periods split. The proof (both her 5 shifts and her matching real
+// `punches`) moved to Mon Sept 14 – Sun Sept 20 2026 instead, which DOES
+// straddle the new Sept 15/16 boundary — see OT_EMPLOYEE_NUMBER,
+// OT_PROOF_WEEK_ID, OT_PROOF_WEEK_DATES, OT_PROOF_SHIFTS, and
+// seedOTEmployeePunches() further down this file for the relocated proof and
+// the weekday-arithmetic verification that it is correct and does not
+// overlap Aug 10–23. Every OTHER deliberate fulfillment-badge case in this
+// Aug 17–23 week (Wed dinner host line UNMET, Thu dinner server line
+// PARTIAL, etc.) is untouched — only the 5 OT-specific shift lines were
+// removed from SEED_SHIFTS_WEEK2 below.
 
 const SEED_WEEK2_ID = '2026-08-17'
 
@@ -1437,23 +1514,10 @@ interface SeedShiftWeek2 extends SeedShift {
   dayPart: 'lunch' | 'dinner'
 }
 
-/**
- * Marisol Peña (prep-cook L2) — the OT/pay-period-split proof (Phase 3(c)).
- * Five 9-hour days, Mon–Fri, 09:00–18:00, all covering that day's Weekday
- * Lunch prep-cook line (overlaps its 11:00–16:00 window). 5 x 9h = 45h,
- * comfortably over the 40h FLSA workweek threshold. `seedOTEmployeePunches()`
- * below reads these five shifts back out (filtering SEED_SHIFTS_WEEK2 by
- * `OT_EMPLOYEE_NUMBER`) to write matching real punch pairs — see that
- * function's own header for why punches, not just shifts, are needed here.
- */
-const OT_EMPLOYEE_NUMBER = '1060' // Marisol Peña
-
 const SEED_SHIFTS_WEEK2: SeedShiftWeek2[] = [
   // ── Mon 17 — weekday profile, fully met ────────────────────────────────
   { dayPart: 'lunch', employeeNumber: '1042', day: 'mon', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
   { dayPart: 'lunch', employeeNumber: '1054', day: 'mon', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
-  // OT proof, day 1 of 5 — see the block comment above.
-  { dayPart: 'lunch', employeeNumber: OT_EMPLOYEE_NUMBER, day: 'mon', startTime: '09:00', endTime: '18:00', roleId: 'prep-cook', requiredSkillLevel: 1, department: 'BOH', station: 'Prep' },
   { dayPart: 'dinner', employeeNumber: '1041', day: 'mon', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 2, department: 'FOH', station: 'Floor' },
   { dayPart: 'dinner', employeeNumber: '1052', day: 'mon', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 2, department: 'FOH', station: 'Floor' },
   { dayPart: 'dinner', employeeNumber: '1058', day: 'mon', startTime: '17:00', endTime: '21:00', roleId: 'hot-line-cook', requiredSkillLevel: 2, department: 'BOH', station: 'Hot Line' },
@@ -1463,8 +1527,6 @@ const SEED_SHIFTS_WEEK2: SeedShiftWeek2[] = [
   // ── Tue 18 — weekday profile, fully met ────────────────────────────────
   { dayPart: 'lunch', employeeNumber: '1043', day: 'tue', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
   { dayPart: 'lunch', employeeNumber: '1044', day: 'tue', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
-  // OT proof, day 2 of 5.
-  { dayPart: 'lunch', employeeNumber: OT_EMPLOYEE_NUMBER, day: 'tue', startTime: '09:00', endTime: '18:00', roleId: 'prep-cook', requiredSkillLevel: 1, department: 'BOH', station: 'Prep' },
   { dayPart: 'dinner', employeeNumber: '1041', day: 'tue', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 2, department: 'FOH', station: 'Floor' },
   { dayPart: 'dinner', employeeNumber: '1052', day: 'tue', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 2, department: 'FOH', station: 'Floor' },
   { dayPart: 'dinner', employeeNumber: '1048', day: 'tue', startTime: '17:00', endTime: '21:00', roleId: 'hot-line-cook', requiredSkillLevel: 2, department: 'BOH', station: 'Hot Line' },
@@ -1474,8 +1536,6 @@ const SEED_SHIFTS_WEEK2: SeedShiftWeek2[] = [
   // ── Wed 19 — weekday profile. Lunch fully met.
   { dayPart: 'lunch', employeeNumber: '1054', day: 'wed', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
   { dayPart: 'lunch', employeeNumber: '1044', day: 'wed', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
-  // OT proof, day 3 of 5.
-  { dayPart: 'lunch', employeeNumber: OT_EMPLOYEE_NUMBER, day: 'wed', startTime: '09:00', endTime: '18:00', roleId: 'prep-cook', requiredSkillLevel: 1, department: 'BOH', station: 'Prep' },
   // Dinner: server / hot-line-cook / shift-supervisor lines all met below.
   // DELIBERATE GAP — the WEEKDAY_DINNER host line (x1 @L1) is intentionally
   // NOT staffed today: no host shift is scheduled for Wed dinner at all, so
@@ -1494,8 +1554,6 @@ const SEED_SHIFTS_WEEK2: SeedShiftWeek2[] = [
   // ── Thu 20 — weekday profile. Lunch fully met.
   { dayPart: 'lunch', employeeNumber: '1043', day: 'thu', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
   { dayPart: 'lunch', employeeNumber: '1044', day: 'thu', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
-  // OT proof, day 4 of 5.
-  { dayPart: 'lunch', employeeNumber: OT_EMPLOYEE_NUMBER, day: 'thu', startTime: '09:00', endTime: '18:00', roleId: 'prep-cook', requiredSkillLevel: 1, department: 'BOH', station: 'Prep' },
   // DELIBERATE GAP — the WEEKDAY_DINNER server line needs 2 @L2; only ONE is
   // scheduled below. The builder's fulfillment badge reads 1 of 2 servers —
   // a genuine PARTIAL state (have > 0, have < count), not a bare "0
@@ -1509,8 +1567,6 @@ const SEED_SHIFTS_WEEK2: SeedShiftWeek2[] = [
   // ── Fri 21 — weekend day-part group (Weekday Lunch + Weekend Dinner), fully met ──
   { dayPart: 'lunch', employeeNumber: '1054', day: 'fri', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
   { dayPart: 'lunch', employeeNumber: '1042', day: 'fri', startTime: '11:00', endTime: '15:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
-  // OT proof, day 5 of 5 — 5 x 9h = 45h total for the week, past the 40h line.
-  { dayPart: 'lunch', employeeNumber: OT_EMPLOYEE_NUMBER, day: 'fri', startTime: '09:00', endTime: '18:00', roleId: 'prep-cook', requiredSkillLevel: 1, department: 'BOH', station: 'Prep' },
   { dayPart: 'dinner', employeeNumber: '1045', day: 'fri', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
   { dayPart: 'dinner', employeeNumber: '1041', day: 'fri', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
   { dayPart: 'dinner', employeeNumber: '1038', day: 'fri', startTime: '17:00', endTime: '21:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
@@ -1975,6 +2031,29 @@ async function seedSettings(): Promise<number> {
 }
 
 /**
+ * `settings/aiProviders` — see the AI_SETTINGS / AI_PROVIDER_ANTHROPIC block
+ * comment above for why this is configured-but-inactive and why no value is
+ * ever written to `_devSecrets/ai-provider-anthropic`.
+ */
+async function seedAiProviders(): Promise<number> {
+  await db
+    .collection('settings')
+    .doc('aiProviders')
+    .set({
+      active: AI_SETTINGS.active,
+      providers: {
+        anthropic: {
+          ...AI_PROVIDER_ANTHROPIC,
+          createdAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        },
+      },
+      updatedAt: FieldValue.serverTimestamp(),
+    })
+  return 1
+}
+
+/**
  * Two roles sharing a colour render as identical bands on the schedule grid —
  * the Kitchen Lead / Hot Line Cook collision that shipped in the first seed.
  * Throwing here means it can never regress silently: the seed refuses to run.
@@ -2407,26 +2486,244 @@ async function seedScheduleWeek2(): Promise<{ shifts: number; open: number }> {
   return { shifts: SEED_SHIFTS_WEEK2.length, open }
 }
 
+// ── a third seeded week: Mon Aug 24 – Sun Aug 30 2026 — AI draft review demo ─
+//
+// Phase 5 (spec §13): exists ONLY to give Settings → AI providers / the
+// schedule builder's draft-review banner something real to render — a
+// generated-but-unpublished week, never one of the two frozen weeks (Aug
+// 10–16, Aug 17–23) and never the OT-proof week (Sept 14–20).
+//
+// Weekday-arithmetic verification (recomputed, not assumed — same discipline
+// as the Sept 14–20 OT relocation above): week 2 (SEED_WEEK2_ID) runs Mon
+// Aug 17 – Sun Aug 23 2026. Aug 23 + 1 day = Aug 24, and Aug 17 + 7 days =
+// Aug 24 also, so Aug 24 2026 is the Monday immediately following week 2's
+// Sunday — confirmed a Monday (`date -j -f '%Y-%m-%d' 2026-08-24 +%A` /
+// Python `datetime.date(2026,8,24).strftime('%A')` both say Monday). Aug 30
+// (Aug 24 + 6) is therefore the following Sunday. This 7-day span sits
+// strictly between week 2's last day (Aug 23) and the OT-proof week's first
+// day (Sept 14), so it cannot overlap either.
+//
+// GUARDRAIL #4 ("never auto-publish"): this schedule's `status` is `'draft'`
+// and stays that way — no `publishedAt`/`publishedBy` fields are written at
+// all, unlike weeks 1 and 2's published documents above.
+//
+// The six shifts below reuse the REAL "Weekday Lunch Mon" (mon-lunch) and
+// "Weekday Dinner Mon" (mon-dinner) profiles from SHIFT_TEMPLATE_DEFS
+// verbatim (roleId/requiredSkillLevel/time range) so the draft reads as a
+// plausible AI proposal against the actual service map, not invented
+// numbers. Every assignment below was checked against that employee's own
+// seeded `shiftRoles` (skillLevel >= requiredSkillLevel) and against the
+// recurring availability overrides in SEED_AVAILABILITY that roll forward
+// into this week (only Micah Lozon carries a recurring Monday-unavailable
+// override, so he is deliberately not used here):
+//   Weekday Lunch Mon (11:00–16:00): server x2 @L1, prep-cook x1 @L1,
+//     bartender x1 @L2 — server slots go to Allison Rodriguez (server L2)
+//     and Emily Roman (server L1); prep-cook to Elvin Batista (prep-cook
+//     L1). The bartender slot is the DELIBERATE invalid case: the AI's
+//     proposed candidate only held bartender L1 against this line's L2
+//     requirement, so `generateAiSchedule`'s validator (spec §13 guardrail
+//     #3) demoted it to an open shift carrying `aiValidationNote` instead of
+//     silently assigning someone under-qualified — employeeId is null.
+//   Weekday Dinner Mon (16:00–22:00): hot-line-cook x1 @L2 goes to Jorge
+//     Medina (hot-line-cook L3); shift-supervisor x1 @L2 goes to Steph Fages
+//     (shift-supervisor L3). Neither carries a Monday availability
+//     conflict.
+// invalidShiftCount on the schedule's aiDraftMeta (1) matches exactly the
+// one demoted bartender line — do not add another without updating it.
+
+const SEED_WEEK3_ID = '2026-08-24'
+
+/** Mon→Sun dates of SEED_WEEK3_ID, in the same order as WEEKDAY_KEYS. */
+const SEED_WEEK3_DATES: Record<WeekdayKey, string> = {
+  mon: '2026-08-24',
+  tue: '2026-08-25',
+  wed: '2026-08-26',
+  thu: '2026-08-27',
+  fri: '2026-08-28',
+  sat: '2026-08-29',
+  sun: '2026-08-30',
+}
+
+const AI_DRAFT_META: AiDraftMeta = {
+  provider: 'anthropic',
+  model: 'claude-opus-5',
+  generatedAt: null, // overwritten with FieldValue.serverTimestamp() at write time
+  promptSummary:
+    'Draft Mon Aug 24 service using the Weekday Lunch and Weekday Dinner requirement lines; assign each slot to the highest-skill available employee whose shiftRoles cover it.',
+  instructions: null, // first generation, not a regenerate
+  tokensUsed: { input: 2150, output: 640 },
+  invalidShiftCount: 1,
+}
+
+interface SeedAiDraftShift {
+  /** Omit for the demoted-to-open invalid case. */
+  employeeNumber?: string
+  day: WeekdayKey
+  startTime: string
+  endTime: string
+  roleId: string
+  requiredSkillLevel: SkillLevel
+  department: Department
+  station: string
+  aiValidationNote?: { messageKey: string; params: Record<string, string | number> } | null
+}
+
+const SEED_SHIFTS_WEEK3: SeedAiDraftShift[] = [
+  // ── Mon 24 — Weekday Lunch (mon-lunch) ─────────────────────────────────
+  { employeeNumber: '1041', day: 'mon', startTime: '11:00', endTime: '16:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { employeeNumber: '1042', day: 'mon', startTime: '11:00', endTime: '16:00', roleId: 'server', requiredSkillLevel: 1, department: 'FOH', station: 'Floor' },
+  { employeeNumber: '1061', day: 'mon', startTime: '11:00', endTime: '16:00', roleId: 'prep-cook', requiredSkillLevel: 1, department: 'BOH', station: 'Prep' },
+  // DELIBERATE invalid case (see block comment above): AI's proposed
+  // candidate held bartender L1 against this line's L2 requirement, so the
+  // validator demoted the assignment to an open shift with a reason.
+  {
+    day: 'mon', startTime: '11:00', endTime: '16:00', roleId: 'bartender', requiredSkillLevel: 2, department: 'FOH', station: 'Main Bar',
+    aiValidationNote: { messageKey: 'conflicts.skillTooLow', params: { has: 1, needs: 2 } },
+  },
+
+  // ── Mon 24 — Weekday Dinner (mon-dinner) ───────────────────────────────
+  { employeeNumber: '1058', day: 'mon', startTime: '16:00', endTime: '22:00', roleId: 'hot-line-cook', requiredSkillLevel: 2, department: 'BOH', station: 'Hot Line' },
+  { employeeNumber: '1049', day: 'mon', startTime: '16:00', endTime: '22:00', roleId: 'shift-supervisor', requiredSkillLevel: 2, department: 'FOH', station: 'Floor' },
+]
+
+function shiftDocIdWeek3(s: SeedAiDraftShift): string {
+  const who = s.employeeNumber ?? `open-${s.roleId}`
+  return `sh3-${s.day}-${s.startTime.replace(':', '')}-${who}`
+}
+
 /**
- * REAL `punches` documents for the OT proof employee's Aug 17–23 workweek
- * (Phase 3(c) addition — the payroll Workshop reads real punch data, not
- * shifts, and nobody is going to manually clock this person in and out for a
- * full week just to review the feature). One in/out pair per OT shift,
- * timestamps matching that shift's own start/end exactly, in restaurant-local
- * time (America/New_York — EDT, UTC-4, in August). `scripts/seed.ts` still
- * seeds NO OTHER punches and NO tip reports anywhere else — both stay
- * runtime-only for the rest of the roster, exactly as before; this is scoped
- * to the one proof employee only, per Rafa's ruling.
+ * The AI-draft review demo week. NEVER published (guardrail #4) — status
+ * stays 'draft' and no publishedAt/publishedBy is written, unlike
+ * seedSchedule()/seedScheduleWeek2() above. Every shift is `aiGenerated:
+ * true` and `status: 'draft'`, including the one demoted-to-open case.
+ */
+async function seedScheduleWeek3(): Promise<{ shifts: number; open: number }> {
+  const scheduleRef = db.collection('schedules').doc(SEED_WEEK3_ID)
+
+  await scheduleRef.set({
+    weekId: SEED_WEEK3_ID,
+    status: 'draft',
+    laborTargetPct: null,
+    aiDraftMeta: { ...AI_DRAFT_META, generatedAt: FieldValue.serverTimestamp() },
+    projectedSales: null,
+    projectedSalesTotal: null,
+    locationId: null,
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
+  })
+
+  const shiftsRef = scheduleRef.collection('shifts')
+  const batch = db.batch()
+  let open = 0
+  for (const s of SEED_SHIFTS_WEEK3) {
+    if (!s.employeeNumber) open += 1
+    if (s.employeeNumber) employeeOrThrow(s.employeeNumber) // fail loudly on a typo'd employeeNumber
+    batch.set(shiftsRef.doc(shiftDocIdWeek3(s)), {
+      employeeId: s.employeeNumber ? employeeDocId(s.employeeNumber) : null,
+      date: SEED_WEEK3_DATES[s.day],
+      startTime: s.startTime,
+      endTime: s.endTime,
+      roleId: s.roleId,
+      requiredSkillLevel: s.requiredSkillLevel,
+      department: s.department,
+      station: s.station,
+      notes: null,
+      aiValidationNote: s.aiValidationNote ?? null,
+      aiGenerated: true,
+      isOnCall: false,
+      status: 'draft',
+      locationId: null,
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    })
+  }
+  await batch.commit()
+
+  return { shifts: SEED_SHIFTS_WEEK3.length, open }
+}
+
+// ── OT / pay-period-split proof — Mon Sept 14 – Sun Sept 20 2026 ────────────
+//
+// RELOCATED here from the Aug 17–23 week (see the block comment above
+// SEED_SHIFTS_WEEK2) by Rafa's Aug 2026 ruling replacing the semimonthly
+// boundary convention with calendar halves (1st–15th / 16th–end-of-month —
+// APP_SETTINGS.payPeriod above, src/lib/payroll/periods.ts). Aug 17–23 falls
+// entirely inside the single Aug 16–31 period under that convention, so it
+// no longer straddles anything; Sept 14–20 does straddle the new Sept 15/16
+// boundary, and does not overlap Aug 10–23 at all.
+//
+// Weekday-arithmetic verification (recomputed from the given anchor, not
+// assumed): Aug 10 2026 is a Monday. Aug 31 2026 is 21 days later (3 x 7),
+// so it is also a Monday, meaning Sept 1 2026 is a Tuesday. Counting forward
+// from Sept 1 (Tue): Sept 2 Wed, 3 Thu, 4 Fri, 5 Sat, 6 Sun, 7 Mon — so
+// Sept 7 is a Monday, and Sept 14 (7 days later) is the following Monday.
+// From Sept 14 (Mon): Sept 15 = Tue, Sept 16 = Wed, ... Sept 20 = Sun. So the
+// Mon–Sun workweek Sept 14–20 contains both Sept 15 (the last day of the
+// Sept 1–15 period) and Sept 16 (the first day of the Sept 16–30 period) — a
+// genuine straddle — and the whole window (Sept 14–20) is chronologically
+// after Aug 23, so it cannot overlap week 1 (Aug 10–16) or week 2 (Aug
+// 17–23) in any way.
+//
+// Marisol Peña (employeeNumber 1060, prep-cook L2) works five 9-hour
+// prep-cook shifts, Mon–Fri (09:00–18:00 each day). 5 x 9h = 45 hours for
+// this Mon-start workweek, comfortably over the 40h FLSA threshold.
+//
+// No `schedules/2026-09-14` document is seeded — real shifts for this week
+// are OPTIONAL per Rafa's ruling and not required for the proof, which only
+// strictly needs real `punches` (the payroll Workshop reads punch data, not
+// shifts — same as the original Aug 17–23 implementation). Punches below
+// carry `shiftId: null` accordingly, since there is no shift document for
+// them to reference.
+
+const OT_EMPLOYEE_NUMBER = '1060' // Marisol Peña
+const OT_PROOF_WEEK_ID = '2026-09-14'
+
+type OTProofWeekday = 'mon' | 'tue' | 'wed' | 'thu' | 'fri'
+
+/** Mon→Fri dates of OT_PROOF_WEEK_ID — Marisol does not work Sat/Sun this week, same as the original Aug 17–23 proof. */
+const OT_PROOF_WEEK_DATES: Record<OTProofWeekday, string> = {
+  mon: '2026-09-14',
+  tue: '2026-09-15',
+  wed: '2026-09-16',
+  thu: '2026-09-17',
+  fri: '2026-09-18',
+}
+
+interface SeedOTProofShift {
+  day: OTProofWeekday
+  startTime: string
+  endTime: string
+  department: Department
+}
+
+const OT_PROOF_SHIFTS: SeedOTProofShift[] = [
+  { day: 'mon', startTime: '09:00', endTime: '18:00', department: 'BOH' }, // day 1 of 5
+  { day: 'tue', startTime: '09:00', endTime: '18:00', department: 'BOH' }, // day 2 of 5
+  { day: 'wed', startTime: '09:00', endTime: '18:00', department: 'BOH' }, // day 3 of 5
+  { day: 'thu', startTime: '09:00', endTime: '18:00', department: 'BOH' }, // day 4 of 5
+  { day: 'fri', startTime: '09:00', endTime: '18:00', department: 'BOH' }, // day 5 of 5 — 5 x 9h = 45h total, past the 40h line
+]
+
+/**
+ * REAL `punches` documents for the OT proof employee's Sept 14–20 workweek
+ * (Phase 3(c) addition, relocated Aug 2026 — see the section header above).
+ * The payroll Workshop reads real punch data, not shifts, and nobody is
+ * going to manually clock this person in and out for a full week just to
+ * review the feature. One in/out pair per OT shift, timestamps matching that
+ * shift's own start/end exactly, in restaurant-local time (America/New_York
+ * — EDT, UTC-4; Sept 2026 is still before DST ends the first Sunday of
+ * November, so -04:00 is correct here same as it was in August).
+ * `scripts/seed.ts` still seeds NO OTHER punches and NO tip reports anywhere
+ * else — both stay runtime-only for the rest of the roster, exactly as
+ * before; this is scoped to the one proof employee only, per Rafa's ruling.
  */
 async function seedOTEmployeePunches(): Promise<{ pairs: number; totalHours: number }> {
-  const otShifts = SEED_SHIFTS_WEEK2.filter((s) => s.employeeNumber === OT_EMPLOYEE_NUMBER)
   const employeeId = employeeDocId(OT_EMPLOYEE_NUMBER)
 
   const batch = db.batch()
   let totalHours = 0
-  for (const s of otShifts) {
-    const date = SEED_WEEK2_DATES[s.day]
-    const shiftId = shiftDocIdWeek2(s)
+  for (const s of OT_PROOF_SHIFTS) {
+    const date = OT_PROOF_WEEK_DATES[s.day]
     totalHours += shiftHours(s.startTime, s.endTime)
 
     const inAt = Timestamp.fromDate(new Date(`${date}T${s.startTime}:00-04:00`))
@@ -2434,7 +2731,7 @@ async function seedOTEmployeePunches(): Promise<{ pairs: number; totalHours: num
 
     batch.set(db.collection('punches').doc(`pn-${date}-${employeeId}-in`), {
       employeeId,
-      shiftId,
+      shiftId: null,
       type: 'in',
       timestamp: inAt,
       deviceTimestamp: inAt,
@@ -2456,7 +2753,7 @@ async function seedOTEmployeePunches(): Promise<{ pairs: number; totalHours: num
 
     batch.set(db.collection('punches').doc(`pn-${date}-${employeeId}-out`), {
       employeeId,
-      shiftId,
+      shiftId: null,
       type: 'out',
       timestamp: outAt,
       deviceTimestamp: outAt,
@@ -2477,19 +2774,41 @@ async function seedOTEmployeePunches(): Promise<{ pairs: number; totalHours: num
   }
   await batch.commit()
 
-  return { pairs: otShifts.length, totalHours }
+  return { pairs: OT_PROOF_SHIFTS.length, totalHours }
 }
 
 // ── payPeriods (spec §11, Phase 3(c)) ────────────────────────────────────────
-// AppSettings.payPeriod is semimonthly, paid on the 5th and 20th (see
-// APP_SETTINGS above), so a period runs 6th→20th / 21st→5th. Two periods
-// bracket the Aug 20/21 boundary that the OT employee's Aug 17–23 workweek
-// straddles — the point is to prove the FLSA per-workweek OT calc gets
-// allocated across the semimonthly cut, not computed per-period (which would
-// silently under- or over-count the overtime). Two older periods are also
-// seeded, `exported` then `locked`, purely so the Workshop's review → lock →
-// unlock flow has real history to browse — optional polish, not required by
-// the boundary proof above.
+// Periods are generated from `semimonthlyPeriodForDate`/`periodIdForDate`
+// (src/lib/payroll/periods.ts) — Rafa's Aug 2026 ruling: calendar halves
+// 1st–15th / 16th–end-of-month, paid the 20th (for 1–15) and the 5th of the
+// FOLLOWING month (for 16–EOM). This REPLACES the section's old hand-computed
+// 6th–20th / 21st–5th boundaries (see PROGRESS.md for the superseded numbers
+// if ever needed for context) — nothing here is hand-computed anymore, every
+// date below comes straight out of the generator.
+//
+// Four periods, covering the same rough real-world window the old seed did:
+//   - Two already-closed periods (July 2026: exported, then locked) purely
+//     so the Workshop's review → lock → unlock flow has real history to
+//     browse — optional polish, not required by the boundary proof below.
+//   - The two periods the relocated OT/pay-period-split proof actually
+//     needs: Sept 1–15 and Sept 16–30 2026, bracketing the Sept 15/16
+//     boundary that Marisol Peña's Sept 14–20 workweek straddles (see
+//     OT_EMPLOYEE_NUMBER / OT_PROOF_WEEK_ID above) — the point is to prove
+//     the FLSA per-workweek OT calc gets allocated across the semimonthly
+//     cut, not computed per-period (which would silently under- or
+//     over-count the overtime).
+//
+// Aug 10–23 2026 (weeks 1 and 2) deliberately gets NO payPeriod of its own
+// here: under the new convention those two weeks sit entirely inside the
+// Aug 1–15 / Aug 16–31 periods, and (per the relocation above) no real
+// punches exist anywhere in August anymore for either week to reconcile
+// against — seeding an Aug period would be decoration with nothing behind
+// it.
+
+const JULY_FIRST_HALF = semimonthlyPeriodForDate('2026-07-10')
+const JULY_SECOND_HALF = semimonthlyPeriodForDate('2026-07-20')
+const SEPT_FIRST_HALF = semimonthlyPeriodForDate('2026-09-10')
+const SEPT_SECOND_HALF = semimonthlyPeriodForDate('2026-09-20')
 
 interface SeedPayPeriod {
   id: string
@@ -2503,25 +2822,35 @@ interface SeedPayPeriod {
 
 const SEED_PAY_PERIODS: SeedPayPeriod[] = [
   {
-    id: '2026-07-05',
-    startDate: '2026-07-05',
-    endDate: '2026-07-20',
+    id: periodIdForDate(JULY_FIRST_HALF.startDate),
+    startDate: JULY_FIRST_HALF.startDate,
+    endDate: JULY_FIRST_HALF.endDate,
     status: 'exported',
-    lockedAt: '2026-07-21T12:00:00-04:00',
-    exportedAt: '2026-07-21T13:00:00-04:00',
-    exportFileName: 'payroll-2026-07-05_2026-07-20.csv',
+    lockedAt: '2026-07-16T12:00:00-04:00',
+    exportedAt: '2026-07-16T13:00:00-04:00',
+    exportFileName: `payroll-${JULY_FIRST_HALF.startDate}_${JULY_FIRST_HALF.endDate}.csv`,
   },
   {
-    id: '2026-07-21',
-    startDate: '2026-07-21',
-    endDate: '2026-08-05',
+    id: periodIdForDate(JULY_SECOND_HALF.startDate),
+    startDate: JULY_SECOND_HALF.startDate,
+    endDate: JULY_SECOND_HALF.endDate,
     status: 'locked',
-    lockedAt: '2026-08-06T12:00:00-04:00',
+    lockedAt: '2026-08-01T12:00:00-04:00',
   },
-  // Brackets the Aug 20/21 boundary the OT employee's Aug 17–23 workweek
+  // Brackets the Sept 15/16 boundary the OT employee's Sept 14–20 workweek
   // straddles — see the section header above.
-  { id: '2026-08-06', startDate: '2026-08-06', endDate: '2026-08-20', status: 'open' },
-  { id: '2026-08-21', startDate: '2026-08-21', endDate: '2026-09-05', status: 'open' },
+  {
+    id: periodIdForDate(SEPT_FIRST_HALF.startDate),
+    startDate: SEPT_FIRST_HALF.startDate,
+    endDate: SEPT_FIRST_HALF.endDate,
+    status: 'open',
+  },
+  {
+    id: periodIdForDate(SEPT_SECOND_HALF.startDate),
+    startDate: SEPT_SECOND_HALF.startDate,
+    endDate: SEPT_SECOND_HALF.endDate,
+    status: 'open',
+  },
 ]
 
 async function seedPayPeriods(): Promise<number> {
@@ -2546,6 +2875,294 @@ async function seedPayPeriods(): Promise<number> {
   }
   await batch.commit()
   return SEED_PAY_PERIODS.length
+}
+
+// ── policies / disciplinaryActions / disciplinaryLadder (spec §12, Phase 4) ─
+// A handful of sample documents so these Phase 4 collections aren't empty in
+// the emulator — not an exhaustive HR data set, just enough for the Policy
+// Library, Disciplinary admin screen, and the profile ladder widget to have
+// something real to render during review.
+
+interface SeedPolicy {
+  id: string
+  title: string
+  titleEs: string
+  bodyMarkdown: string
+  bodyMarkdownEs: string
+  category: PolicyCategory
+  requiresSignature: boolean
+  activeFrom: string
+}
+
+const SEED_POLICIES: SeedPolicy[] = [
+  {
+    id: 'policy-employee-handbook',
+    title: 'Employee Handbook',
+    titleEs: 'Manual del Empleado',
+    category: 'handbook',
+    requiresSignature: true,
+    activeFrom: '2026-01-01',
+    bodyMarkdown: `# Rosalia's Kitchen — Employee Handbook
+
+Welcome to Rosalia's Kitchen. This handbook covers the basics of how we work together: scheduling, time off, conduct, and the standards we hold every team member to, front of house and back of house alike.
+
+## Scheduling & Availability
+
+Schedules publish by Friday at 11:59 PM for the following week. Submit or update your weekly availability before the Thursday 11:59 PM deadline — availability submitted after the deadline may not be reflected in that week's schedule. Shift trades must go through the app and are only valid once approved by a manager.
+
+## Time & Attendance
+
+Clock in and out for every shift using the app, from inside the restaurant. Arriving more than 10 minutes late without notifying a manager is treated as a late arrival for attendance purposes. Repeated unexcused late arrivals or no-call/no-shows may result in disciplinary action per our escalation ladder.
+
+## Conduct
+
+Treat every guest and teammate with respect. Harassment, discrimination, and workplace violence are never tolerated and will result in immediate review, up to and including termination. Report any concerns to a manager or Denise directly — retaliation for a good-faith report is itself a violation of this policy.
+
+By signing below, you acknowledge you have read and understand this handbook.`,
+    bodyMarkdownEs: `# Rosalia's Kitchen — Manual del Empleado
+
+Bienvenido/a a Rosalia's Kitchen. Este manual cubre lo básico sobre cómo trabajamos juntos: horarios, tiempo libre, conducta y los estándares que mantenemos para cada miembro del equipo, tanto en el salón como en cocina.
+
+## Horarios y Disponibilidad
+
+Los horarios se publican los viernes antes de las 11:59 PM para la semana siguiente. Envía o actualiza tu disponibilidad semanal antes de la fecha límite del jueves a las 11:59 PM; la disponibilidad enviada después de esa fecha límite puede no reflejarse en el horario de esa semana. Los intercambios de turnos deben hacerse a través de la aplicación y solo son válidos una vez aprobados por un gerente.
+
+## Tiempo y Asistencia
+
+Marca tu entrada y salida en cada turno usando la aplicación, desde dentro del restaurante. Llegar más de 10 minutos tarde sin avisar a un gerente se considera una llegada tardía para efectos de asistencia. Llegadas tardías repetidas sin justificación o ausencias sin aviso pueden resultar en acción disciplinaria según nuestra escalera de consecuencias.
+
+## Conducta
+
+Trata a cada cliente y compañero de trabajo con respeto. El acoso, la discriminación y la violencia en el lugar de trabajo nunca se toleran y darán lugar a una revisión inmediata, pudiendo llegar hasta el despido. Reporta cualquier inquietud directamente a un gerente o a Denise; las represalias por un reporte hecho de buena fe son en sí mismas una violación de esta política.
+
+Al firmar a continuación, reconoces que has leído y entendido este manual.`,
+  },
+  {
+    id: 'policy-food-safety',
+    title: 'Food Safety & Sanitation Policy',
+    titleEs: 'Política de Seguridad Alimentaria y Sanitización',
+    category: 'policy',
+    requiresSignature: true,
+    activeFrom: '2026-01-01',
+    bodyMarkdown: `# Food Safety & Sanitation Policy
+
+Food safety is non-negotiable at Rosalia's Kitchen. Every BOH team member is responsible for following these standards on every shift.
+
+## Handwashing & Hygiene
+
+Wash hands at the start of every shift, after handling raw proteins, after using the restroom, and any time you touch your face, hair, or phone. Gloves are required when handling ready-to-eat food and must be changed between tasks.
+
+## Temperature Control
+
+Cold holding must stay at 41°F or below; hot holding at 135°F or above. Log cooler and hot-hold temperatures at the start of every shift and any time a unit is serviced. Any item found out of range must be discarded and logged — never "re-chilled and served."
+
+## Cross-Contamination
+
+Raw proteins are stored on the bottom shelf of any shared cooler, below ready-to-eat items. Cutting boards and utensils are color-coded by protein type and never shared across categories without a full wash-rinse-sanitize cycle in between.
+
+Violations of this policy are treated seriously and may result in disciplinary action per our escalation ladder, given the direct risk to guest health.`,
+    bodyMarkdownEs: `# Política de Seguridad Alimentaria y Sanitización
+
+La seguridad alimentaria no es negociable en Rosalia's Kitchen. Cada miembro del equipo de cocina es responsable de seguir estos estándares en cada turno.
+
+## Lavado de Manos e Higiene
+
+Lávate las manos al inicio de cada turno, después de manipular proteínas crudas, después de usar el baño, y cada vez que te toques la cara, el cabello o el teléfono. Se requieren guantes al manipular alimentos listos para comer, y deben cambiarse entre tareas.
+
+## Control de Temperatura
+
+El almacenamiento en frío debe mantenerse a 41°F o menos; el almacenamiento en caliente a 135°F o más. Registra las temperaturas de los refrigeradores y las unidades de mantenimiento en caliente al inicio de cada turno y cada vez que se le dé servicio a una unidad. Cualquier producto fuera de rango debe desecharse y registrarse — nunca "volver a enfriarse y servirse".
+
+## Contaminación Cruzada
+
+Las proteínas crudas se almacenan en el estante inferior de cualquier refrigerador compartido, debajo de los alimentos listos para comer. Las tablas de cortar y utensilios están codificados por color según el tipo de proteína y nunca se comparten entre categorías sin un ciclo completo de lavado-enjuague-desinfección entre usos.
+
+Las violaciones de esta política se toman en serio y pueden resultar en acción disciplinaria según nuestra escalera de consecuencias, dado el riesgo directo a la salud de nuestros clientes.`,
+  },
+  {
+    id: 'policy-attendance',
+    title: 'Attendance & Punctuality Policy',
+    titleEs: 'Política de Asistencia y Puntualidad',
+    category: 'policy',
+    requiresSignature: false,
+    activeFrom: '2026-01-01',
+    bodyMarkdown: `# Attendance & Punctuality Policy
+
+Reliable attendance keeps the floor and the kitchen running for everyone on shift with you.
+
+## Arriving On Time
+
+Be clocked in and ready to work at your scheduled start time — not just arriving at the building. If you are going to be late, call or message your shift supervisor or manager as early as possible, ideally before your shift starts.
+
+## Requesting Time Off
+
+Submit time-off requests through the app as far in advance as possible. Requests inside the current published week are not guaranteed and are reviewed case by case against existing coverage.
+
+## No-Call/No-Show
+
+Failing to show up for a scheduled shift without any notice is treated as a serious attendance violation, separate from and more severe than a late arrival, and is escalated accordingly.
+
+This policy does not require a signature — it's posted for reference and reviewed during onboarding.`,
+    bodyMarkdownEs: `# Política de Asistencia y Puntualidad
+
+La asistencia confiable mantiene el salón y la cocina funcionando para todos los que están de turno contigo.
+
+## Llegar a Tiempo
+
+Marca tu entrada y está listo/a para trabajar a tu hora de inicio programada, no simplemente llegando al edificio. Si vas a llegar tarde, llama o envía un mensaje a tu supervisor de turno o gerente lo antes posible, idealmente antes de que comience tu turno.
+
+## Solicitar Tiempo Libre
+
+Envía las solicitudes de tiempo libre a través de la aplicación con la mayor anticipación posible. Las solicitudes dentro de la semana ya publicada no están garantizadas y se revisan caso por caso según la cobertura existente.
+
+## Ausencia sin Aviso
+
+No presentarse a un turno programado sin ningún aviso se considera una violación grave de asistencia, distinta y más severa que una llegada tardía, y se escala en consecuencia.
+
+Esta política no requiere firma; se publica como referencia y se revisa durante la incorporación.`,
+  },
+]
+
+async function seedPolicies(): Promise<number> {
+  const batch = db.batch()
+  for (const p of SEED_POLICIES) {
+    batch.set(db.collection('policies').doc(p.id), {
+      familyId: p.id,
+      title: p.title,
+      titleEs: p.titleEs,
+      bodyMarkdown: p.bodyMarkdown,
+      bodyMarkdownEs: p.bodyMarkdownEs,
+      version: 1,
+      category: p.category,
+      requiresSignature: p.requiresSignature,
+      activeFrom: p.activeFrom,
+      isCurrent: true,
+      locationId: null,
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    })
+  }
+  await batch.commit()
+  return SEED_POLICIES.length
+}
+
+/**
+ * One sample disciplinary action, on a real staff employee OTHER than
+ * Marisol Peña (the OT proof employee — kept clear of this so the two demos
+ * never get conflated). Allison Rodriguez (employeeNumber 1041, accessRole
+ * 'staff', FOH server) is real availability/schedule content elsewhere in
+ * this file already; `employeeAccessRole` is denormalized at write time here
+ * exactly as `TipReport.employeeAccessRole` is elsewhere in this script —
+ * the same list-query-safety reasoning (models.ts's own doc comment on
+ * `DisciplinaryAction.employeeAccessRole`).
+ */
+interface SeedDisciplinaryAction {
+  id: string
+  employeeNumber: string
+  type: DisciplinaryActionType
+  date: string
+  issuedByNumber: string
+  policyRefs: string[]
+  narrative: string
+  status: DisciplinaryActionStatus
+}
+
+const SEED_DISCIPLINARY_ACTIONS: SeedDisciplinaryAction[] = [
+  {
+    id: 'da-2026-08-05-1041',
+    employeeNumber: '1041', // Allison Rodriguez, staff
+    type: 'verbal-warning',
+    date: '2026-08-05',
+    issuedByNumber: '1051', // Denise Lasarte, GM
+    policyRefs: ['policy-attendance'],
+    narrative:
+      "Clocked in 22 minutes after the scheduled start of the Aug 3 dinner shift without notifying a manager or shift supervisor in advance. Reviewed the attendance policy's advance-notice expectations with Allison directly. First occurrence on file — verbal warning.",
+    status: 'issued',
+  },
+]
+
+async function seedDisciplinaryActions(): Promise<number> {
+  const batch = db.batch()
+  for (const a of SEED_DISCIPLINARY_ACTIONS) {
+    const employee = employeeOrThrow(a.employeeNumber)
+    batch.set(db.collection('disciplinaryActions').doc(a.id), {
+      employeeId: employeeDocId(a.employeeNumber),
+      type: a.type,
+      date: a.date,
+      issuedBy: employeeDocId(a.issuedByNumber),
+      policyRefs: a.policyRefs,
+      narrative: a.narrative,
+      signatureId: null,
+      status: a.status,
+      refusedWitnessEmployeeId: null,
+      refusedAt: null,
+      pdfStoragePath: null,
+      emailedTo: null,
+      emailedAt: null,
+      emailPending: false,
+      emailPendingAt: null,
+      employeeAccessRole: employee.accessRole,
+      locationId: null,
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    })
+  }
+  await batch.commit()
+  return SEED_DISCIPLINARY_ACTIONS.length
+}
+
+/**
+ * The singleton escalation ladder config (`src/lib/db/disciplinaryLadder.ts`
+ * reads it via `limit(1)`, no fixed doc id assumed — this id is just this
+ * seed's own convention). A plausible 4-step ladder, same shape as
+ * `disciplinaryLadder.test.ts`'s own fixture: 2 counted actions → written
+ * warning, 3 → write-up, 4 → final warning, 5 → suspension/termination
+ * review. `draft` actions never count toward these thresholds
+ * (computeLadderPosition's own contract) — only issued/signed/
+ * refused-to-sign do, so the one seeded action above (status 'issued')
+ * counts as 1 toward Allison's own ladder position.
+ */
+const DISCIPLINARY_LADDER_ID = 'default'
+
+const SEED_DISCIPLINARY_LADDER_STEPS: DisciplinaryLadderStep[] = [
+  {
+    order: 1,
+    type: 'written-warning',
+    thresholdCount: 2,
+    consequenceText: 'Next incident: written warning',
+    consequenceTextEs: 'Próximo incidente: amonestación escrita',
+  },
+  {
+    order: 2,
+    type: 'writeup',
+    thresholdCount: 3,
+    consequenceText: 'Next incident: write-up',
+    consequenceTextEs: 'Próximo incidente: reporte formal',
+  },
+  {
+    order: 3,
+    type: 'final-warning',
+    thresholdCount: 4,
+    consequenceText: 'Next incident: final warning',
+    consequenceTextEs: 'Próximo incidente: advertencia final',
+  },
+  {
+    order: 4,
+    type: 'suspension',
+    thresholdCount: 5,
+    consequenceText: 'Next incident: suspension/termination review',
+    consequenceTextEs: 'Próximo incidente: revisión de suspensión/despido',
+  },
+]
+
+async function seedDisciplinaryLadder(): Promise<number> {
+  await db.collection('disciplinaryLadder').doc(DISCIPLINARY_LADDER_ID).set({
+    steps: SEED_DISCIPLINARY_LADDER_STEPS,
+    locationId: null,
+    createdAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
+  })
+  return 1
 }
 
 /**
@@ -2757,6 +3374,7 @@ async function main(): Promise<void> {
   const authUsers = await seedAuthUsers()
   const employees = await seedEmployees(authUsers.uidByNumber)
   const invites = await seedInvites()
+  const aiProviders = await seedAiProviders()
 
   // Verified BEFORE anything scheduling-shaped is written: a week whose labor
   // does not match the mockup is not worth seeding.
@@ -2766,8 +3384,12 @@ async function main(): Promise<void> {
   const schedule = await seedSchedule()
   const templates = await seedShiftTemplates()
   const scheduleWeek2 = await seedScheduleWeek2()
+  const scheduleWeek3 = await seedScheduleWeek3()
   const otPunches = await seedOTEmployeePunches()
   const payPeriods = await seedPayPeriods()
+  const policies = await seedPolicies()
+  const disciplinaryActions = await seedDisciplinaryActions()
+  const disciplinaryLadder = await seedDisciplinaryLadder()
   const timeOff = await seedTimeOff()
   const tasks = await seedTasks()
   const taskInstances = await seedTaskInstances()
@@ -2817,6 +3439,7 @@ async function main(): Promise<void> {
     }`,
   )
   console.log('  invites/*                 ', invites, 'document (pending)')
+  console.log('  settings/aiProviders      ', aiProviders, 'document (anthropic configured, inactive, no _devSecrets value)')
 
   const pendingAvailability = SEED_AVAILABILITY.filter((a) => a.status === 'pending').length
   console.log('  availability/*            ', availability, 'documents')
@@ -2832,16 +3455,33 @@ async function main(): Promise<void> {
     templates,
     'documents (14 base + 7 seasonal Fall-hours variants, 4 profiles: weekday-lunch, brunch, weekday-dinner, weekend-dinner)',
   )
-  console.log(`  schedules/${SEED_WEEK2_ID}      1 document (published) — fulfillment-badge + OT demo week`)
+  console.log(`  schedules/${SEED_WEEK2_ID}      1 document (published) — fulfillment-badge demo week`)
   console.log(
     `      shifts ${scheduleWeek2.shifts} (${scheduleWeek2.open} open) · Fri/Sat/Sun weekend day-parts fully met · Wed dinner host line 0/1 (deliberate) · Thu dinner server line 1/2 (deliberate)`,
   )
+  console.log(`  schedules/${SEED_WEEK3_ID}      1 document (draft, never published) — AI draft review demo week`)
   console.log(
-    `  punches/*                 ${otPunches.pairs * 2} documents (${otPunches.pairs} in/out pairs, Marisol Peña, ${otPunches.totalHours}h over Aug 17-23 — OT/pay-period-split demo)`,
+    `      shifts ${scheduleWeek3.shifts} (${scheduleWeek3.open} open) · all aiGenerated: true, status: draft · 1 demoted to open (bartender skill-too-low) · aiDraftMeta.invalidShiftCount ${AI_DRAFT_META.invalidShiftCount}`,
+  )
+  console.log(
+    `  punches/*                 ${otPunches.pairs * 2} documents (${otPunches.pairs} in/out pairs, Marisol Peña, ${otPunches.totalHours}h over ${OT_PROOF_WEEK_ID} (Sept 14-20) — OT/pay-period-split demo, relocated off Aug 17-23 by the new 1-15/16-EOM period convention)`,
   )
   console.log('  payPeriods/*              ', payPeriods, 'documents')
   console.log(
     `      ${SEED_PAY_PERIODS.map((p) => `${p.id} (${p.status})`).join(' · ')}`,
+  )
+  console.log('  policies/*                ', policies, 'documents')
+  console.log(
+    `      ${SEED_POLICIES.map((p) => `${p.id} (v1${p.requiresSignature ? ', signature required' : ''})`).join(' · ')}`,
+  )
+  console.log('  disciplinaryActions/*     ', disciplinaryActions, 'document')
+  console.log(
+    `      ${SEED_DISCIPLINARY_ACTIONS.map((a) => `${a.id} — ${employeeOrThrow(a.employeeNumber).firstName} ${employeeOrThrow(a.employeeNumber).lastName} (${a.type}, ${a.status})`).join(' · ')}`,
+  )
+  console.log(
+    '  disciplinaryLadder/*      ',
+    disciplinaryLadder,
+    `document (${SEED_DISCIPLINARY_LADDER_STEPS.length} steps: ${SEED_DISCIPLINARY_LADDER_STEPS.map((s) => `${s.type}@${s.thresholdCount}`).join(' → ')})`,
   )
   console.log('  timeOff/*                 ', timeOff.docs, 'documents')
   console.log(

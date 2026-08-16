@@ -13,6 +13,9 @@ import { TimeOffAdminPage } from '@/pages/settings/TimeOffAdminPage'
 import { TimeOffCalendarPage } from '@/pages/settings/TimeOffCalendarPage'
 import { ShiftsAndTipsPage } from '@/pages/settings/ShiftsAndTipsPage'
 import { PayrollWorkshopPage } from '@/pages/settings/PayrollWorkshopPage'
+import { PolicyLibraryPage } from '@/pages/settings/PolicyLibraryPage'
+import { DisciplinaryActionsPage } from '@/pages/settings/DisciplinaryActionsPage'
+import { AiProvidersPage } from '@/pages/settings/AiProvidersPage'
 import { MyTimeOffPage } from '@/pages/availability/MyTimeOffPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { InviteAcceptPage } from '@/pages/auth/InviteAcceptPage'
@@ -29,6 +32,7 @@ import { WhosWorkingPage } from '@/pages/schedule/WhosWorkingPage'
 import { ShiftPoolPage } from '@/pages/shiftPool/ShiftPoolPage'
 import { ClockPage } from '@/pages/clock/ClockPage'
 import { MyTasksPage } from '@/pages/tasks/MyTasksPage'
+import { HrHubPage } from '@/pages/hr/HrHubPage'
 
 /**
  * Phase 0 routing.
@@ -88,7 +92,7 @@ export default function App() {
         <Route path="time-off" element={<MyTimeOffPage />} />
         <Route path="shift-pool" element={<ShiftPoolPage />} />
         <Route path="tasks" element={<MyTasksPage />} />
-        <Route path="hr" element={<PlaceholderPage titleKey="nav.hr" phase={4} />} />
+        <Route path="hr" element={<HrHubPage />} />
         <Route
           path="reports"
           element={<PlaceholderPage titleKey="nav.reports" phase={3} />}
@@ -110,6 +114,9 @@ export default function App() {
           <Route path="time-off/calendar" element={<TimeOffCalendarPage />} />
           <Route path="shifts-and-tips" element={<ShiftsAndTipsPage />} />
           <Route path="payroll" element={<PayrollWorkshopPage />} />
+          <Route path="policies" element={<PolicyLibraryPage />} />
+          <Route path="discipline" element={<DisciplinaryActionsPage />} />
+          <Route path="ai" element={<AiProvidersPage />} />
         </Route>
         <Route path="more" element={<MorePage />} />
 

@@ -14,10 +14,13 @@
     "serve": "npm run build && firebase emulators:start --only functions --project demo-rk-staffhub"
   },
   "dependencies": {
+    "@google-cloud/secret-manager": "^7.0.0",
     "firebase-admin": "^13.5.0",
-    "firebase-functions": "^6.6.0"
+    "firebase-functions": "^6.6.0",
+    "pdfkit": "^0.19.1"
   },
   "devDependencies": {
+    "@types/pdfkit": "^0.17.6",
     "typescript": "^5.7.2"
   }
 }

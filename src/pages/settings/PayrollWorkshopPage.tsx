@@ -17,6 +17,7 @@ import {
   PayrollActionRejected,
   type CsvVariant,
 } from '@/lib/payroll/payrollActions'
+import { payDateForPeriod } from '@/lib/payroll/periods'
 import type { PayPeriod, PayPeriodStatus } from '@/types/models'
 
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, LockIcon } from './payrollIcons'
@@ -252,6 +253,11 @@ function PayrollWorkshopScreen(): JSX.Element {
                           frequency: t(`settings.payroll.frequency.${payPeriodFrequency}`),
                           index: periodOrdinal.index,
                           total: periodOrdinal.total,
+                        })}
+                      </span>
+                      <span className="text-chip text-ink-muted">
+                        {t('settings.payroll.payDate', {
+                          date: formatDate(dateFromIso(payDateForPeriod(period.startDate)), { month: 'short', day: 'numeric', year: 'numeric' }, lang),
                         })}
                       </span>
                     </>

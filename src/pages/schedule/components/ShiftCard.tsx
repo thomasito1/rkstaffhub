@@ -66,6 +66,16 @@ export function ShiftCard({
     .map((c) => t(c.messageKey, c.params as Record<string, string | number>))
     .join(' — ')
 
+  // Only ever set on an open shift (spec §13, guardrail #3) — the AI proposed
+  // an assignment here that failed conflict validation, so this shift landed
+  // open with a machine-generated reason instead. `conflicts` is always empty
+  // for an open shift (RoleBandRow never scores one), so this never collides
+  // with the hasBlock/hasWarn badge slot above — a distinct violet treatment
+  // (this app's AI accent color, mockup 13) rather than reusing red/amber,
+  // which are reserved for a MANAGER'S OWN assignment conflicts.
+  const aiNote = isOpen ? (shift.aiValidationNote ?? null) : null
+  const aiNoteText = aiNote ? t(aiNote.messageKey, aiNote.params as Record<string, string | number>) : null
+
   function handleKeyDown(e: KeyboardEvent<HTMLDivElement>) {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
@@ -150,6 +160,16 @@ export function ShiftCard({
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="h-2.5 w-2.5" aria-hidden="true">
             <path d="M10.3 3.4 2.6 17a1.5 1.5 0 0 0 1.3 2.2h16.2a1.5 1.5 0 0 0 1.3-2.2L13.7 3.4a1.5 1.5 0 0 0-3.4 0Z" />
             <path d="M12 9v4M12 16.3h.01" />
+          </svg>
+        </span>
+      ) : aiNoteText ? (
+        <span
+          className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-violet-500 text-white"
+          title={aiNoteText}
+          aria-label={t('scheduleBuilder.card.aiNoteAriaLabel', { reason: aiNoteText })}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="h-2.5 w-2.5" aria-hidden="true">
+            <path d="M12 3v3.5M12 17.5V21M4.5 12H8M16 12h3.5M6.8 6.8l2.1 2.1M15.1 15.1l2.1 2.1M17.2 6.8l-2.1 2.1M8.9 15.1l-2.1 2.1" />
           </svg>
         </span>
       ) : null}

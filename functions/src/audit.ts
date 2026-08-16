@@ -36,6 +36,9 @@ export type AuditAction =
   | 'period.lock'
   | 'period.unlock'
   | 'payroll.export'
+  | 'discipline.issue'
+  | 'ai.keyChange'
+  | 'ai.generate'
 
 export interface AuditInput {
   action: AuditAction

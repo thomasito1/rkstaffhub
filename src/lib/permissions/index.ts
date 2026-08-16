@@ -128,6 +128,39 @@ export function viewableTipRoles(role: AccessRole): AccessRole[] {
 }
 
 /**
+ * Roles whose disciplinary actions `role` may view, per the below-your-level
+ * rule (spec §4/§12) — strictly-below only, except Owner's blanket bypass
+ * (spec §4: "Owners see all," no below-level carve-out even for a peer
+ * Owner — the one deliberate exception, tested explicitly in
+ * `tests/rules/disciplinary.rules.test.ts`).
+ *
+ * Mirrors firestore.rules' `disciplinaryActions` match block's own
+ * `viewableDisciplineRoles()` EXACTLY (same values as `viewableTipRoles`
+ * above, kept as its own named function rather than reused directly so each
+ * stays a 1:1 mirror of its own rule function if either is ever tightened
+ * independently). Same list-query-safety reasoning: a Firestore `list` is
+ * all-or-nothing, so a client reading disciplinary actions across more than
+ * one employee MUST constrain the query itself with
+ * `where('employeeAccessRole', 'in', viewableDisciplineRoles(actor.accessRole))`
+ * — the exact literal set the rule checks membership against — or the whole
+ * request is denied outright.
+ */
+export function viewableDisciplineRoles(role: AccessRole): AccessRole[] {
+  switch (role) {
+    case 'owner':
+      return ['owner', 'gm', 'manager', 'supervisor', 'staff']
+    case 'gm':
+      return ['manager', 'supervisor', 'staff']
+    case 'manager':
+      return ['supervisor', 'staff']
+    case 'supervisor':
+      return ['staff']
+    default:
+      return []
+  }
+}
+
+/**
  * Department scoping for approvals — spec §4.
  * FOH managers approve FOH trades/availability. Owners and GM bypass.
  */

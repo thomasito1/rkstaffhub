@@ -944,6 +944,187 @@ service cloud.firestore {
       allow create, update, delete: if false;
     }
 
+    // ── policies (spec §12, Phase 4) ──────────────────────────────────────────
+    // Read broadly — everyone needs to read a policy they're being asked to
+    // sign, and the handbook generally. Versioned + immutable: an edit is
+    // ALWAYS a new document (new id, `version: version + 1`, same
+    // `familyId`), never a mutation of an existing one — the one exception,
+    // `isCurrent`, exists specifically so creating the new version can flip
+    // the superseded doc's flag without a Cloud Function.
+
+    match /policies/{policyId} {
+
+      // Field-by-field, not diff().affectedKeys().hasOnly() — same house
+      // style as employees' unchanged() (above): explicit equality states
+      // the intent plainly and is the documented preference over diff() in
+      // this file already.
+      function policyUnchanged(field) {
+        return (field in request.resource.data) == (field in resource.data)
+          && (!(field in request.resource.data)
+              || request.resource.data[field] == resource.data[field]);
+      }
+
+      // The narrow update shape: isCurrent + updatedAt may change, every
+      // other Policy field must not — same intent as
+      // diff(resource.data).affectedKeys().hasOnly(['isCurrent', 'updatedAt']),
+      // expressed without diff().
+      function onlySupersedeFieldsChanged() {
+        return policyUnchanged('familyId')
+          && policyUnchanged('title')
+          && policyUnchanged('titleEs')
+          && policyUnchanged('bodyMarkdown')
+          && policyUnchanged('bodyMarkdownEs')
+          && policyUnchanged('version')
+          && policyUnchanged('category')
+          && policyUnchanged('requiresSignature')
+          && policyUnchanged('activeFrom')
+          && policyUnchanged('locationId')
+          && policyUnchanged('createdAt');
+      }
+
+      allow read: if hasIdentity();
+
+      allow create: if hasPerm('policies.manage');
+
+      // -- QUARANTINED DIRTY DENIAL, same class as employees/private/admin's
+      // (above) — revisit only if a real bisection lead turns up ----------
+      // `npm run test:rules:clean` flags this rule as a genuine (never-
+      // resolved) evaluation error for a CREATE of a brand-new policy
+      // document by a caller WITHOUT policies.manage. It is a diagnostic
+      // artifact, not an authorization defect: every test in
+      // policies.rules.test.ts — including every create/update boundary —
+      // passes. Investigated and ruled out: guarding with `resource !=
+      // null` before the field comparison; replacing diff() with the
+      // per-field policyUnchanged() above (same fix employees' own
+      // unchanged() already models); reordering the && so the get()-free
+      // check runs first. None changed the outcome.
+      //
+      // Working theory, consistent with the employees/private/admin
+      // precedent: a plain client write to a path with no existing document
+      // is speculatively checked against BOTH `allow create` and `allow
+      // update` before Firestore knows which applies (documented at this
+      // file's header). When the request truly resolves as a CREATE, the
+      // sibling `update` rule is evaluated once in Firestore's untyped
+      // discovery pass (where get()-backed hasPerm() calls are unresolved)
+      // and, because it is not the operative rule for the real decision,
+      // never receives the second, data-backed pass that would let it reach
+      // a clean verdict. This should affect ANY collection whose `create`
+      // and `update` are separate `allow` statements that BOTH call
+      // hasPerm() — `employees` (L322 & L326) fits that shape too, and
+      // simply has no existing rules test that creates a brand-new employee
+      // doc through a denied client write to surface it. Not a rules bug;
+      // do not rewrite this rule chasing it further; do not re-run the
+      // bisection.
+      allow update: if hasPerm('policies.manage') && onlySupersedeFieldsChanged();
+
+      allow delete: if false; // A permanent historical record — no version is ever removed.
+    }
+
+    // ── signatures (spec §12, Phase 4) ────────────────────────────────────────
+    // Every write is Cloud-Function-only (submitSignature/
+    // recordRefusedToSign) — a signature's PDF + email leg must be server-
+    // side, so there is no client-writable shape here at all, same as
+    // punches/tipReports/taskInstances.
+    //
+    // READ splits by how sensitive the TARGET is. A policy signature carries
+    // no disciplinary sensitivity — "3 employees haven't signed the new
+    // policy" is a `policies.manage` concern, not `discipline.view`. A
+    // disciplinary-target signature is exactly as sensitive as the action it
+    // belongs to (below-level, same rule disciplinaryActions itself uses).
+
+    match /signatures/{signatureId} {
+      function subjectEmployeeId() {
+        return resource != null && 'employeeId' in resource.data
+          ? resource.data.employeeId
+          : '__nobody__';
+      }
+
+      function targetType() {
+        return resource != null && 'targetType' in resource.data
+          ? resource.data.targetType
+          : '__none__';
+      }
+
+      function mayViewAsPolicyAdmin() {
+        return targetType() == 'policy' && hasPerm('policies.manage');
+      }
+
+      // Single-document reads only (a specific disciplinary action's own
+      // signature) — nothing in this app lists signatures broadly by
+      // below-level rank. If that ever changes, this needs the same
+      // membership-check treatment `disciplinaryActions` documents below,
+      // for the identical list-query-safety reason.
+      function mayViewAsDisciplineAdmin() {
+        return targetType() == 'disciplinaryAction'
+          && hasPerm('discipline.view')
+          && canAccessSensitive(subjectEmployeeId());
+      }
+
+      allow read: if hasIdentity()
+                  && (isSelf(subjectEmployeeId())
+                      || mayViewAsPolicyAdmin()
+                      || mayViewAsDisciplineAdmin());
+
+      allow create, update, delete: if false;
+    }
+
+    // ── disciplinaryActions (spec §4, §12, §17) ───────────────────────────────
+    // The MOST sensitive collection in this app (Rafa's own ruling) — full
+    // trio, strict below-level, no peer-file reads (two Managers cannot see
+    // each other's), staff read only their own. Every write is Cloud-
+    // Function-only (issueDisciplinaryAction / submitSignature /
+    // recordRefusedToSign) — never a raw client write, matching punches'
+    // shape for the same "needs the audit guarantee" reason.
+
+    match /disciplinaryActions/{actionId} {
+      function subjectEmployeeId() {
+        return resource != null && 'employeeId' in resource.data
+          ? resource.data.employeeId
+          : '__nobody__';
+      }
+
+      // Same list-query-safety shape as `tipReports`' `employeeAccessRole`
+      // (Aug 14 2026 fix): a RANK comparison can never be proven for a
+      // `list` request — only a MEMBERSHIP check against a literal set the
+      // query's own where() pins. Missing the field fails closed to
+      // 'owner' — a below-level check must never widen because a record
+      // predates it.
+      function targetAccessRole() {
+        return 'employeeAccessRole' in resource.data ? resource.data.employeeAccessRole : 'owner';
+      }
+
+      function viewableDisciplineRoles(role) {
+        return role == 'owner' ? ['owner', 'gm', 'manager', 'supervisor', 'staff']
+             : role == 'gm' ? ['manager', 'supervisor', 'staff']
+             : role == 'manager' ? ['supervisor', 'staff']
+             : role == 'supervisor' ? ['staff']
+             : [];
+      }
+
+      function mayViewAsAdmin() {
+        return hasPerm('discipline.view') && targetAccessRole() in viewableDisciplineRoles(myRole());
+      }
+
+      allow read: if hasIdentity()
+                  && (isSelf(subjectEmployeeId()) || mayViewAsAdmin());
+
+      allow create, update, delete: if false;
+    }
+
+    // ── disciplinaryLadder (spec §12, Phase 4) ────────────────────────────────
+    // A single org-wide config doc, not per-employee-sensitive itself — every
+    // employee needs to read it to render their OWN progress-ladder widget's
+    // "what happens next" copy (cross-referenced against their own, already-
+    // readable disciplinaryActions). Writing the ESCALATION POLICY (the
+    // thresholds/consequences themselves) is a settings-level decision, not
+    // a day-to-day `discipline.issue` action — gated `settings.manage`
+    // (Owner/GM), same bar as other org-wide policy configs.
+
+    match /disciplinaryLadder/{ladderId} {
+      allow read: if hasIdentity();
+      allow write: if hasPerm('settings.manage');
+    }
+
     // ── trades (spec §7, §17) ─────────────────────────────────────────────────
     // Unlike punches/tipReports, POSTING a trade risks nothing irreversible —
     // no shift reassignment happens until a manager approves — so create and

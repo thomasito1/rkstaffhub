@@ -91,6 +91,12 @@ export const COLLECTIONS = {
   disciplinaryLadder: 'disciplinaryLadder',
   payPeriods: 'payPeriods',
   settings: 'settings',
+  /**
+   * Emulator/dev-only Secret Manager stand-in (spec §13, Phase 5) — never
+   * read or written by the client; listed here only so `COLLECTIONS` stays
+   * the single source of truth for every collection path in the app.
+   */
+  devSecrets: '_devSecrets',
   permissions: 'permissions',
   invites: 'invites',
   auditLog: 'auditLog',

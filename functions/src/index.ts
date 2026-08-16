@@ -48,6 +48,29 @@
  *                                            Owner/GM, not just the permission
  *   exportPayPeriodCsv    payroll.export   · §11 generic/Gusto/ADP CSV,
  *                                            audited + stamped on the period
+ *   issueDisciplinaryAction discipline.issue · §12/§17 issues a disciplinary
+ *                                            action, below-level + audited
+ *   recordRefusedToSign   discipline.issue · witnessed refusal path, same
+ *                                            PDF/email/audit treatment as a
+ *                                            real signature
+ *   submitSignature        (self only)    · shared by policy AND
+ *                                            disciplinary signing — PDF +
+ *                                            email, employee's own language
+ *                                            with an EN-fallback note, never
+ *                                            silently substituted
+ *   configureAiProvider/
+ *   setActiveAiProvider   ai.configureKeys · §13 stores a key in Secret
+ *                                            Manager (never Firestore, never
+ *                                            returned to the client), writes
+ *                                            metadata only, audited
+ *   generateAiSchedule    ai.generateSchedule · §13 assembles context via the
+ *                                            shared conflicts/fulfillment
+ *                                            engines, calls the active
+ *                                            provider, validates every
+ *                                            proposed shift, writes a DRAFT
+ *                                            only (never auto-publishes),
+ *                                            rate-limited, audited with
+ *                                            token usage
  *
  * Region is the default us-central1, matching `getFunctions(app)` in
  * `src/lib/firebase.ts` — the client passes no region, so changing it here
@@ -77,3 +100,7 @@ export { materializeDailyTasks, materializeWeeklyTasks, materializeMonthlyTasks 
 export { completeTaskInstance } from './taskActions'
 export { lockPayPeriod, unlockPayPeriod } from './payrollActions'
 export { exportPayPeriodCsv } from './payrollExport'
+export { issueDisciplinaryAction, recordRefusedToSign } from './disciplinaryActions'
+export { submitSignature } from './signatures'
+export { configureAiProvider, setActiveAiProvider } from './ai/configureProvider'
+export { generateAiSchedule } from './ai/generate'

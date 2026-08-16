@@ -287,6 +287,8 @@ export type AuditAction =
   | 'ai.keyChange'
   | 'discipline.issue'
   | 'employee.import'
+  /** A schedule-generation call (spec §13) — `reason` disambiguates 'generate' | 'regenerate'; `after` carries token usage (Rafa's guardrail #7's cost guard). */
+  | 'ai.generate'
 
 // 'schedule.override' vs 'trade.override': both are a manager overriding a
 // blocked assignment with a logged reason, but at different moments. §6's
@@ -392,6 +394,12 @@ export interface AiDraftMeta {
   model: string
   generatedAt: unknown
   promptSummary: string
+  /** The manager's free-text for a "regenerate with instructions" call. `null` for a first generation. */
+  instructions?: string | null
+  /** Cost-guard provenance (Rafa's guardrail #7) — the SAME numbers written to the `ai.generate` auditLog entry, denormalized here so the draft banner can show them without a second read. */
+  tokensUsed?: { input: number; output: number } | null
+  /** How many of the provider's proposed shifts failed conflict validation and were demoted to an open shift with a reason (guardrail #3) — surfaced in the draft banner's warning list. */
+  invalidShiftCount?: number
 }
 
 export interface Schedule {
@@ -456,6 +464,31 @@ export interface Shift {
   /** e.g. "Bar", "Floor", "Expo". */
   station: string | null
   notes?: string | null
+  /**
+   * Set only on an AI-generated open shift whose proposed assignment failed
+   * conflict validation (spec §13, guardrail #3) — WHY it was demoted to
+   * open rather than assigned. Structured like `Conflict` (`src/lib/
+   * scheduling/tradeEligibility.ts`) rather than a pre-rendered string —
+   * CLAUDE.md requires every user-facing string go through `t()`, and this
+   * is machine-generated, so it must carry an i18n key + params, not
+   * English prose, for the builder to render bilingually. Distinct from
+   * `notes` (manager free text) so the two never conflate a system-generated
+   * warning with a human note. Cleared when a manager assigns the shift
+   * manually.
+   */
+  aiValidationNote?: { messageKey: string; params?: Record<string, string | number> } | null
+  /**
+   * True for any shift a `generateAiSchedule` call created (assigned OR
+   * open-with-reason alike) — separate from `aiValidationNote`, since an
+   * ACCEPTED AI assignment has no validation note but must still be
+   * identifiable as AI-authored. A "regenerate with instructions" call
+   * (guardrail #6) deletes every still-`draft` shift with `aiGenerated:
+   * true` before generating fresh, so an instruction like "give Robin
+   * Saturday off" can actually UNDO a prior AI assignment rather than only
+   * ever adding more on top of it — while a manager's own manual edits
+   * (never carrying this flag) are always preserved across a regenerate.
+   */
+  aiGenerated?: boolean
   /** On-Call Server renders as its own band at the bottom of FOH (§6). */
   isOnCall: boolean
   status: ShiftStatus
@@ -881,5 +914,186 @@ export interface PayPeriod {
   auditPendingAt?: unknown
   locationId?: string | null
   createdAt?: unknown
+  updatedAt?: unknown
+}
+
+// ── policies/{policyId} (spec §12, Phase 4) ─────────────────────────────────
+
+export type PolicyCategory = 'handbook' | 'policy' | 'onboarding' | 'other'
+
+export interface Policy {
+  id: string
+  /**
+   * Groups every version of "the same policy" — editing content NEVER
+   * mutates an existing doc (guardrail: "immutable-once-signed," implemented
+   * as immutable-always for simplicity, since tracking "has anyone signed
+   * yet" to conditionally allow edits adds real complexity for no real
+   * benefit). An edit creates a NEW document, `version: version + 1`, same
+   * `familyId`. A signature binds to the exact `version` it was signed
+   * against, so old signatures stay meaningful even after a newer version
+   * ships.
+   */
+  familyId: string
+  title: string
+  titleEs: string
+  bodyMarkdown: string
+  bodyMarkdownEs: string
+  version: number
+  category: PolicyCategory
+  requiresSignature: boolean
+  /** "YYYY-MM-DD" — when this version takes effect. */
+  activeFrom: string
+  /**
+   * Denormalized "is this the current version of its family" — the ONE
+   * field `firestore.rules` allows updating on an otherwise-immutable doc
+   * (flips false the moment a newer version is created), so "which policy do
+   * I show/require a signature for" never needs a cross-document query.
+   */
+  isCurrent: boolean
+  locationId?: string | null
+  createdAt?: unknown
+  updatedAt?: unknown
+}
+
+// ── signatures/{signatureId} (spec §12, Phase 4) ────────────────────────────
+
+export type SignatureTargetType = 'policy' | 'disciplinaryAction'
+
+export interface Signature {
+  id: string
+  employeeId: string
+  targetType: SignatureTargetType
+  targetId: string
+  /** The exact policy version signed — set only when `targetType === 'policy'`. */
+  policyVersion?: number | null
+  signatureImagePath: string
+  signedAt: unknown
+  pdfStoragePath: string | null
+  emailedTo: string | null
+  emailedAt?: unknown
+  /**
+   * The "audit-style guarantee" (Rafa's ruling): a signature is always
+   * created, even if the email leg fails — a failed send surfaces here
+   * rather than silently vanishing, same shape as `Schedule.pushPending`/
+   * `PayPeriod.auditPending`.
+   */
+  emailPending?: boolean
+  emailPendingAt?: unknown
+  /** The language the PDF was actually generated in — employee's own language where an ES body exists, EN fallback otherwise (noted on the document itself). */
+  language: Language
+  createdAt?: unknown
+}
+
+// ── disciplinaryActions/{actionId} (spec §12, Phase 4) ──────────────────────
+
+export type DisciplinaryActionType =
+  | 'verbal-warning'
+  | 'written-warning'
+  | 'writeup'
+  | 'final-warning'
+  | 'suspension'
+  | 'termination-note'
+
+export type DisciplinaryActionStatus = 'draft' | 'issued' | 'signed' | 'refused-to-sign'
+
+export interface DisciplinaryAction {
+  id: string
+  employeeId: string
+  type: DisciplinaryActionType
+  /** "YYYY-MM-DD". */
+  date: string
+  issuedBy: string
+  policyRefs: string[]
+  narrative: string
+  signatureId?: string | null
+  status: DisciplinaryActionStatus
+  /** Set only when `status === 'refused-to-sign'` — spec §12's own requirement, a second employee witnessing the refusal. */
+  refusedWitnessEmployeeId?: string | null
+  refusedAt?: unknown
+  /**
+   * A refused-to-sign action still gets a PDF + email, same as a signed one
+   * (spec §12: "Signed PDF emailed + archived" — the disciplinary record
+   * needs to be equally durable either way) — but there is no `Signature`
+   * doc for a refusal (nobody signed anything), so its own PDF/email
+   * tracking lives directly on this doc rather than forcing a refusal into
+   * a model built around "an employee's signature image."
+   */
+  pdfStoragePath?: string | null
+  emailedTo?: string | null
+  emailedAt?: unknown
+  emailPending?: boolean
+  emailPendingAt?: unknown
+  /**
+   * Denormalized from the employee at creation time — the exact same
+   * list-query-safety reasoning as `TipReport.employeeAccessRole` (Aug 14
+   * 2026 fix): a RANK comparison can never be proven for a `list` request,
+   * only a MEMBERSHIP check against a literal set the query itself pins.
+   */
+  employeeAccessRole?: AccessRole
+  locationId?: string | null
+  createdAt?: unknown
+  updatedAt?: unknown
+}
+
+// ── disciplinaryLadder/{ladderId} (spec §12, Phase 4) ───────────────────────
+
+export interface DisciplinaryLadderStep {
+  order: number
+  type: DisciplinaryActionType
+  /** How many of THIS type (or worse, per the ladder's own order) trigger this step. */
+  thresholdCount: number
+  consequenceText: string
+  consequenceTextEs: string
+}
+
+export interface DisciplinaryLadder {
+  id: string
+  steps: DisciplinaryLadderStep[]
+  locationId?: string | null
+  createdAt?: unknown
+  updatedAt?: unknown
+}
+
+// ── settings/aiProviders (spec §13, Phase 5) ────────────────────────────────
+
+export type AiProviderName = 'anthropic' | 'openai' | 'google' | 'custom'
+
+/**
+ * Provider metadata ONLY — the key itself lives in Secret Manager
+ * (`functions/src/ai/secrets.ts`), never in Firestore, never returned to a
+ * client (Rafa's guardrail #1). `secretRef` is an opaque handle a Cloud
+ * Function resolves back to the real key server-side; a client reading this
+ * document (`ai.configureKeys` holders only) sees everything EXCEPT the
+ * secret itself.
+ */
+export interface AiProviderConfig {
+  provider: AiProviderName
+  model: string
+  /** Last 4 characters of the key, for the Settings UI's masked display. */
+  keyLast4: string
+  /** Opaque Secret Manager resource handle. Never the key. */
+  secretRef: string
+  /**
+   * Only meaningful for `provider === 'custom'` — an assumed
+   * OpenAI-compatible chat-completions endpoint (spec's "other/custom slot"
+   * names no request/response shape, so this is a documented judgment call —
+   * see `functions/src/ai/providers/custom.ts` — confirm with Rafa before a
+   * real custom integration depends on it).
+   */
+  endpoint?: string | null
+  /** Set true once a generation call using this config has actually succeeded. */
+  connected: boolean
+  lastUsedAt?: unknown | null
+  configuredBy: string
+  createdAt?: unknown
+  updatedAt?: unknown
+}
+
+export interface AiSettings {
+  /** Document id — always `'aiProviders'` (a settings/ singleton, like `AppSettings`'s `'app'`). */
+  id: string
+  /** Which configured provider generation calls use. `null` = AI scheduling is unconfigured. */
+  active: AiProviderName | null
+  providers: Partial<Record<AiProviderName, AiProviderConfig>>
   updatedAt?: unknown
 }

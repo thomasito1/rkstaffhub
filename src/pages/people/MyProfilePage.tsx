@@ -4,11 +4,14 @@ import { useTranslation } from 'react-i18next'
 
 import { Avatar, Button, EmptyState, Pill, useToast } from '@/components/ui'
 import { useAuth } from '@/lib/auth/AuthProvider'
-import { getEmployeeCompensation, listShiftRoles, updateEmployee } from '@/lib/db'
+import { getEmployeeCompensation, listMyDisciplinaryActions, listShiftRoles, updateEmployee } from '@/lib/db'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { setLanguage, SUPPORTED_LANGUAGES, type Language } from '@/i18n'
-import type { Employee, ShiftRole } from '@/types/models'
+import type { DisciplinaryAction, Employee, ShiftRole } from '@/types/models'
 
+import { DisciplinarySignatureScreen } from '@/pages/hr/DisciplinarySignatureScreen'
+
+import { DisciplineLadderWidget } from './components/DisciplineLadderWidget'
 import { ShiftRoleChips } from './components/ShiftRolesEditor'
 
 /**
@@ -27,9 +30,16 @@ import { ShiftRoleChips } from './components/ShiftRolesEditor'
  * fields firestore.rules forbids a person to change on themselves), with the
  * mockup's "set by your manager" note.
  *
- * The documents card and the standing/ladder widget are Phase 4 (spec §19).
- * They render as the card shell the mockup draws with a "later phase" empty
- * state — no disciplinary feature is built here.
+ * The documents card is still Phase 4 scaffolding (spec §19) — no document-
+ * archive feature is built here. The "my standing" card, though, is now the
+ * real profile ladder widget (spec §12's own guardrail #5): see
+ * `DisciplineLadderWidget`. Any action of this employee's own still in
+ * `status: 'issued'` (awaiting their signature) surfaces here too, with a
+ * "review and sign" prompt that opens `DisciplinarySignatureScreen` — the
+ * only place that screen can be reached from, since `submitSignature` for a
+ * disciplinaryAction target only succeeds when the caller IS the target
+ * employee (functions/src/signatures.ts) — an admin session can never
+ * complete it on someone else's behalf.
  */
 
 interface EditDraft {
@@ -169,7 +179,25 @@ export function MyProfilePage(): JSX.Element {
   const [draft, setDraft] = useState<EditDraft | null>(null)
   const [saving, setSaving] = useState(false)
 
+  const [pendingSignatureActions, setPendingSignatureActions] = useState<DisciplinaryAction[]>([])
+  const [ladderRefreshKey, setLadderRefreshKey] = useState(0)
+  const [signingAction, setSigningAction] = useState<DisciplinaryAction | null>(null)
+
   const employeeId = employee?.id ?? ''
+
+  const loadPendingSignatures = useCallback(async () => {
+    if (employeeId === '') return
+    try {
+      const mine = await listMyDisciplinaryActions(employeeId)
+      setPendingSignatureActions(mine.filter((a) => a.status === 'issued'))
+    } catch {
+      setPendingSignatureActions([])
+    }
+  }, [employeeId])
+
+  useEffect(() => {
+    void loadPendingSignatures()
+  }, [loadPendingSignatures, ladderRefreshKey])
 
   const loadRate = useCallback(async () => {
     if (employeeId === '') return
@@ -231,6 +259,22 @@ export function MyProfilePage(): JSX.Element {
           body={t('auth.notLinkedBody')}
         />
       </div>
+    )
+  }
+
+  if (signingAction) {
+    return (
+      <DisciplinarySignatureScreen
+        action={signingAction}
+        employee={employee}
+        onBack={() => setSigningAction(null)}
+        onCancel={() => setSigningAction(null)}
+        onSigned={() => {
+          setSigningAction(null)
+          setLadderRefreshKey((k) => k + 1)
+          toast.show({ tone: 'success', message: t('people.discipline.signedToast') })
+        }}
+      />
     )
   }
 
@@ -554,16 +598,32 @@ export function MyProfilePage(): JSX.Element {
           />
         </StackCard>
 
-        {/* Card F — my standing (Phase 4 shell, ladder widget) */}
+        {/* Card F — my standing (spec §12's profile ladder widget) */}
         <StackCard
           title={t('people.my.standingTitle')}
           subtitle={t('people.my.standingSubtitle')}
         >
-          <EmptyState
-            illustration="trades"
-            title={t('people.my.standingEmptyTitle')}
-            body={t('placeholder.phaseNote', { phase: 4 })}
-          />
+          <div className="space-y-4">
+            {pendingSignatureActions.length > 0 ? (
+              <div className="rounded-control border border-warning/40 bg-warning-tint p-4">
+                <p className="text-meta font-semibold text-ink">
+                  {t('people.discipline.pendingSignatureTitle')}
+                </p>
+                <p className="mt-0.5 text-chip text-ink-muted">
+                  {t('people.discipline.pendingSignatureBody', { count: pendingSignatureActions.length })}
+                </p>
+                <Button
+                  className="mt-3"
+                  variant="primary"
+                  onClick={() => setSigningAction(pendingSignatureActions[0] ?? null)}
+                >
+                  {t('people.discipline.reviewAndSign')}
+                </Button>
+              </div>
+            ) : null}
+
+            <DisciplineLadderWidget key={ladderRefreshKey} employeeId={employee.id} isSelf />
+          </div>
         </StackCard>
       </div>
     </div>
